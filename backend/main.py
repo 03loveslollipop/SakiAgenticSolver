@@ -109,18 +109,67 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint that verifies MongoDB connection"""
+    from database.mongodb import DATABASE_NAME, MONGODB_URL
     mongo_healthy = await check_connection()
+    
+    # Get MongoDB URL (masked for security)
+    masked_url = MONGODB_URL
+    if '@' in masked_url:
+        # Mask password in URL
+        parts = masked_url.split('@')
+        credentials = parts[0].split('://')[-1]
+        if ':' in credentials:
+            username = credentials.split(':')[0]
+            masked_url = masked_url.replace(credentials, f"{username}:***")
     
     if mongo_healthy:
         return {
             "status": "healthy",
-            "database": "connected"
+            "database": "connected",
+            "database_name": DATABASE_NAME,
+            "mongodb_url": masked_url
         }
     else:
         return {
             "status": "unhealthy",
-            "database": "disconnected"
+            "database": "disconnected",
+            "database_name": DATABASE_NAME,
+            "mongodb_url": masked_url
         }
+
+
+@app.get("/debug/mongodb-config")
+async def debug_mongodb_config():
+    """Debug endpoint to check MongoDB configuration (REMOVE IN PRODUCTION)"""
+    import os
+    from database.mongodb import DATABASE_NAME, MONGODB_URL
+    
+    # Check which environment variables are set
+    env_vars = {
+        "MONGODB_URL": "SET" if os.getenv("MONGODB_URL") else "NOT SET",
+        "NF_SAKI_DB_MONGO_SRV": "SET" if os.getenv("NF_SAKI_DB_MONGO_SRV") else "NOT SET",
+        "NF_SAKI_DB_DATABASE": os.getenv("NF_SAKI_DB_DATABASE", "NOT SET"),
+        "NF_SAKI_DB_HOST": "SET" if os.getenv("NF_SAKI_DB_HOST") else "NOT SET",
+        "NF_SAKI_DB_USERNAME": "SET" if os.getenv("NF_SAKI_DB_USERNAME") else "NOT SET",
+        "NF_SAKI_DB_PASSWORD": "SET" if os.getenv("NF_SAKI_DB_PASSWORD") else "NOT SET",
+        "DATABASE": os.getenv("DATABASE", "NOT SET"),
+        "DATABASE_NAME": os.getenv("DATABASE_NAME", "NOT SET"),
+    }
+    
+    # Mask the MongoDB URL
+    masked_url = MONGODB_URL
+    if '@' in masked_url:
+        parts = masked_url.split('@')
+        credentials = parts[0].split('://')[-1]
+        if ':' in credentials:
+            username = credentials.split(':')[0]
+            masked_url = masked_url.replace(credentials, f"{username}:***")
+    
+    return {
+        "detected_database_name": DATABASE_NAME,
+        "mongodb_url_masked": masked_url,
+        "environment_variables": env_vars
+    }
 
 
 @app.post("/api/sessions", status_code=status.HTTP_201_CREATED)
