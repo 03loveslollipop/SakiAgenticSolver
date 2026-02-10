@@ -43,27 +43,104 @@ graph TB
 
 ### Component Architecture
 
-The system is divided into three main layers:
+The system is divided into four main layers:
 
-1. **Frontend Layer (React)**
+1. **Authentication Layer**
+   - Login component with 2FA
+   - User management component (admin only)
+   - JWT token management
+   - Session management
+
+2. **Frontend Layer (React)**
    - Dashboard component for session listing
    - VM creation form component
    - Session detail component with terminal
    - File viewer components for AGENT.md and TOOLS.md
 
-2. **Backend Layer (Python FastAPI)**
+3. **Backend Layer (Python FastAPI)**
+   - Authentication and authorization middleware
    - REST API endpoints for CRUD operations
    - WebSocket endpoints for terminal connections
    - Azure VM management service
    - Session persistence service
    - SSH key management service
+   - User management service
+   - Email notification service
 
-3. **Infrastructure Layer (Azure)**
+4. **Infrastructure Layer (Azure)**
    - Virtual machines with configurable resources
    - Network security groups for SSH access
    - Storage for VM disks
 
 ## Components and Interfaces
+
+### Authentication Components
+
+#### 1. Login Component
+**Purpose**: Authenticate users with username/password and 2FA
+
+**State**:
+- `username`: String
+- `password`: String
+- `totpCode`: String
+- `requires2FA`: Boolean
+- `requiresSetup2FA`: Boolean
+- `qrCodeUrl`: String (for first-time setup)
+- `loading`: Boolean
+- `error`: String
+
+**Interface**:
+```typescript
+interface LoginRequest {
+  username: string;
+  password: string;
+  totpCode?: string;
+}
+
+interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  requires2FASetup: boolean;
+  qrCodeUrl?: string;
+  secret?: string;
+}
+
+interface LoginComponentProps {
+  onLoginSuccess: (token: string) => void;
+}
+```
+
+#### 2. User Management Component (Admin Only)
+**Purpose**: Allow admins to create and manage users
+
+**State**:
+- `users`: Array of user objects
+- `showCreateForm`: Boolean
+- `newUserEmail`: String
+- `loading`: Boolean
+- `error`: String
+
+**Interface**:
+```typescript
+interface User {
+  id: string;
+  email: string;
+  role: 'admin' | 'user';
+  is2FAEnabled: boolean;
+  isActive: boolean;
+  createdAt: string;
+  lastLogin?: string;
+}
+
+interface CreateUserRequest {
+  email: string;
+  role: 'admin' | 'user';
+}
+
+interface UserManagementProps {
+  currentUser: User;
+}
+```
 
 ### Frontend Components
 
@@ -311,7 +388,114 @@ class VMSetupService:
         """Start AI agent with root privileges"""
 ```
 
-#### 4. Session Manager Service
+#### 4. User Manager Service
+**Purpose**: Manage user accounts, authentication, and authorization
+
+**Dependencies**:
+- `motor` for async MongoDB operations
+- `passlib` for password hashing (bcrypt)
+- `pyotp` for TOTP 2FA
+- `pyjwt` for JWT token generation
+- `cryptography` for encrypting 2FA secrets
+
+**Interface**:
+```python
+class UserManager:
+    def __init__(self, mongo_client: AsyncIOMotorClient, database_name: str = "ctf_platform"):
+        """Initialize with MongoDB client"""
+        self.db = mongo_client[database_name]
+        self.users_collection = self.db["users"]
+        
+    async def create_user(self, email: str, role: str = "user") -> User:
+        """Create new user with generated password"""
+        
+    async def get_user_by_email(self, email: str) -> User:
+        """Retrieve user by email"""
+        
+    async def get_user_by_id(self, user_id: str) -> User:
+        """Retrieve user by ID"""
+        
+    async def list_users(self) -> List[User]:
+        """List all users (admin only)"""
+        
+    async def update_user(self, user_id: str, updates: dict) -> User:
+        """Update user fields"""
+        
+    async def disable_user(self, user_id: str) -> bool:
+        """Disable user account"""
+        
+    async def verify_password(self, email: str, password: str) -> bool:
+        """Verify user password"""
+        
+    async def setup_2fa(self, user_id: str) -> dict:
+        """Generate 2FA secret and QR code"""
+        
+    async def verify_2fa(self, user_id: str, totp_code: str) -> bool:
+        """Verify TOTP code"""
+        
+    async def enable_2fa(self, user_id: str) -> bool:
+        """Mark 2FA as enabled after verification"""
+        
+    async def create_indexes(self):
+        """Create MongoDB indexes for performance"""
+```
+
+#### 5. Authentication Service
+**Purpose**: Handle JWT token generation and validation
+
+**Dependencies**:
+- `pyjwt` for JWT operations
+- `datetime` for token expiration
+
+**Interface**:
+```python
+class AuthService:
+    def __init__(self, secret_key: str, algorithm: str = "HS256"):
+        """Initialize with JWT secret key"""
+        
+    def create_access_token(self, user_id: str, email: str, role: str) -> str:
+        """Generate JWT access token (expires in 1 hour)"""
+        
+    def create_refresh_token(self, user_id: str) -> str:
+        """Generate JWT refresh token (expires in 7 days)"""
+        
+    def verify_token(self, token: str) -> dict:
+        """Verify and decode JWT token"""
+        
+    def get_current_user(self, token: str) -> dict:
+        """Extract user info from token"""
+```
+
+#### 6. Email Service
+**Purpose**: Send email notifications for user creation
+
+**Dependencies**:
+- `aiosmtplib` for async email sending
+- `email` for email formatting
+
+**Interface**:
+```python
+class EmailService:
+    def __init__(self, smtp_host: str, smtp_port: int, smtp_user: str, smtp_password: str):
+        """Initialize with SMTP configuration"""
+        
+    async def send_welcome_email(
+        self,
+        to_email: str,
+        username: str,
+        temporary_password: str
+    ) -> bool:
+        """Send welcome email with credentials"""
+        
+    async def send_password_reset_email(
+        self,
+        to_email: str,
+        reset_token: str
+    ) -> bool:
+        """Send password reset email"""
+```
+
+#### 7. Session Manager Service
 **Purpose**: Manage session metadata and persistence using MongoDB
 
 **Dependencies**:
@@ -493,6 +677,25 @@ class MCPConfigService:
 
 ## Data Models
 
+### User Model
+```python
+class User(BaseModel):
+    id: str  # UUID
+    email: str
+    password_hash: str  # bcrypt hashed
+    role: Literal['admin', 'user']
+    is_2fa_enabled: bool = False
+    totp_secret: Optional[str]  # Encrypted at rest
+    is_active: bool = True
+    created_at: datetime
+    last_login: Optional[datetime]
+    created_by: Optional[str]  # User ID of admin who created this user
+    
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+
 ### Session Model
 ```python
 class Session(BaseModel):
@@ -532,6 +735,22 @@ class KeyPair(BaseModel):
 ```
 
 ### MongoDB Collections
+
+**users collection**:
+```json
+{
+  "_id": "uuid-string",
+  "email": "user@example.com",
+  "password_hash": "bcrypt-hashed-password",
+  "role": "admin|user",
+  "is_2fa_enabled": false,
+  "totp_secret": "encrypted-secret or null",
+  "is_active": true,
+  "created_at": "ISO-8601 datetime",
+  "last_login": "ISO-8601 datetime or null",
+  "created_by": "uuid-string or null"
+}
+```
 
 **sessions collection**:
 ```json
@@ -579,6 +798,7 @@ class KeyPair(BaseModel):
 ```
 
 **Indexes**:
+- users: `{ "_id": 1 }` (default), `{ "email": 1 }` (unique), `{ "is_active": 1 }`
 - sessions: `{ "_id": 1 }` (default), `{ "created_at": -1 }`, `{ "status": 1 }`
 - ssh_keys: `{ "session_id": 1 }` (unique)
 - writeups: `{ "session_id": 1 }` (unique), `{ "completion_timestamp": -1 }`, `{ "category": 1 }`, `{ "technologies": 1 }`, `{ "content": "text" }` (text index for search), `{ "category": 1 }`, `{ "technologies": 1 }`

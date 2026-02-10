@@ -9,11 +9,117 @@ This implementation plan breaks down the CTF Challenge Automation Platform into 
 - [x] 1. Set up project structure and dependencies
   - Create backend directory with FastAPI project structure
   - Create frontend directory with React/TypeScript project
-  - Set up Python virtual environment and install dependencies (fastapi, uvicorn, azure-identity, azure-mgmt-compute, azure-mgmt-network, azure-mgmt-resource, paramiko, pydantic, motor, pymongo, pytest, hypothesis, mongomock)
-  - Set up Node.js project and install dependencies (react, typescript, xterm, axios, @testing-library/react, jest, fast-check)
+  - Set up Python virtual environment and install dependencies (fastapi, uvicorn, azure-identity, azure-mgmt-compute, azure-mgmt-network, azure-mgmt-resource, paramiko, pydantic, motor, pymongo, pytest, hypothesis, mongomock, passlib, pyotp, pyjwt, cryptography, aiosmtplib)
+  - Set up Node.js project and install dependencies (react, typescript, xterm, axios, @testing-library/react, jest, fast-check, qrcode.react)
   - Create .gitignore files for both projects
   - Set up MongoDB connection configuration with environment variables
   - _Requirements: All requirements (foundational setup)_
+
+- [ ] 1.5. Implement authentication and user management
+  - [x] 1.5.1 Create User data model and MongoDB collection
+    - Define User Pydantic model with all required fields (id, email, password_hash, role, is_2fa_enabled, totp_secret, is_active, created_at, last_login, created_by)
+    - Create users collection in MongoDB with indexes on email (unique) and is_active
+    - _Requirements: 0.1, 0.14, 0.15, 0.18, 0.19_
+  
+  - [ ] 1.5.2 Implement UserManager service
+    - Create UserManager class with MongoDB operations
+    - Implement create_user() with password generation and bcrypt hashing
+    - Implement get_user_by_email() and get_user_by_id() methods
+    - Implement list_users() for admin user management
+    - Implement update_user() and disable_user() methods
+    - Implement verify_password() using bcrypt
+    - Implement setup_2fa() to generate TOTP secret and QR code
+    - Implement verify_2fa() to validate TOTP codes
+    - Implement enable_2fa() to mark 2FA as enabled
+    - Use Motor async driver for all MongoDB operations
+    - _Requirements: 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.9, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.20_
+  
+  - [ ] 1.5.3 Implement AuthService for JWT token management
+    - Create AuthService class for JWT operations
+    - Implement create_access_token() with 1-hour expiration
+    - Implement create_refresh_token() with 7-day expiration
+    - Implement verify_token() to validate and decode JWT
+    - Implement get_current_user() to extract user info from token
+    - Use environment variable for JWT secret key
+    - _Requirements: 0.10, 0.11, 0.12_
+  
+  - [ ] 1.5.4 Implement EmailService for user notifications
+    - Create EmailService class with SMTP configuration
+    - Implement send_welcome_email() with username and temporary password
+    - Configure SMTP settings from environment variables
+    - Use aiosmtplib for async email sending
+    - _Requirements: 0.2_
+  
+  - [ ] 1.5.5 Implement authentication API endpoints
+    - Implement POST /api/auth/login endpoint for username/password authentication
+    - Implement POST /api/auth/login/2fa endpoint for TOTP verification
+    - Implement POST /api/auth/setup-2fa endpoint for first-time 2FA setup
+    - Implement POST /api/auth/verify-2fa-setup endpoint to complete 2FA setup
+    - Implement POST /api/auth/refresh endpoint for token refresh
+    - Implement POST /api/auth/logout endpoint to invalidate tokens
+    - Return JWT tokens on successful authentication
+    - _Requirements: 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.10_
+  
+  - [ ] 1.5.6 Implement user management API endpoints (admin only)
+    - Implement POST /api/users endpoint to create new users
+    - Implement GET /api/users endpoint to list all users
+    - Implement GET /api/users/{user_id} endpoint to get user details
+    - Implement PUT /api/users/{user_id} endpoint to update user
+    - Implement DELETE /api/users/{user_id} endpoint to disable user
+    - Require admin role for all user management endpoints
+    - Send welcome email when creating new users
+    - _Requirements: 0.1, 0.2, 0.13, 0.14, 0.15, 0.16, 0.17_
+  
+  - [ ] 1.5.7 Implement authentication middleware
+    - Create JWT authentication dependency for FastAPI
+    - Implement token validation on all protected endpoints
+    - Implement role-based access control (admin vs user)
+    - Return 401 for invalid/expired tokens
+    - Return 403 for insufficient permissions
+    - _Requirements: 0.11, 0.12_
+    - **STATUS**: Partially complete (implemented via FastAPI dependencies in routes/auth.py and routes/users.py)
+  
+  - [x] 1.5.8 Implement frontend Login component
+    - Create Login component with username/password form
+    - Implement 2FA code input for users with 2FA enabled
+    - Implement first-time 2FA setup flow with QR code display
+    - Store JWT token in localStorage or secure cookie
+    - Redirect to dashboard on successful login
+    - Display error messages for failed authentication
+    - _Requirements: 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9_
+  
+  - [x] 1.5.9 Implement frontend User Management component (admin only)
+    - Create UserManagement component for admin users
+    - Display list of all users with email, role, 2FA status, and active status
+    - Implement create user form with email and role selection
+    - Implement disable user functionality
+    - Show success/error messages for user operations
+    - _Requirements: 0.13, 0.14, 0.15, 0.16, 0.17_
+  
+  - [x] 1.5.10 Implement authentication guards and routing
+    - Create PrivateRoute component to protect authenticated routes
+    - Create AdminRoute component to protect admin-only routes
+    - Create PublicRoute component to redirect authenticated users
+    - Redirect unauthenticated users to login page
+    - Redirect authenticated users away from login page
+    - Implement token refresh logic in AuthContext
+    - _Requirements: 0.11, 0.12, 0.13_
+  
+  - [x] 1.5.11 Write unit tests for authentication services
+    - Test UserManager CRUD operations
+    - Test password hashing and verification
+    - Test 2FA setup and verification
+    - Test JWT token generation and validation
+    - Test email template rendering
+    - _Requirements: 0.1-0.20_
+  
+  - [x] 1.5.12 Write integration tests for authentication endpoints
+    - Test login flow with valid/invalid credentials
+    - Test 2FA setup and verification flow
+    - Test token refresh flow
+    - Test user creation and management (admin)
+    - Test authentication middleware on protected endpoints
+    - _Requirements: 0.1-0.20_
 
 - [x] 2. Implement backend data models and database setup
   - [x] 2.1 Create Pydantic models for Session, VMConfig, KeyPair, and API request/response schemas
