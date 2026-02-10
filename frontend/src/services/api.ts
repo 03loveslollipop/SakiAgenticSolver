@@ -76,8 +76,8 @@ class APIClient {
   }
 
   async getSessions(): Promise<Session[]> {
-    const response = await this.client.get<Session[]>('/api/sessions');
-    return response.data;
+    const response = await this.client.get<{ sessions: Session[] }>('/api/sessions');
+    return response.data.sessions;
   }
 
   async getSession(sessionId: string): Promise<Session> {
