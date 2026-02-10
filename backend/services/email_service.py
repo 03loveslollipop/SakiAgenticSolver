@@ -129,14 +129,16 @@ class EmailService:
                 html_part = MIMEText(body_html, "html")
                 message.attach(html_part)
             
-            # Send email
+            # Send email using STARTTLS (not SSL)
+            # For iCloud SMTP, we need to use STARTTLS on port 587
             await aiosmtplib.send(
                 message,
                 hostname=self.smtp_host,
                 port=self.smtp_port,
                 username=self.smtp_user,
                 password=self.smtp_password,
-                use_tls=self.use_tls
+                use_tls=False,  # Don't use SSL immediately
+                start_tls=True  # Use STARTTLS instead
             )
             
             logger.info(f"Email sent successfully to: {to_email}")
