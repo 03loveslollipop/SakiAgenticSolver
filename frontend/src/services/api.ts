@@ -1,0 +1,175 @@
+// API client service for backend communication
+import axios, { AxiosInstance, AxiosError } from 'axios';
+import {
+  Session,
+  VMCreationRequest,
+  SSHConnectionInfo,
+  Writeup,
+  WriteupSearchParams,
+} from '../types';
+
+// Configure base URL from environment or default to localhost
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+class APIClient {
+  private client: AxiosInstance;
+
+  constructor() {
+    this.client = axios.create({
+      baseURL: BASE_URL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000, // 30 seconds
+    });
+
+    // Add response interceptor for error handling
+    this.client.interceptors.response.use(
+      (response) => response,
+      (error: AxiosError) => {
+        if (error.response) {
+          // Server responded with error status
+          const message = (error.response.data as any)?.detail || error.message;
+          throw new Error(message);
+        } else if (error.request) {
+          // Request made but no response
+          throw new Error('No response from server. Please check your connection.');
+        } else {
+          // Error setting up request
+          throw new Error(error.message);
+        }
+      }
+    );
+  }
+
+  // Session endpoints
+  async createSession(request: VMCreationRequest): Promise<Session> {
+    const response = await this.client.post<Session>('/api/sessions', request);
+    return response.data;
+  }
+
+  async getSessions(): Promise<Session[]> {
+    const response = await this.client.get<Session[]>('/api/sessions');
+    return response.data;
+  }
+
+  async getSession(sessionId: string): Promise<Session> {
+    const response = await this.client.get<Session>(`/api/sessions/${sessionId}`);
+    return response.data;
+  }
+
+  async deleteSession(sessionId: string): Promise<void> {
+    await this.client.delete(`/api/sessions/${sessionId}`);
+  }
+
+  // SSH endpoints
+  async getSSHInfo(sessionId: string): Promise<SSHConnectionInfo> {
+    const response = await this.client.get<SSHConnectionInfo>(
+      `/api/sessions/${sessionId}/ssh`
+    );
+    return response.data;
+  }
+
+  async downloadSSHKey(sessionId: string): Promise<Blob> {
+    const response = await this.client.get(`/api/sessions/${sessionId}/ssh-key`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  }
+
+  // File content endpoints
+  async getAgentMd(sessionId: string): Promise<string> {
+    const response = await this.client.get<{ content: string }>(
+      `/api/sessions/${sessionId}/agent-md`
+    );
+    return response.data.content;
+  }
+
+  async updateAgentMd(sessionId: string, content: string): Promise<void> {
+    await this.client.put(`/api/sessions/${sessionId}/agent-md`, { content });
+  }
+
+  async getBasePrompt(sessionId: string): Promise<string> {
+    const response = await this.client.get<{ content: string }>(
+      `/api/sessions/${sessionId}/base-prompt`
+    );
+    return response.data.content;
+  }
+
+  async getToolsMd(sessionId: string): Promise<string> {
+    const response = await this.client.get<{ content: string }>(
+      `/api/sessions/${sessionId}/tools-md`
+    );
+    return response.data.content;
+  }
+
+  async getChangelog(sessionId: string): Promise<string> {
+    const response = await this.client.get<{ content: string }>(
+      `/api/sessions/${sessionId}/changelog`
+    );
+    return response.data.content;
+  }
+
+  async getDiscoveries(sessionId: string): Promise<string> {
+    const response = await this.client.get<{ content: string }>(
+      `/api/sessions/${sessionId}/discoveries`
+    );
+    return response.data.content;
+  }
+
+  // Writeup endpoints
+  async uploadWriteup(
+    sessionId: string,
+    content: string,
+    category?: string,
+    technologies?: string[]
+  ): Promise<{ id: string; message: string }> {
+    const response = await this.client.post<{ id: string; message: string }>(
+      `/api/sessions/${sessionId}/writeup`,
+      { content, category, technologies }
+    );
+    return response.data;
+  }
+
+  async getWriteups(skip: number = 0, limit: number = 20, category?: string): Promise<Writeup[]> {
+    const params: any = { skip, limit };
+    if (category) {
+      params.category = category;
+    }
+    const response = await this.client.get<Writeup[]>('/api/writeups', { params });
+    return response.data;
+  }
+
+  async getWriteup(sessionId: string): Promise<Writeup> {
+    const response = await this.client.get<Writeup>(`/api/writeups/${sessionId}`);
+    return response.data;
+  }
+
+  async searchWriteups(params: WriteupSearchParams): Promise<Writeup[]> {
+    const response = await this.client.get<Writeup[]>('/api/writeups/search', {
+      params,
+    });
+    return response.data;
+  }
+
+  // WebSocket URL for terminal
+  getTerminalWebSocketURL(sessionId: string): string {
+    const wsProtocol = BASE_URL.startsWith('https') ? 'wss' : 'ws';
+    const wsBaseURL = BASE_URL.replace(/^https?/, wsProtocol);
+    return `${wsBaseURL}/api/sessions/${sessionId}/terminal`;
+  }
+
+  // Health check
+  async healthCheck(): Promise<boolean> {
+    try {
+      await this.client.get('/health');
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+// Export singleton instance
+export const apiClient = new APIClient();
+export default apiClient;

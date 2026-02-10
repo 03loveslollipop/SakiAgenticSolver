@@ -1,0 +1,151 @@
+/* SSH Info Component */
+.ssh-info {
+  padding: 2rem;
+}
+
+.ssh-info-header {
+  margin-bottom: 2rem;
+}
+
+.ssh-info-header h3 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.ssh-info-header p {
+  margin: 0;
+  color: #666;
+}
+
+.ssh-info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.info-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid #e0e0e0;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-weight: 500;
+  color: #666;
+  min-width: 120px;
+}
+
+.info-value-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.info-value {
+  background: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  font-family: 'Courier New', monospace;
+  color: #333;
+}
+
+.ssh-command-section,
+.ssh-key-section,
+.ssh-instructions {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid #e0e0e0;
+}
+
+.ssh-command-section h4,
+.ssh-key-section h4,
+.ssh-instructions h4 {
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.command-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.command-box code {
+  flex: 1;
+  font-family: 'Courier New', monospace;
+  color: #333;
+  word-break: break-all;
+}
+
+.ssh-key-section p {
+  margin: 0 0 1rem 0;
+  color: #666;
+}
+
+.ssh-instructions ol {
+  margin: 0;
+  padding-left: 1.5rem;
+  color: #666;
+}
+
+.ssh-instructions li {
+  margin-bottom: 0.75rem;
+}
+
+.ssh-instructions code {
+  background: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  border: 1px solid #ddd;
+  font-family: 'Courier New', monospace;
+  color: #333;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ssh-info {
+    padding: 1rem;
+  }
+
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .info-value-group {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .command-box {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .command-box .btn {
+    width: 100%;
+  }
+}
