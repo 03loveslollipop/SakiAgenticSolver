@@ -13,6 +13,7 @@ import {
   TokenResponse,
   RefreshTokenRequest,
   User,
+  UserRole,
 } from '../types';
 
 // Configure base URL from environment or default to localhost
