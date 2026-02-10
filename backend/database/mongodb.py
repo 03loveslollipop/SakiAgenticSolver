@@ -11,24 +11,34 @@ logger = logging.getLogger(__name__)
 def get_mongodb_url() -> str:
     """
     Get MongoDB connection URL from environment variables.
-    Supports two modes:
+    Supports three modes:
     1. Simple: MONGODB_URL (for local development)
-    2. Northflank: Individual variables (MONGO_SRV, USERNAME, PASSWORD, etc.)
+    2. Northflank: Full connection string from NF_SAKI_DB_MONGO_SRV
+    3. Northflank: Individual variables (for custom construction)
     """
     # Check if simple MONGODB_URL is provided (local development)
     mongodb_url = os.getenv("MONGODB_URL")
     if mongodb_url:
+        logger.info("Using MONGODB_URL from environment")
         return mongodb_url
     
-    # Otherwise, construct from Northflank-provided variables
-    mongo_srv = os.getenv("MONGO_SRV")
-    username = os.getenv("USERNAME")
-    password = os.getenv("PASSWORD")
-    database = os.getenv("DATABASE")
+    # Check for Northflank full connection string (preferred)
+    nf_mongo_srv = os.getenv("NF_SAKI_DB_MONGO_SRV")
+    if nf_mongo_srv:
+        logger.info("Using NF_SAKI_DB_MONGO_SRV from Northflank addon")
+        return nf_mongo_srv
+    
+    # Otherwise, construct from Northflank-provided individual variables
+    # Try with NF_SAKI_DB_ prefix first (Northflank addon naming)
+    mongo_srv = os.getenv("NF_SAKI_DB_HOST") or os.getenv("MONGO_SRV")
+    username = os.getenv("NF_SAKI_DB_USERNAME") or os.getenv("USERNAME")
+    password = os.getenv("NF_SAKI_DB_PASSWORD") or os.getenv("PASSWORD")
+    database = os.getenv("NF_SAKI_DB_DATABASE") or os.getenv("DATABASE")
     
     if mongo_srv and username and password:
         # Construct MongoDB connection string
         # Format: mongodb+srv://username:password@host/database
+        logger.info(f"Constructing MongoDB URL from individual variables (host: {mongo_srv})")
         return f"mongodb+srv://{username}:{password}@{mongo_srv}/{database or 'ctf_platform'}"
     
     # Fallback to localhost for development
@@ -38,7 +48,7 @@ def get_mongodb_url() -> str:
 
 # MongoDB connection string from environment variables
 MONGODB_URL = get_mongodb_url()
-DATABASE_NAME = os.getenv("DATABASE", os.getenv("DATABASE_NAME", "ctf_platform"))
+DATABASE_NAME = os.getenv("NF_SAKI_DB_DATABASE") or os.getenv("DATABASE") or os.getenv("DATABASE_NAME") or "ctf_platform"
 
 # Global MongoDB client instance
 mongo_client: AsyncIOMotorClient = None
@@ -88,6 +98,12 @@ async def create_indexes():
     Should be called on application startup after connecting to MongoDB.
     """
     db = get_database()
+    
+    # Users collection indexes
+    users_collection = db["users"]
+    await users_collection.create_index("email", unique=True, name="idx_email_unique")
+    await users_collection.create_index("is_active", name="idx_is_active")
+    logger.info("Created indexes for users collection")
     
     # Sessions collection indexes
     sessions_collection = db["sessions"]
