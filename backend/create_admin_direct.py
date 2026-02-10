@@ -31,8 +31,14 @@ async def create_admin_direct(email: str, password: str):
     try:
         # Connect to MongoDB
         print("📡 Connecting to MongoDB...")
-        db = await connect_to_mongo()
-        users_collection = db.client["ctf_platform"]["users"]
+        mongo_client = await connect_to_mongo()
+        
+        # Get database name from environment or URL
+        from database.mongodb import DATABASE_NAME
+        print(f"📊 Using database: {DATABASE_NAME}")
+        
+        db = mongo_client[DATABASE_NAME]
+        users_collection = db["users"]
         print("✅ Connected to MongoDB")
         
         # Check if user already exists

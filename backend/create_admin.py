@@ -30,11 +30,15 @@ async def create_admin_user(email: str):
     try:
         # Connect to MongoDB
         print("📡 Connecting to MongoDB...")
-        db = await connect_to_mongo()
+        mongo_client = await connect_to_mongo()
         print("✅ Connected to MongoDB")
         
+        # Get database name from environment
+        from database.mongodb import DATABASE_NAME
+        print(f"📊 Using database: {DATABASE_NAME}")
+        
         # Initialize services
-        user_manager = UserManager(db.client)
+        user_manager = UserManager(mongo_client, DATABASE_NAME)
         email_service = EmailService()
         
         # Check if user already exists
