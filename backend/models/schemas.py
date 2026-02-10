@@ -6,6 +6,34 @@ from pydantic import BaseModel, Field, validator
 import uuid
 
 
+class User(BaseModel):
+    """User model for authentication and authorization"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    email: str
+    password_hash: str  # bcrypt hashed password
+    role: Literal['admin', 'user'] = 'user'
+    is_2fa_enabled: bool = False
+    totp_secret: Optional[str] = None  # Encrypted at rest
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    last_login: Optional[datetime] = None
+    created_by: Optional[str] = None  # User ID of admin who created this user
+    
+    model_config = {
+        "populate_by_name": True,
+        "json_encoders": {
+            datetime: lambda v: v.isoformat()
+        }
+    }
+    
+    @validator('email')
+    def validate_email(cls, v):
+        """Validate email format"""
+        if not v or '@' not in v:
+            raise ValueError("Invalid email address format")
+        return v.lower()
+
+
 class VMConfig(BaseModel):
     """VM configuration model with size specifications"""
     vm_size: Literal['small', 'medium', 'large']
@@ -61,12 +89,12 @@ class Session(BaseModel):
     resource_group: str
     error_message: Optional[str] = None
     
-    class Config:
-        # MongoDB uses _id field, we map it to id
-        allow_population_by_field_name = True
-        json_encoders = {
+    model_config = {
+        "populate_by_name": True,
+        "json_encoders": {
             datetime: lambda v: v.isoformat()
         }
+    }
     
     @validator('challenge_urls')
     def validate_challenge_urls(cls, v):
@@ -88,10 +116,11 @@ class KeyPair(BaseModel):
     private_key: str  # Should be encrypted at rest
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
-    class Config:
-        json_encoders = {
+    model_config = {
+        "json_encoders": {
             datetime: lambda v: v.isoformat()
         }
+    }
 
 
 class VMCreationRequest(BaseModel):
@@ -137,10 +166,11 @@ class SessionResponse(BaseModel):
     resource_group: str
     error_message: Optional[str]
     
-    class Config:
-        json_encoders = {
+    model_config = {
+        "json_encoders": {
             datetime: lambda v: v.isoformat()
         }
+    }
 
 
 class SessionListResponse(BaseModel):
@@ -166,11 +196,12 @@ class Writeup(BaseModel):
     agent_type: Literal['codex', 'copilot']
     agent_model: str
     
-    class Config:
-        allow_population_by_field_name = True
-        json_encoders = {
+    model_config = {
+        "populate_by_name": True,
+        "json_encoders": {
             datetime: lambda v: v.isoformat()
         }
+    }
 
 
 class WriteupSegment(BaseModel):

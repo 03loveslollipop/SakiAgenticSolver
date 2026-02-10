@@ -1,0 +1,22 @@
+Welcome to Saki!
+
+Your account has been created for Saki - Agentic CTF Solver Orchestration platform. Here are your login credentials:
+
+Username: {{username}}
+Temporary Password: {{temporary_password}}
+
+IMPORTANT: 
+- You will be required to set up Two-Factor Authentication (2FA) on your first login
+- Please keep your credentials secure and do not share them with anyone
+- You can change your password after logging in
+
+To get started:
+1. Visit the Saki platform login page
+2. Enter your username and temporary password
+3. Follow the instructions to set up 2FA using an authenticator app (Google Authenticator, Authy, etc.)
+4. Complete the 2FA setup by entering the verification code
+
+If you did not request this account or have any questions, please contact your administrator.
+
+Best regards,
+Saki Team

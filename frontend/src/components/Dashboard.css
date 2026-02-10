@@ -3,6 +3,60 @@
   width: 100%;
 }
 
+.dashboard-top-bar {
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 1rem 2rem;
+  margin: -2rem -2rem 2rem -2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #667eea;
+  font-weight: 700;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-email {
+  font-size: 14px;
+  color: #666;
+}
+
+.user-badge {
+  background: #667eea;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.btn-logout {
+  padding: 8px 16px;
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-logout:hover {
+  background: #667eea;
+  color: white;
+}
+
 .dashboard-header {
   display: flex;
   justify-content: space-between;

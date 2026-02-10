@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Session } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../services/api';
 import './Dashboard.css';
 
@@ -9,6 +10,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     loadSessions();
@@ -27,6 +29,16 @@ const Dashboard = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (err) {
+      console.error('Logout error:', err);
+      navigate('/login');
+    }
+  };
+
   const handleSessionClick = (sessionId: string) => {
     navigate(`/sessions/${sessionId}`);
   };
@@ -37,6 +49,10 @@ const Dashboard = () => {
 
   const handleViewWriteups = () => {
     navigate('/writeups');
+  };
+
+  const handleManageUsers = () => {
+    navigate('/users');
   };
 
   const formatDate = (dateString: string) => {
@@ -86,9 +102,27 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
+      <div className="dashboard-top-bar">
+        <div className="app-header">
+          <h1>Saki - CTF Automation Platform</h1>
+        </div>
+        <div className="user-info">
+          <span className="user-email">{user?.email}</span>
+          {user?.role === 'admin' && <span className="user-badge">Admin</span>}
+          <button onClick={handleLogout} className="btn btn-logout">
+            Logout
+          </button>
+        </div>
+      </div>
+
       <div className="dashboard-header">
         <h2>VM Sessions</h2>
         <div className="dashboard-actions">
+          {user?.role === 'admin' && (
+            <button onClick={handleManageUsers} className="btn btn-secondary">
+              Manage Users
+            </button>
+          )}
           <button onClick={handleViewWriteups} className="btn btn-secondary">
             View Writeups
           </button>

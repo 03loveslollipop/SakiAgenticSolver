@@ -6,6 +6,13 @@ import {
   SSHConnectionInfo,
   Writeup,
   WriteupSearchParams,
+  LoginRequest,
+  LoginResponse,
+  TwoFAVerifyRequest,
+  TwoFASetupVerifyRequest,
+  TokenResponse,
+  RefreshTokenRequest,
+  User,
 } from '../types';
 
 // Configure base URL from environment or default to localhost
@@ -22,6 +29,18 @@ class APIClient {
       },
       timeout: 30000, // 30 seconds
     });
+
+    // Add request interceptor to include auth token
+    this.client.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
 
     // Add response interceptor for error handling
     this.client.interceptors.response.use(
@@ -167,6 +186,62 @@ class APIClient {
     } catch {
       return false;
     }
+  }
+
+  // Authentication endpoints
+  async login(request: LoginRequest): Promise<LoginResponse> {
+    const response = await this.client.post<LoginResponse>('/api/auth/login', request);
+    return response.data;
+  }
+
+  async loginWith2FA(request: TwoFAVerifyRequest): Promise<TokenResponse> {
+    const response = await this.client.post<TokenResponse>('/api/auth/login/2fa', request);
+    return response.data;
+  }
+
+  async setup2FAVerify(request: TwoFASetupVerifyRequest): Promise<TokenResponse> {
+    const response = await this.client.post<TokenResponse>('/api/auth/setup-2fa/verify', request);
+    return response.data;
+  }
+
+  async refreshToken(request: RefreshTokenRequest): Promise<TokenResponse> {
+    const response = await this.client.post<TokenResponse>('/api/auth/refresh', request);
+    return response.data;
+  }
+
+  async logout(): Promise<void> {
+    await this.client.post('/api/auth/logout');
+  }
+
+  async getCurrentUser(): Promise<User> {
+    const response = await this.client.get<User>('/api/auth/me');
+    return response.data;
+  }
+
+  // User management endpoints (admin only)
+  async createUser(request: { email: string; role: UserRole }): Promise<{ user: any; message: string }> {
+    const response = await this.client.post<{ user: any; message: string }>('/api/users', request);
+    return response.data;
+  }
+
+  async getUsers(): Promise<{ users: any[]; total: number }> {
+    const response = await this.client.get<{ users: any[]; total: number }>('/api/users');
+    return response.data;
+  }
+
+  async getUser(userId: string): Promise<any> {
+    const response = await this.client.get<any>(`/api/users/${userId}`);
+    return response.data;
+  }
+
+  async updateUser(userId: string, updates: { role?: UserRole; is_active?: boolean }): Promise<any> {
+    const response = await this.client.put<any>(`/api/users/${userId}`, updates);
+    return response.data;
+  }
+
+  async disableUser(userId: string): Promise<{ message: string }> {
+    const response = await this.client.delete<{ message: string }>(`/api/users/${userId}`);
+    return response.data;
   }
 }
 

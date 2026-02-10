@@ -603,3 +603,11 @@ async def delete_session(session_id: str):
 # Include additional endpoints router
 from endpoints_additional import router as additional_router
 app.include_router(additional_router)
+
+# Include authentication routes
+from routes.auth import router as auth_router
+app.include_router(auth_router)
+
+# Include user management routes
+from routes.users import router as users_router
+app.include_router(users_router)
