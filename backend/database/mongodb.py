@@ -38,8 +38,10 @@ def get_mongodb_url() -> str:
     if mongo_srv and username and password:
         # Construct MongoDB connection string
         # Format: mongodb+srv://username:password@host/database
-        logger.info(f"Constructing MongoDB URL from individual variables (host: {mongo_srv})")
-        return f"mongodb+srv://{username}:{password}@{mongo_srv}/{database or 'ctf_platform'}"
+        # IMPORTANT: Must include database name for proper authentication
+        db_name = database or 'ctf_platform'
+        logger.info(f"Constructing MongoDB URL from individual variables (host: {mongo_srv}, database: {db_name})")
+        return f"mongodb+srv://{username}:{password}@{mongo_srv}/{db_name}"
     
     # Fallback to localhost for development
     logger.warning("No MongoDB configuration found, using localhost")
@@ -52,9 +54,10 @@ MONGODB_URL = get_mongodb_url()
 # Get database name - prioritize environment variables, fallback to parsing from URL
 def get_database_name() -> str:
     """Get the database name from environment or MongoDB URL"""
-    # Try environment variables first
+    # Try environment variables first (Northflank provides this)
     db_name = os.getenv("NF_SAKI_DB_DATABASE") or os.getenv("DATABASE") or os.getenv("DATABASE_NAME")
     if db_name:
+        logger.info(f"Database name from environment: {db_name}")
         return db_name
     
     # Try to parse from MongoDB URL
@@ -67,11 +70,13 @@ def get_database_name() -> str:
                 # Remove query parameters if any
                 db_from_url = parts[-1].split('?')[0]
                 if db_from_url and db_from_url not in ['', 'admin', 'test']:
+                    logger.info(f"Database name from URL: {db_from_url}")
                     return db_from_url
-        except:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to parse database name from URL: {e}")
     
-    # Default fallback
+    # Default fallback (only for local development)
+    logger.warning("No database name found in environment or URL, using default: ctf_platform")
     return "ctf_platform"
 
 DATABASE_NAME = get_database_name()
