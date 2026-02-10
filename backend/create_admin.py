@@ -4,10 +4,13 @@ Script to create the first admin user in the database.
 Run this script after deploying the backend to production.
 
 Usage:
-    python create_admin.py <email>
+    python create_admin.py [email]
 
-Example:
-    python create_admin.py admin@02labs.me
+Examples:
+    python create_admin.py admin@02labs.me    # Direct mode
+    python create_admin.py                     # Interactive mode
+
+If no email is provided, the script will prompt for it interactively.
 """
 
 import sys
@@ -20,6 +23,7 @@ from services.email_service import EmailService
 async def create_admin_user(email: str):
     """Create an admin user and send welcome email"""
     
+    print()
     print(f"🔧 Creating admin user: {email}")
     print("=" * 60)
     
@@ -99,15 +103,58 @@ async def create_admin_user(email: str):
 
 def main():
     """Main entry point"""
-    if len(sys.argv) != 2:
-        print("Usage: python create_admin.py <email>")
-        print("Example: python create_admin.py admin@02labs.me")
+    
+    # Check if email was provided as argument
+    if len(sys.argv) > 2:
+        print("Usage: python create_admin.py [email]")
+        print()
+        print("Examples:")
+        print("  python create_admin.py admin@02labs.me    # Direct mode")
+        print("  python create_admin.py                     # Interactive mode")
         sys.exit(1)
     
-    email = sys.argv[1]
+    # Get email from argument or prompt interactively
+    if len(sys.argv) == 2:
+        email = sys.argv[1]
+    else:
+        # Interactive mode
+        print()
+        print("=" * 60)
+        print("🎯 CREATE FIRST ADMIN USER")
+        print("=" * 60)
+        print()
+        print("This script will create an admin user with a randomly")
+        print("generated password and send a welcome email.")
+        print()
+        
+        # Prompt for email
+        while True:
+            email = input("Enter admin email address: ").strip()
+            
+            if not email:
+                print("❌ Email cannot be empty. Please try again.")
+                continue
+            
+            # Validate email format
+            if "@" not in email or "." not in email.split("@")[-1]:
+                print(f"❌ Invalid email format: {email}")
+                print("   Please enter a valid email address.")
+                continue
+            
+            # Confirm email
+            print()
+            confirm = input(f"Create admin user for '{email}'? (yes/no): ").strip().lower()
+            
+            if confirm in ['yes', 'y']:
+                break
+            elif confirm in ['no', 'n']:
+                print("❌ Cancelled by user.")
+                sys.exit(0)
+            else:
+                print("Please answer 'yes' or 'no'.")
     
-    # Validate email format
-    if "@" not in email or "." not in email:
+    # Validate email format (for direct mode)
+    if "@" not in email or "." not in email.split("@")[-1]:
         print(f"❌ Invalid email format: {email}")
         sys.exit(1)
     

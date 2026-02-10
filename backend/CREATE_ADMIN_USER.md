@@ -30,12 +30,40 @@ This method uses the UserManager service to create a user with a randomly genera
    export SMTP_PASSWORD="your-app-password"
    ```
 
-3. **Run the script**:
+3. **Run the script** (interactive or direct mode):
+   
+   **Interactive mode** (recommended for containers):
+   ```bash
+   python create_admin.py
+   ```
+   The script will prompt you for the email address.
+   
+   **Direct mode**:
    ```bash
    python create_admin.py admin@02labs.me
    ```
 
 4. **Save the generated password** - it will be displayed in the terminal and sent via email.
+
+### Interactive Mode Example
+```
+============================================================
+🎯 CREATE FIRST ADMIN USER
+============================================================
+
+This script will create an admin user with a randomly
+generated password and send a welcome email.
+
+Enter admin email address: admin@02labs.me
+
+Create admin user for 'admin@02labs.me'? (yes/no): yes
+
+🔧 Creating admin user: admin@02labs.me
+============================================================
+📡 Connecting to MongoDB...
+✅ Connected to MongoDB
+...
+```
 
 ### Output Example
 ```
@@ -81,10 +109,38 @@ This method creates a user directly in MongoDB with a password you specify (no e
    export MONGODB_URL="your-production-mongodb-url"
    ```
 
-3. **Run the script with your chosen password**:
+3. **Run the script** (interactive or direct mode):
+   
+   **Interactive mode** (recommended for containers):
+   ```bash
+   python create_admin_direct.py
+   ```
+   The script will prompt you for email and password (password input is hidden).
+   
+   **Direct mode**:
    ```bash
    python create_admin_direct.py admin@02labs.me "MySecurePassword123!"
    ```
+
+### Interactive Mode Example
+```
+============================================================
+🎯 CREATE ADMIN USER WITH CUSTOM PASSWORD
+============================================================
+
+This script will create an admin user with a password
+that you specify (no email will be sent).
+
+Enter admin email address: admin@02labs.me
+Enter password (min 8 characters): ********
+Confirm password: ********
+
+Create admin user for 'admin@02labs.me'? (yes/no): yes
+
+🔧 Creating admin user: admin@02labs.me
+============================================================
+...
+```
 
 ### Output Example
 ```
@@ -107,11 +163,24 @@ User ID:  user_1234567890.123
 
 ---
 
-## Method 3: Using Northflank CLI (For Northflank Deployments)
+## Method 3: Using Northflank CLI or Container Shell (For Northflank Deployments)
 
-If your backend is deployed on Northflank, you can run the script directly on the deployed service.
+If your backend is deployed on Northflank, you can run the script directly in the running container.
 
-### Steps
+### Option A: Using Container Shell (Easiest)
+
+1. **Open Northflank dashboard**
+2. **Navigate to your backend service**
+3. **Click on "Shell" or "Terminal" tab**
+4. **Run the script interactively**:
+   ```bash
+   cd /app
+   python create_admin.py
+   ```
+5. **Follow the prompts** to enter the email address
+6. **Save the generated password** from the output
+
+### Option B: Using Port Forward
 
 1. **Port forward to MongoDB** (if needed):
    ```bash
@@ -122,10 +191,10 @@ If your backend is deployed on Northflank, you can run the script directly on th
    ```bash
    cd backend
    export MONGODB_URL="mongodb://localhost:27017"
-   python create_admin.py admin@02labs.me
+   python create_admin.py
    ```
 
-Alternatively, you can use Northflank's job feature to run the script:
+### Option C: Using Northflank Job
 
 1. Create a one-off job in Northflank
 2. Use the same Docker image as your backend

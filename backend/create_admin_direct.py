@@ -4,22 +4,27 @@ Script to create admin user directly in MongoDB without using UserManager.
 This is useful if you want to create a user with a specific password.
 
 Usage:
-    python create_admin_direct.py <email> <password>
+    python create_admin_direct.py [email] [password]
 
-Example:
-    python create_admin_direct.py admin@02labs.me MySecurePassword123!
+Examples:
+    python create_admin_direct.py admin@02labs.me MySecurePassword123!  # Direct mode
+    python create_admin_direct.py                                        # Interactive mode
+
+If no arguments are provided, the script will prompt for them interactively.
 """
 
 import sys
 import asyncio
 from datetime import datetime
 import bcrypt
+import getpass
 from database.mongodb import connect_to_mongo, close_mongo_connection
 
 
 async def create_admin_direct(email: str, password: str):
     """Create admin user directly in MongoDB"""
     
+    print()
     print(f"🔧 Creating admin user: {email}")
     print("=" * 60)
     
@@ -92,20 +97,87 @@ async def create_admin_direct(email: str, password: str):
 
 def main():
     """Main entry point"""
-    if len(sys.argv) != 3:
-        print("Usage: python create_admin_direct.py <email> <password>")
-        print("Example: python create_admin_direct.py admin@02labs.me MySecurePassword123!")
+    
+    # Check if arguments were provided
+    if len(sys.argv) > 3:
+        print("Usage: python create_admin_direct.py [email] [password]")
+        print()
+        print("Examples:")
+        print("  python create_admin_direct.py admin@02labs.me MyPass123!  # Direct mode")
+        print("  python create_admin_direct.py                              # Interactive mode")
         sys.exit(1)
     
-    email = sys.argv[1]
-    password = sys.argv[2]
+    # Get email and password from arguments or prompt interactively
+    if len(sys.argv) == 3:
+        # Direct mode with both arguments
+        email = sys.argv[1]
+        password = sys.argv[2]
+    else:
+        # Interactive mode
+        print()
+        print("=" * 60)
+        print("🎯 CREATE ADMIN USER WITH CUSTOM PASSWORD")
+        print("=" * 60)
+        print()
+        print("This script will create an admin user with a password")
+        print("that you specify (no email will be sent).")
+        print()
+        
+        # Prompt for email
+        while True:
+            email = input("Enter admin email address: ").strip()
+            
+            if not email:
+                print("❌ Email cannot be empty. Please try again.")
+                continue
+            
+            # Validate email format
+            if "@" not in email or "." not in email.split("@")[-1]:
+                print(f"❌ Invalid email format: {email}")
+                print("   Please enter a valid email address.")
+                continue
+            
+            break
+        
+        print()
+        
+        # Prompt for password (hidden input)
+        while True:
+            password = getpass.getpass("Enter password (min 8 characters): ").strip()
+            
+            if not password:
+                print("❌ Password cannot be empty. Please try again.")
+                continue
+            
+            if len(password) < 8:
+                print("❌ Password must be at least 8 characters long.")
+                continue
+            
+            # Confirm password
+            password_confirm = getpass.getpass("Confirm password: ").strip()
+            
+            if password != password_confirm:
+                print("❌ Passwords do not match. Please try again.")
+                print()
+                continue
+            
+            break
+        
+        print()
+        
+        # Confirm creation
+        confirm = input(f"Create admin user for '{email}'? (yes/no): ").strip().lower()
+        
+        if confirm not in ['yes', 'y']:
+            print("❌ Cancelled by user.")
+            sys.exit(0)
     
-    # Validate email format
-    if "@" not in email or "." not in email:
+    # Validate email format (for direct mode)
+    if "@" not in email or "." not in email.split("@")[-1]:
         print(f"❌ Invalid email format: {email}")
         sys.exit(1)
     
-    # Validate password length
+    # Validate password length (for direct mode)
     if len(password) < 8:
         print(f"❌ Password must be at least 8 characters long")
         sys.exit(1)
