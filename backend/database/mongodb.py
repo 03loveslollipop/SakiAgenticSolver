@@ -7,9 +7,38 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+def get_mongodb_url() -> str:
+    """
+    Get MongoDB connection URL from environment variables.
+    Supports two modes:
+    1. Simple: MONGODB_URL (for local development)
+    2. Northflank: Individual variables (MONGO_SRV, USERNAME, PASSWORD, etc.)
+    """
+    # Check if simple MONGODB_URL is provided (local development)
+    mongodb_url = os.getenv("MONGODB_URL")
+    if mongodb_url:
+        return mongodb_url
+    
+    # Otherwise, construct from Northflank-provided variables
+    mongo_srv = os.getenv("MONGO_SRV")
+    username = os.getenv("USERNAME")
+    password = os.getenv("PASSWORD")
+    database = os.getenv("DATABASE")
+    
+    if mongo_srv and username and password:
+        # Construct MongoDB connection string
+        # Format: mongodb+srv://username:password@host/database
+        return f"mongodb+srv://{username}:{password}@{mongo_srv}/{database or 'ctf_platform'}"
+    
+    # Fallback to localhost for development
+    logger.warning("No MongoDB configuration found, using localhost")
+    return "mongodb://localhost:27017"
+
+
 # MongoDB connection string from environment variables
-MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-DATABASE_NAME = os.getenv("DATABASE_NAME", "ctf_platform")
+MONGODB_URL = get_mongodb_url()
+DATABASE_NAME = os.getenv("DATABASE", os.getenv("DATABASE_NAME", "ctf_platform"))
 
 # Global MongoDB client instance
 mongo_client: AsyncIOMotorClient = None

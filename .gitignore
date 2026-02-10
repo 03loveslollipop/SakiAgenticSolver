@@ -5,3 +5,8 @@
 /TASK_19_1_E2E_TESTS_COMPLETE.md
 /TASK_20_FINAL_VERIFICATION_REPORT.md
 /VERCEL_DEPLOYMENT.md
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
