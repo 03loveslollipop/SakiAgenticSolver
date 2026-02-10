@@ -69,8 +69,9 @@ class MessageResponse(BaseModel):
 # Dependency to get services
 async def get_user_manager() -> UserManager:
     """Get UserManager instance"""
+    from database import DATABASE_NAME
     db = get_database()
-    return UserManager(db.client)
+    return UserManager(db.client, DATABASE_NAME)
 
 
 async def get_auth_service() -> AuthService:
