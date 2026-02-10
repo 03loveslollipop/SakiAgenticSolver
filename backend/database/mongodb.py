@@ -48,7 +48,34 @@ def get_mongodb_url() -> str:
 
 # MongoDB connection string from environment variables
 MONGODB_URL = get_mongodb_url()
-DATABASE_NAME = os.getenv("NF_SAKI_DB_DATABASE") or os.getenv("DATABASE") or os.getenv("DATABASE_NAME") or "ctf_platform"
+
+# Get database name - prioritize environment variables, fallback to parsing from URL
+def get_database_name() -> str:
+    """Get the database name from environment or MongoDB URL"""
+    # Try environment variables first
+    db_name = os.getenv("NF_SAKI_DB_DATABASE") or os.getenv("DATABASE") or os.getenv("DATABASE_NAME")
+    if db_name:
+        return db_name
+    
+    # Try to parse from MongoDB URL
+    if MONGODB_URL:
+        # MongoDB URL format: mongodb://host:port/database or mongodb+srv://user:pass@host/database
+        try:
+            # Split by '/' and get the last part (database name)
+            parts = MONGODB_URL.split('/')
+            if len(parts) > 3:
+                # Remove query parameters if any
+                db_from_url = parts[-1].split('?')[0]
+                if db_from_url and db_from_url not in ['', 'admin', 'test']:
+                    return db_from_url
+        except:
+            pass
+    
+    # Default fallback
+    return "ctf_platform"
+
+DATABASE_NAME = get_database_name()
+logger.info(f"Using database: {DATABASE_NAME}")
 
 # Global MongoDB client instance
 mongo_client: AsyncIOMotorClient = None
