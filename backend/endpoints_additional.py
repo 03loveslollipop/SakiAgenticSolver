@@ -12,6 +12,28 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+# Helper functions to get service instances with correct database name
+def get_session_manager():
+    """Get SessionManager instance with correct database name"""
+    from database.mongodb import mongo_client, DATABASE_NAME
+    from services.session_manager import SessionManager
+    return SessionManager(mongo_client, DATABASE_NAME)
+
+
+def get_ssh_key_manager():
+    """Get SSHKeyManager instance with correct database name"""
+    from database.mongodb import mongo_client, DATABASE_NAME
+    from services.ssh_key_manager import SSHKeyManager
+    return SSHKeyManager(mongo_client, DATABASE_NAME)
+
+
+def get_writeup_manager():
+    """Get WriteupManager instance with correct database name"""
+    from database.mongodb import mongo_client, DATABASE_NAME
+    from services.writeup_manager import WriteupManager
+    return WriteupManager(mongo_client, DATABASE_NAME)
+
+
 @router.get("/api/sessions/{session_id}/ssh")
 async def get_ssh_connection_info(session_id: str):
     """
@@ -25,7 +47,7 @@ async def get_ssh_connection_info(session_id: str):
     from services.session_manager import SessionManager
     
     try:
-        session_manager = SessionManager(mongo_client)
+        session_manager = get_session_manager()
         session = await session_manager.get_session(session_id)
         
         if not session:
@@ -71,8 +93,8 @@ async def get_ssh_public_key(session_id: str):
     from services.ssh_key_manager import SSHKeyManager
     
     try:
-        session_manager = SessionManager(mongo_client)
-        ssh_key_manager = SSHKeyManager(mongo_client)
+        session_manager = get_session_manager()
+        ssh_key_manager = get_ssh_key_manager()
         
         # Verify session exists
         session = await session_manager.get_session(session_id)
@@ -119,8 +141,8 @@ async def _read_file_via_ssh(session_id: str, file_path: str) -> str:
     import paramiko
     from io import StringIO
     
-    session_manager = SessionManager(mongo_client)
-    ssh_key_manager = SSHKeyManager(mongo_client)
+    session_manager = get_session_manager()
+    ssh_key_manager = get_ssh_key_manager()
     
     # Get session
     session = await session_manager.get_session(session_id)
@@ -213,8 +235,8 @@ async def update_agent_md(session_id: str, content: dict):
         
         new_content = content["content"]
         
-        session_manager = SessionManager(mongo_client)
-        ssh_key_manager = SSHKeyManager(mongo_client)
+        session_manager = get_session_manager()
+        ssh_key_manager = get_ssh_key_manager()
         
         # Get session
         session = await session_manager.get_session(session_id)
@@ -373,8 +395,8 @@ async def upload_writeup(session_id: str, writeup_data: dict):
         content = writeup_data["content"]
         challenge_type = writeup_data.get("challenge_type")
         
-        session_manager = SessionManager(mongo_client)
-        writeup_manager = WriteupManager(mongo_client)
+        session_manager = get_session_manager()
+        writeup_manager = get_writeup_manager()
         
         # Get session to extract metadata
         session = await session_manager.get_session(session_id)
@@ -436,7 +458,7 @@ async def search_writeups(q: Optional[str] = None, challenge_type: Optional[str]
                 detail="At least one of 'q' or 'challenge_type' parameter is required"
             )
         
-        writeup_manager = WriteupManager(mongo_client)
+        writeup_manager = get_writeup_manager()
         writeups = await writeup_manager.search_writeups(
             query=q,
             challenge_type=challenge_type
@@ -502,7 +524,7 @@ async def list_writeups(skip: int = 0, limit: int = 20):
                 detail="limit parameter must be between 1 and 100"
             )
         
-        writeup_manager = WriteupManager(mongo_client)
+        writeup_manager = get_writeup_manager()
         writeups = await writeup_manager.list_writeups(skip=skip, limit=limit)
         
         # Convert to response format
@@ -548,7 +570,7 @@ async def get_writeup_by_session(session_id: str):
     from services.writeup_manager import WriteupManager
     
     try:
-        writeup_manager = WriteupManager(mongo_client)
+        writeup_manager = get_writeup_manager()
         writeup = await writeup_manager.get_writeup(session_id)
         
         if not writeup:
@@ -600,7 +622,7 @@ async def terminal_websocket(websocket: WebSocket, session_id: str):
     
     try:
         # Get session details
-        session_manager = SessionManager(mongo_client)
+        session_manager = get_session_manager()
         session = await session_manager.get_session(session_id)
         
         if not session:
@@ -616,7 +638,7 @@ async def terminal_websocket(websocket: WebSocket, session_id: str):
             return
         
         # Get SSH private key
-        ssh_key_manager = SSHKeyManager(mongo_client)
+        ssh_key_manager = get_ssh_key_manager()
         private_key = await ssh_key_manager.get_private_key(session_id)
         
         if not private_key:

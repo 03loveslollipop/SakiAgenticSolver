@@ -18,6 +18,28 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+# Helper functions to get service instances with correct database name
+def get_session_manager():
+    """Get SessionManager instance with correct database name"""
+    from database.mongodb import mongo_client, DATABASE_NAME
+    from services.session_manager import SessionManager
+    return SessionManager(mongo_client, DATABASE_NAME)
+
+
+def get_ssh_key_manager():
+    """Get SSHKeyManager instance with correct database name"""
+    from database.mongodb import mongo_client, DATABASE_NAME
+    from services.ssh_key_manager import SSHKeyManager
+    return SSHKeyManager(mongo_client, DATABASE_NAME)
+
+
+def get_writeup_manager():
+    """Get WriteupManager instance with correct database name"""
+    from database.mongodb import mongo_client, DATABASE_NAME
+    from services.writeup_manager import WriteupManager
+    return WriteupManager(mongo_client, DATABASE_NAME)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager - runs on startup and shutdown"""
@@ -203,9 +225,8 @@ async def create_session(request: VMCreationRequest):
         db = get_database()
         
         # Initialize services
-        from database.mongodb import mongo_client
-        session_manager = SessionManager(mongo_client)
-        ssh_key_manager = SSHKeyManager(mongo_client)
+        session_manager = get_session_manager()
+        ssh_key_manager = get_ssh_key_manager()
         
         # Generate unique session ID
         session_id = str(uuid.uuid4())
@@ -404,8 +425,7 @@ async def create_session(request: VMCreationRequest):
         # Try to clean up if we have a session_id
         if session_id:
             try:
-                from database.mongodb import mongo_client
-                session_manager = SessionManager(mongo_client)
+                session_manager = get_session_manager()
                 await session_manager.update_session_status(
                     session_id,
                     "error",
@@ -434,7 +454,7 @@ async def list_sessions():
     
     try:
         # Initialize SessionManager
-        session_manager = SessionManager(mongo_client)
+        session_manager = get_session_manager()
         
         # Query all sessions sorted by created_at descending
         logger.info("Retrieving all sessions")
@@ -488,7 +508,7 @@ async def get_session_details(session_id: str):
     
     try:
         # Initialize SessionManager
-        session_manager = SessionManager(mongo_client)
+        session_manager = get_session_manager()
         
         # Query session by ID
         logger.info(f"Retrieving session {session_id}")
@@ -552,8 +572,8 @@ async def delete_session(session_id: str):
     
     try:
         # Initialize services
-        session_manager = SessionManager(mongo_client)
-        ssh_key_manager = SSHKeyManager(mongo_client)
+        session_manager = get_session_manager()
+        ssh_key_manager = get_ssh_key_manager()
         
         # Step 1: Verify session exists
         logger.info(f"Deleting session {session_id}")
