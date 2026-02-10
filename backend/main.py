@@ -194,6 +194,74 @@ async def debug_mongodb_config():
     }
 
 
+@app.post("/debug/send-test-email")
+async def send_test_email(email: str = "quizgamer234@gmail.com"):
+    """
+    Debug endpoint to send a test email.
+    REMOVE IN PRODUCTION - This is for testing email functionality only.
+    
+    Query parameter:
+      email: Email address to send test email to (default: quizgamer234@gmail.com)
+    """
+    import os
+    from services.email_service import EmailService
+    
+    logger.info(f"Sending test email to: {email}")
+    
+    # Check if SMTP is configured
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    
+    if not smtp_user or not smtp_password:
+        return {
+            "status": "error",
+            "message": "SMTP credentials not configured",
+            "details": {
+                "SMTP_USER": "SET" if smtp_user else "NOT SET",
+                "SMTP_PASSWORD": "SET" if smtp_password else "NOT SET"
+            }
+        }
+    
+    try:
+        # Initialize email service
+        email_service = EmailService()
+        
+        # Send welcome email
+        success = await email_service.send_welcome_email(
+            to_email=email,
+            username=email,
+            temporary_password="TempPass123!@#"
+        )
+        
+        if success:
+            logger.info(f"Test email sent successfully to: {email}")
+            return {
+                "status": "success",
+                "message": f"Test email sent to {email}",
+                "details": {
+                    "to_email": email,
+                    "username": email,
+                    "temporary_password": "TempPass123!@#",
+                    "from": f"{email_service.smtp_from_name} <{email_service.smtp_from}>"
+                }
+            }
+        else:
+            logger.error(f"Failed to send test email to: {email}")
+            return {
+                "status": "error",
+                "message": f"Failed to send email to {email}",
+                "details": "Check logs for error details"
+            }
+            
+    except Exception as e:
+        logger.error(f"Error sending test email: {e}", exc_info=True)
+        return {
+            "status": "error",
+            "message": f"Error sending email: {str(e)}",
+            "details": str(e)
+        }
+
+
 @app.post("/api/sessions", status_code=status.HTTP_201_CREATED)
 async def create_session(request: VMCreationRequest):
     """
