@@ -326,6 +326,7 @@ async def create_session(request: VMCreationRequest):
             "vm_size": request.vm_size,
             "agent_type": request.agent_type,
             "agent_model": request.agent_model,
+            "setup_mode": getattr(request, 'setup_mode', None),
             "challenge_urls": request.challenge_urls,
             "instructions": request.instructions,
             "status": "creating",
