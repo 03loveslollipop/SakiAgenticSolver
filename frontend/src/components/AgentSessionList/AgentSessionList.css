@@ -1,0 +1,9 @@
+.agent-session-list{display:flex;flex-direction:column;gap:12px}
+.session-row{display:flex;align-items:center;justify-content:space-between}
+.session-main{flex:1}
+.session-title{font-weight:700}
+.session-meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
+.session-actions{display:flex;gap:8px}
+.status-running{color:#1abbdb}
+.status-creating{color:#dbc70f}
+.status-stopped{color:#3d7a86}

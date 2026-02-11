@@ -326,7 +326,7 @@ async def create_session(request: VMCreationRequest):
             "vm_size": request.vm_size,
             "agent_type": request.agent_type,
             "agent_model": request.agent_model,
-            "setup_mode": getattr(request, 'setup_mode', None),
+            "setup_mode": getattr(request, 'setup_mode', 'manual'),
             "challenge_urls": request.challenge_urls,
             "instructions": request.instructions,
             "status": "creating",
@@ -472,6 +472,7 @@ async def create_session(request: VMCreationRequest):
             vm_size=session.vm_size,
             agent_type=session.agent_type,
             agent_model=session.agent_model,
+            setup_mode=getattr(session, 'setup_mode', 'manual'),
             challenge_urls=session.challenge_urls,
             instructions=session.instructions,
             created_at=session.created_at,
@@ -484,6 +485,30 @@ async def create_session(request: VMCreationRequest):
         )
         
     except ValueError as e:
+        # Client errors (validation, etc.)
+        logger.error(f"Validation error creating session: {e}")
+        raise
+    except Exception as e:
+        # Server errors
+        logger.error(f"Unexpected error creating session: {e}", exc_info=True)
+        
+        # Try to clean up if we have a session_id
+        if session_id:
+            try:
+                session_manager = get_session_manager()
+                await session_manager.update_session_status(
+                    session_id,
+                    "error",
+                    f"Unexpected error: {str(e)}"
+                )
+            except:
+                pass
+        
+        raise Exception(f"Failed to create VM session: {str(e)}")
+
+
+@app.get("/api/sessions")
+async def list_sessions():
         # Client errors (validation, etc.)
         logger.error(f"Validation error creating session: {e}")
         raise
@@ -536,11 +561,7 @@ async def list_sessions():
                 vm_size=session.vm_size,
                 agent_type=session.agent_type,
                 agent_model=session.agent_model,
-                challenge_urls=session.challenge_urls,
-                instructions=session.instructions,
-                created_at=session.created_at,
-                status=session.status,
-                vm_ip=session.vm_ip,
+                setup_mode=getattr(session, 'setup_mode', 'manual'),
                 ssh_username=session.ssh_username,
                 ssh_port=session.ssh_port,
                 resource_group=session.resource_group,

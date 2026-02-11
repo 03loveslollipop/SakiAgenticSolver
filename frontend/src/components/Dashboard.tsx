@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Session } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../services/api';
+import AgentSessionList from './AgentSessionList/AgentSessionList';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -141,48 +142,23 @@ const Dashboard = () => {
         </div>
       ) : (
         <div className="sessions-grid">
-          {sessions.map((session) => (
-            <div
-              key={session.id}
-              className="session-card"
-              onClick={() => handleSessionClick(session.id)}
-            >
-              <div className="session-card-header">
-                <h3>Session {session.id.substring(0, 8)}</h3>
-                <span className={getStatusBadgeClass(session.status)}>
-                  {session.status}
-                </span>
-              </div>
-              <div className="session-card-body">
-                <div className="session-info-row">
-                  <span className="label">VM Size:</span>
-                  <span className="value">{session.vmSize}</span>
-                </div>
-                <div className="session-info-row">
-                  <span className="label">Agent:</span>
-                  <span className="value">
-                    {session.agentType} ({session.agentModel})
-                  </span>
-                </div>
-                <div className="session-info-row">
-                  <span className="label">Created:</span>
-                  <span className="value">{formatDate(session.createdAt)}</span>
-                </div>
-                {session.vmIp && (
-                  <div className="session-info-row">
-                    <span className="label">IP:</span>
-                    <span className="value">{session.vmIp}</span>
-                  </div>
-                )}
-                {session.errorMessage && (
-                  <div className="session-error">
-                    <span className="error-label">Error:</span>
-                    <span className="error-text">{session.errorMessage}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+          {/* Use AgentSessionList for consistent session UI */}
+          <AgentSessionList
+            sessions={sessions}
+            onConnect={(id) => handleSessionClick(id)}
+            onDelete={async (id) => {
+              try {
+                setLoading(true);
+                await apiClient.deleteSession(id);
+                await loadSessions();
+              } catch (err) {
+                console.error('Failed to delete session:', err);
+                setError(err instanceof Error ? err.message : 'Failed to delete session');
+              } finally {
+                setLoading(false);
+              }
+            }}
+          />
         </div>
       )}
     </div>

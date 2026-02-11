@@ -173,7 +173,12 @@ const Login: React.FC = () => {
 
             {qrCodeUrl && (
               <div className="qr-code-container">
-                <img src={qrCodeUrl} alt="2FA QR Code" className="qr-code" />
+                <img 
+                  src={qrCodeUrl} 
+                  alt="2FA QR Code" 
+                  className="qr-code" 
+                  loading="lazy"
+                />
               </div>
             )}
 
