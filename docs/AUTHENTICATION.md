@@ -12,6 +12,9 @@ This file consolidates authentication-related documentation for the project. It 
 - `ENCRYPTION_KEY` — Key used for encrypting 2FA secrets (Fernet)
 - SMTP configuration variables (for sending emails): `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`
 
+## Notes
+- The repository previously included operational runbooks for tasks such as creating an initial admin user and testing SMTP. Those step-by-step instructions were intentionally removed. The backend provides scripts to create an admin user (see `backend/create_admin.py`) and to run an email test (`backend/run_email_test.py`); refer to internal runbooks for usage details and to obtain any required credentials.
+- Keep JWT and SMTP secrets in a secure secret store; do not commit them to source control.
 ## Tests & Coverage
 - Authentication services have strong unit test coverage (see project tests under `backend/`)
 - Integration tests exist and need a database to run — keep test runbooks secured

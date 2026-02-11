@@ -18,6 +18,7 @@ Priority used by the backend to discover connection information:
 3. Individual provider variables (username/password/host)
 4. Fallback to localhost when nothing is configured
 
+**Implementation note:** The backend looks for provider variables from Northflank using the `NF_SAKI_DB_` prefix (for example `NF_SAKI_DB_MONGO_SRV`, `NF_SAKI_DB_USERNAME`, etc.). This priority and prefix handling was added to ensure compatibility with Northflank's addon variable naming.
 ## Security notes
 - Never commit credentials; use a secrets manager or the platform's secret store
 - Use TLS/SSL connections and restrict network access to production DB
