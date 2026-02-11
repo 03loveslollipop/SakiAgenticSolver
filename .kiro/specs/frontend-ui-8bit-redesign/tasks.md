@@ -467,21 +467,21 @@ The implementation uses React with TypeScript and Tailwind CSS for styling. Test
 - All components use TypeScript for type safety
 - Tailwind CSS provides utility-first styling with custom 8-bit theme
 - Testing uses Jest, React Testing Library, and fast-check for comprehensive coverage
-- [-] 18. Implement email internationalization support
-  - [-] 18.1 Update user model to include locale field
+- [ ] 18. Implement email internationalization support
+  - [x] 18.1 Update user model to include locale field
     - Add locale field to User model with default value 'en'
     - Update database schema to include locale field
     - Create migration script for existing users
     - _Requirements: 17.3_
   
-  - [ ] 18.2 Create localized email template directory structure
+  - [x] 18.2 Create localized email template directory structure
     - Create locale-specific directories (en/, ja/, es/) in email_templates
     - Copy existing English templates to en/ directory
     - Create Japanese translations for all email templates
     - Create Spanish translations for all email templates
     - _Requirements: 17.5, 17.14_
   
-  - [ ] 18.3 Update email service to support internationalization
+  - [x] 18.3 Update email service to support internationalization
     - Extend EmailService class with locale-aware methods
     - Implement template loading with locale fallback (locale → English)
     - Add locale parameter to all email sending methods
@@ -520,7 +520,7 @@ The implementation uses React with TypeScript and Tailwind CSS for styling. Test
     - Test fallback to English when locale template missing
     - _Requirements: 17.1, 17.2, 17.3, 17.4, 17.11_
 
-- [x] 19. Final checkpoint - Ensure all tests pass
+- [x] 19. Final checkpoint - Ensure all tests pass 
   - Ensure all tests pass, ask the user if questions arise.
 - [ ] 20. Fix accessibility property test issues
   - [ ] 20.1 Fix keyboard navigation property test for disabled buttons

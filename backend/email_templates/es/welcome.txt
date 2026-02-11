@@ -1,0 +1,22 @@
+¡Bienvenido a Saki!
+
+Se ha creado su cuenta para Saki - Plataforma de Orquestación de Solucionadores CTF Agénticos. Aquí están sus credenciales de inicio de sesión:
+
+Nombre de usuario: {{username}}
+Contraseña temporal: {{temporary_password}}
+
+⚠️ IMPORTANTE
+・Se le requerirá configurar la Autenticación de Dos Factores (2FA) en su primer inicio de sesión
+・Mantenga sus credenciales seguras y no las comparta con nadie
+・Puede cambiar su contraseña después de iniciar sesión
+
+Para comenzar:
+1. Visite la página de inicio de sesión de la plataforma Saki
+2. Ingrese su nombre de usuario y contraseña temporal
+3. Siga las instrucciones para configurar 2FA usando una aplicación de autenticación (Google Authenticator, Authy, etc.)
+4. Complete la configuración de 2FA ingresando el código de verificación
+
+Si no solicitó esta cuenta o tiene alguna pregunta, por favor contacte a su administrador.
+
+Saludos cordiales,
+Equipo Saki

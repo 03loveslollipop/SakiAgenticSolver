@@ -1,0 +1,10 @@
+🔒 Alerta de Seguridad
+
+2FA Deshabilitado
+
+La Autenticación de Dos Factores (2FA) ha sido deshabilitada para su cuenta ({{username}}).
+
+Si no realizó este cambio, por favor contacte a su administrador inmediatamente ya que su cuenta puede estar comprometida.
+
+Saludos cordiales,
+Equipo Saki

@@ -1,0 +1,8 @@
+Security Alert: 2FA Disabled
+
+Two-Factor Authentication (2FA) has been disabled for your account ({{username}}) on Saki - Agentic CTF Solver Orchestration platform.
+
+If you did not make this change, please contact your administrator immediately as your account may be compromised.
+
+Best regards,
+Saki Team

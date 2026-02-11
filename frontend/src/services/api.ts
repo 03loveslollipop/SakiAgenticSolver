@@ -20,7 +20,7 @@ import {
 // If VITE_DEV is true, use localhost, otherwise use production URL
 const isDev = import.meta.env.VITE_DEV === 'true';
 const BASE_URL = isDev 
-  ? 'http://localhost:8000' 
+  ? 'https://api.saki.02labs.me' 
   : (import.meta.env.VITE_API_BASE_URL || 'https://api.saki.02labs.me');
 
 console.log(`API Client initialized in ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'} mode`);

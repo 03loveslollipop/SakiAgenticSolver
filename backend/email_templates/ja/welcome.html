@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .credentials {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-left: 4px solid #4CAF50;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .credentials p {
+            margin: 10px 0;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .warning h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .warning ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .steps {
+            background-color: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .steps h3 {
+            margin-top: 0;
+        }
+        .steps ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: #666;
+            font-size: 12px;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #d63384;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sakiへようこそ！</h1>
+        </div>
+        <div class="content">
+            <p>Saki - エージェント型CTFソルバーオーケストレーションプラットフォームのアカウントが作成されました。ログイン情報は以下の通りです：</p>
+            
+            <div class="credentials">
+                <p><strong>ユーザー名：</strong> <code>{{username}}</code></p>
+                <p><strong>一時パスワード：</strong> <code>{{temporary_password}}</code></p>
+            </div>
+            
+            <div class="warning">
+                <h3>⚠️ 重要</h3>
+                <ul>
+                    <li>初回ログイン時に二要素認証（2FA）の設定が必要です</li>
+                    <li>認証情報は安全に保管し、誰とも共有しないでください</li>
+                    <li>ログイン後、パスワードを変更できます</li>
+                </ul>
+            </div>
+            
+            <div class="steps">
+                <h3>始め方：</h3>
+                <ol>
+                    <li>Sakiプラットフォームのログインページにアクセス</li>
+                    <li>ユーザー名と一時パスワードを入力</li>
+                    <li>認証アプリ（Google Authenticator、Authyなど）を使用して2FAを設定</li>
+                    <li>認証コードを入力して2FA設定を完了</li>
+                </ol>
+            </div>
+            
+            <p>このアカウントをリクエストしていない場合や質問がある場合は、管理者に連絡してください。</p>
+        </div>
+        <div class="footer">
+            <p>よろしくお願いします、<br><strong>Sakiチーム</strong></p>
+        </div>
+    </div>
+</body>
+</html>
