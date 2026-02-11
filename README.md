@@ -123,11 +123,7 @@ This platform automates the process of solving CTF challenges by:
 
 ### Deployment
 
-See deployment guides:
-- **Quick Start**: `QUICK_START_DEPLOYMENT.md` (30 minutes)
-- **Detailed Guide**: `.kiro/specs/ctf-automation-platform/deployment.md`
-- **Vercel Setup**: `VERCEL_DEPLOYMENT.md`
-- **Architecture Analysis**: `MICROSERVICES_ANALYSIS.md`
+High-level deployment architecture and canonical secret/variable names are consolidated in `/docs/DEPLOYMENT.md`. Step-by-step deployment instructions and secret upload guides have been removed from the repository for security reasons. For design and specification documents, see `.kiro/specs/ctf-automation-platform/` (design-only, no operational runbooks).
 
 ## Project Structure
 
@@ -218,13 +214,13 @@ npm run test:e2e
 
 ## Documentation
 
-- **Deployment Guide**: `.kiro/specs/ctf-automation-platform/deployment.md`
-- **Requirements**: `.kiro/specs/ctf-automation-platform/requirements.md`
-- **Design**: `.kiro/specs/ctf-automation-platform/design.md`
-- **Tasks**: `.kiro/specs/ctf-automation-platform/tasks.md`
-- **Quick Start**: `QUICK_START_DEPLOYMENT.md`
-- **Vercel Guide**: `VERCEL_DEPLOYMENT.md`
+- **High-level Deployment**: `/docs/DEPLOYMENT.md` (architecture and canonical secret names — no procedural instructions)
+- **Authentication (summary)**: `/docs/AUTHENTICATION.md`
+- **MongoDB (summary)**: `/docs/MONGODB.md`
+- **Design & Specs**: `.kiro/specs/ctf-automation-platform/` (design-only; specs and designs)
 - **Architecture Analysis**: `MICROSERVICES_ANALYSIS.md`
+
+*Note: Procedural deployment/runbook documents and secret upload instructions were intentionally removed from the repository for security reasons.*
 
 ## Contributing
 
