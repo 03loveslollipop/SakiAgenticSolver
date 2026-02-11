@@ -144,14 +144,34 @@ const VMCreationForm = () => {
                 <button
                   type="button"
                   onClick={() => removeUrlField(index)}
-                  className="btn btn-danger btn-small"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      removeUrlField(index);
+                    }
+                  }}
+                  className="btn btn-danger btn-small focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2"
+                  aria-label={`Remove URL ${index + 1}`}
+                  tabIndex={0}
                 >
                   Remove
                 </button>
               )}
             </div>
           ))}
-          <button type="button" onClick={addUrlField} className="btn btn-secondary btn-small">
+          <button 
+            type="button" 
+            onClick={addUrlField} 
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                addUrlField();
+              }
+            }}
+            className="btn btn-secondary btn-small focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2"
+            aria-label="Add another URL"
+            tabIndex={0}
+          >
             Add Another URL
           </button>
         </div>
@@ -182,7 +202,9 @@ const VMCreationForm = () => {
           <select
             value={agentType}
             onChange={(e) => setAgentType(e.target.value as AgentType)}
-            className={`form-select ${errors.agentType ? 'input-error' : ''}`}
+            className={`form-select ${errors.agentType ? 'input-error' : ''} focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2`}
+            aria-label="Select agent type"
+            tabIndex={0}
           >
             <option value="codex">Codex</option>
             <option value="copilot">Copilot</option>
@@ -264,12 +286,26 @@ const VMCreationForm = () => {
           <button
             type="button"
             onClick={handleCancel}
-            className="btn btn-secondary"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleCancel();
+              }
+            }}
+            className="btn btn-secondary focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2"
             disabled={submitting}
+            aria-label="Cancel VM creation"
+            tabIndex={0}
           >
             Cancel
           </button>
-          <button type="submit" className="btn btn-primary" disabled={submitting}>
+          <button 
+            type="submit" 
+            className="btn btn-primary focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2" 
+            disabled={submitting}
+            aria-label="Create virtual machine"
+            tabIndex={0}
+          >
             {submitting ? 'Creating VM...' : 'Create VM'}
           </button>
         </div>

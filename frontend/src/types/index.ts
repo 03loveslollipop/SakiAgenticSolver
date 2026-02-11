@@ -10,6 +10,7 @@ export type SetupMode = 'gemini' | 'manual';
 
 export interface Session {
   id: string;
+  name?: string;
   vmSize: VMSize;
   agentType: AgentType;
   agentModel: string;

@@ -1,4 +1,4 @@
-name: Frontend CI/CD
+ame: Frontend CI/CD
 
 on:
   push:

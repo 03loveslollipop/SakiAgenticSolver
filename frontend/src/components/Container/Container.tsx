@@ -8,6 +8,10 @@ export interface ContainerProps {
   children: React.ReactNode;
   className?: string;
   padding?: 'sm' | 'md' | 'lg';
+  role?: string;
+  'aria-labelledby'?: string;
+  'aria-describedby'?: string;
+  'aria-label'?: string;
 }
 
 export const Container: React.FC<ContainerProps> = ({
@@ -15,6 +19,10 @@ export const Container: React.FC<ContainerProps> = ({
   children,
   className = '',
   padding = 'md',
+  role,
+  'aria-labelledby': ariaLabelledBy,
+  'aria-describedby': ariaDescribedBy,
+  'aria-label': ariaLabel,
 }) => {
   const baseClasses = 'border-4 border-solid';
   
@@ -30,7 +38,13 @@ export const Container: React.FC<ContainerProps> = ({
   };
   
   return (
-    <div className={`${baseClasses} ${variantClasses[variant]} ${paddingClasses[padding]} ${className}`}>
+    <div 
+      className={`${baseClasses} ${variantClasses[variant]} ${paddingClasses[padding]} ${className}`}
+      role={role}
+      aria-labelledby={ariaLabelledBy}
+      aria-describedby={ariaDescribedBy}
+      aria-label={ariaLabel}
+    >
       {children}
     </div>
   );

@@ -38,14 +38,21 @@ export class ErrorBoundary extends Component<Props, State> {
       }
       
       return (
-        <Container variant="dark" padding="lg" className="text-center">
+        <Container 
+          variant="dark" 
+          padding="lg" 
+          className="text-center" 
+          role="alert"
+          aria-live="assertive"
+          aria-label="Error boundary"
+        >
           <h2 className="font-pixel text-lg text-accent-pink mb-md">
             Oops! Something went wrong
           </h2>
           <p className="font-pixel text-sm mb-lg">
             {this.state.error?.message || 'An unexpected error occurred'}
           </p>
-          <Button variant="primary" onClick={this.handleReset}>
+          <Button variant="primary" onClick={this.handleReset} aria-label="Try again">
             Try Again
           </Button>
         </Container>

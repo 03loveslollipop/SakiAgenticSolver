@@ -30,6 +30,31 @@
   #root {
     min-height: 100vh;
   }
+
+  /* Global focus styles for accessibility */
+  :focus {
+    outline: 2px solid #1ABBDB; /* accent-cyan */
+    outline-offset: 2px;
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid #1ABBDB; /* accent-cyan */
+    outline-offset: 2px;
+  }
+
+  /* Remove default focus styles for mouse users but keep for keyboard */
+  button:focus,
+  input:focus,
+  select:focus,
+  textarea:focus,
+  a:focus {
+    outline: 2px solid #1ABBDB;
+    outline-offset: 2px;
+  }
 }
 
 /* Scrollbar Styling - 8-bit aesthetic */

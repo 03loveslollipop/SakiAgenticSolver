@@ -53,6 +53,7 @@ async def test_create_user(user_manager, mock_mongo_client):
     assert user.role == "user"
     assert user.is_active is True
     assert user.is_2fa_enabled is False
+    assert user.locale == "en"  # Default locale
     assert len(user.id) > 0
     
     # Verify password
@@ -61,6 +62,31 @@ async def test_create_user(user_manager, mock_mongo_client):
     assert any(c.islower() for c in temp_password)
     assert any(c.isdigit() for c in temp_password)
     assert any(c in "!@#$%^&*" for c in temp_password)
+    
+    # Verify insert was called
+    users_collection.insert_one.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_create_user_with_locale(user_manager, mock_mongo_client):
+    """Test user creation with specific locale"""
+    _, users_collection = mock_mongo_client
+    
+    # Mock find_one to return None (user doesn't exist)
+    users_collection.find_one = AsyncMock(return_value=None)
+    users_collection.insert_one = AsyncMock()
+    
+    # Create user with Japanese locale
+    user, temp_password = await user_manager.create_user(
+        email="test@example.com",
+        role="user",
+        locale="ja"
+    )
+    
+    # Verify user object has Japanese locale
+    assert user.email == "test@example.com"
+    assert user.role == "user"
+    assert user.locale == "ja"  # Japanese locale
     
     # Verify insert was called
     users_collection.insert_one.assert_called_once()
@@ -95,7 +121,8 @@ async def test_get_user_by_email(user_manager, mock_mongo_client):
         "is_active": True,
         "created_at": datetime.utcnow(),
         "last_login": None,
-        "created_by": None
+        "created_by": None,
+        "locale": "en"
     }
     
     users_collection.find_one = AsyncMock(return_value=user_doc)
@@ -143,7 +170,8 @@ async def test_verify_password_success(user_manager, mock_mongo_client):
         "is_active": True,
         "created_at": datetime.utcnow(),
         "last_login": None,
-        "created_by": None
+        "created_by": None,
+        "locale": "en"
     }
     
     users_collection.find_one = AsyncMock(return_value=user_doc)
@@ -177,7 +205,8 @@ async def test_verify_password_wrong_password(user_manager, mock_mongo_client):
         "is_active": True,
         "created_at": datetime.utcnow(),
         "last_login": None,
-        "created_by": None
+        "created_by": None,
+        "locale": "en"
     }
     
     users_collection.find_one = AsyncMock(return_value=user_doc)

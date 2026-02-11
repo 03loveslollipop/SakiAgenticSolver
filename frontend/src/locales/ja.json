@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "ホーム",
+    "explore": "探索",
+    "login": "ログイン",
+    "signup": "サインアップ",
+    "dashboard": "ダッシュボード",
+    "vms": "仮想マシン",
+    "createVm": "VM作成",
+    "settings": "設定"
+  },
+  "landing": {
+    "hero": {
+      "title": "CTF自動化プラットフォームへようこそ",
+      "subtitle": "CTF環境を簡単に起動・管理",
+      "ctaExplore": "探索",
+      "ctaJoin": "コミュニティに参加"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "ログイン",
+      "email": "メールアドレス",
+      "password": "パスワード",
+      "rememberMe": "ログイン状態を保持",
+      "forgotPassword": "パスワードをお忘れですか？",
+      "submit": "ログイン",
+      "switchToSignup": "アカウントをお持ちでない方はこちら"
+    },
+    "signup": {
+      "title": "サインアップ",
+      "name": "名前",
+      "email": "メールアドレス",
+      "password": "パスワード",
+      "confirmPassword": "パスワード確認",
+      "submit": "サインアップ",
+      "switchToLogin": "既にアカウントをお持ちの方はこちら"
+    }
+  },
+  "vm": {
+    "create": {
+      "title": "仮想マシンを作成",
+      "basicInfo": "基本情報",
+      "name": "VM名",
+      "os": "オペレーティングシステム",
+      "resources": "リソース",
+      "cpu": "CPUコア数",
+      "ram": "RAM (GB)",
+      "storage": "ストレージ (GB)",
+      "network": "ネットワーク設定",
+      "setupMode": "セットアップモード",
+      "setupModeGemini": "Gemini CLI",
+      "setupModeManual": "マニュアル",
+      "setupModeGeminiDesc": "AI開発支援のためのGemini CLIが事前設定済み",
+      "setupModeManualDesc": "基本ツールとSSHアクセスのみ - 独自の環境を設定",
+      "advanced": "詳細オプション",
+      "submit": "VM作成",
+      "cancel": "キャンセル"
+    },
+    "list": {
+      "title": "エージェントセッション",
+      "noSessions": "アクティブなセッションがありません",
+      "setupMode": "セットアップモード",
+      "status": "ステータス",
+      "actions": "アクション"
+    },
+    "delete": {
+      "button": "インフラストラクチャを削除",
+      "modalTitle": "エージェントインフラストラクチャを削除",
+      "warning": "このアクションは、このセッションに関連するすべてのクラウドリソースを完全に破棄します。",
+      "sessionIdLabel": "確認のためセッションIDを入力",
+      "sessionIdPlaceholder": "セッションIDを入力",
+      "confirmPhraseLabel": "確認フレーズを入力",
+      "confirmPhrasePlaceholder": "delete agent infrastructure",
+      "confirmPhraseRequired": "delete agent infrastructure",
+      "submit": "インフラストラクチャを削除",
+      "cancel": "キャンセル",
+      "deleting": "インフラストラクチャを削除中...",
+      "success": "インフラストラクチャが正常に削除されました",
+      "error": "インフラストラクチャの削除に失敗しました"
+    }
+  },
+  "errors": {
+    "required": "この項目は必須です",
+    "invalidEmail": "無効なメールアドレスです",
+    "passwordMismatch": "パスワードが一致しません",
+    "networkError": "ネットワークエラーが発生しました。もう一度お試しください。",
+    "authFailed": "認証に失敗しました。認証情報を確認してください。"
+  },
+  "common": {
+    "loading": "読み込み中...",
+    "back": "戻る",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "close": "閉じる"
+  }
+}

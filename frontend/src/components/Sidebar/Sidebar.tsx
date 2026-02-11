@@ -37,6 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ${isCollapsed ? 'w-16' : 'w-64'}
         flex flex-col
       `}
+      aria-label="Main navigation"
     >
       {/* Logo Section */}
       <div className="p-md border-b-4 border-neutral-teal flex items-center justify-between">
@@ -48,8 +49,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {collapsible && (
           <button
             onClick={toggleCollapse}
-            className="p-xs hover:bg-neutral-teal transition-colors"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleCollapse();
+              }
+            }}
+            className="p-xs hover:bg-neutral-teal transition-colors focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2"
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            tabIndex={0}
           >
             <span className="text-white font-pixel text-xs">
               {isCollapsed ? '>' : '<'}

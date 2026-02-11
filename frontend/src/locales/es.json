@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "explore": "Explorar",
+    "login": "Iniciar Sesión",
+    "signup": "Registrarse",
+    "dashboard": "Panel",
+    "vms": "Máquinas Virtuales",
+    "createVm": "Crear VM",
+    "settings": "Configuración"
+  },
+  "landing": {
+    "hero": {
+      "title": "Bienvenido a la Plataforma de Automatización CTF",
+      "subtitle": "Lanza y gestiona tus entornos CTF con facilidad",
+      "ctaExplore": "Explorar",
+      "ctaJoin": "Unirse a la Comunidad"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar Sesión",
+      "email": "Correo Electrónico",
+      "password": "Contraseña",
+      "rememberMe": "Recordarme",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "submit": "Iniciar Sesión",
+      "switchToSignup": "¿No tienes cuenta? Regístrate"
+    },
+    "signup": {
+      "title": "Registrarse",
+      "name": "Nombre",
+      "email": "Correo Electrónico",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar Contraseña",
+      "submit": "Registrarse",
+      "switchToLogin": "¿Ya tienes cuenta? Inicia sesión"
+    }
+  },
+  "vm": {
+    "create": {
+      "title": "Crear Máquina Virtual",
+      "basicInfo": "Información Básica",
+      "name": "Nombre de VM",
+      "os": "Sistema Operativo",
+      "resources": "Recursos",
+      "cpu": "Núcleos de CPU",
+      "ram": "RAM (GB)",
+      "storage": "Almacenamiento (GB)",
+      "network": "Configuración de Red",
+      "setupMode": "Modo de Configuración",
+      "setupModeGemini": "Gemini CLI",
+      "setupModeManual": "Manual",
+      "setupModeGeminiDesc": "Preconfigurado con Gemini CLI para desarrollo con IA",
+      "setupModeManualDesc": "Herramientas básicas y acceso SSH - configura tu propio entorno",
+      "advanced": "Opciones Avanzadas",
+      "submit": "Crear VM",
+      "cancel": "Cancelar"
+    },
+    "list": {
+      "title": "Sesiones de Agente",
+      "noSessions": "No hay sesiones activas",
+      "setupMode": "Modo de Configuración",
+      "status": "Estado",
+      "actions": "Acciones"
+    },
+    "delete": {
+      "button": "Eliminar Infraestructura",
+      "modalTitle": "Eliminar Infraestructura de Agente",
+      "warning": "Esta acción destruirá permanentemente todos los recursos en la nube asociados con esta sesión.",
+      "sessionIdLabel": "Ingrese el ID de sesión para confirmar",
+      "sessionIdPlaceholder": "Escriba el ID de sesión aquí",
+      "confirmPhraseLabel": "Escriba la frase de confirmación",
+      "confirmPhrasePlaceholder": "delete agent infrastructure",
+      "confirmPhraseRequired": "delete agent infrastructure",
+      "submit": "Eliminar Infraestructura",
+      "cancel": "Cancelar",
+      "deleting": "Eliminando infraestructura...",
+      "success": "Infraestructura eliminada exitosamente",
+      "error": "Error al eliminar la infraestructura"
+    }
+  },
+  "errors": {
+    "required": "Este campo es obligatorio",
+    "invalidEmail": "Dirección de correo electrónico inválida",
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "networkError": "Error de red. Por favor, intente nuevamente.",
+    "authFailed": "Autenticación fallida. Por favor, verifique sus credenciales."
+  },
+  "common": {
+    "loading": "Cargando...",
+    "back": "Atrás",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar"
+  }
+}

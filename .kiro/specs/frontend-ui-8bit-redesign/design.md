@@ -1382,23 +1382,29 @@ A property is a characteristic or behavior that should hold true across all vali
 
 **Validates: Requirements 16.3, 16.4, 16.6, 16.7**
 
-### Property 24: Language Selection Persistence
+### Property 27: Language Selection Persistence
 
 *For any* language selection made by the user, the selected locale should be persisted in browser storage and automatically loaded when the user returns to the application.
 
 **Validates: Requirements 14.4, 14.5**
 
-### Property 25: Translation Completeness
+### Property 28: Translation Completeness
 
 *For any* UI text element (buttons, labels, messages, navigation items), when the user switches languages, the text should update to the selected language, or fall back to English if the translation is missing.
 
 **Validates: Requirements 14.3, 14.7, 14.10**
 
-### Property 26: Locale-Specific Formatting
+### Property 29: Locale-Specific Formatting
 
 *For any* date, number, or currency value displayed in the application, the formatting should match the conventions of the selected locale (e.g., date format, decimal separator, currency symbol).
 
 **Validates: Requirements 14.9**
+
+### Property 30: Email Template Localization
+
+*For any* email notification sent to a user, the email content (subject and body) should be in the user's preferred locale, with appropriate fallback to English when locale-specific templates are not available.
+
+**Validates: Requirements 17.5, 17.6, 17.7, 17.8, 17.9, 17.10, 17.11**
 
 ## Error Handling
 
@@ -1848,3 +1854,563 @@ describe('Accessibility Properties', () => {
   });
 });
 ```
+## Email Internationalization Design
+
+### Email Service Internationalization
+
+The email service needs to be extended to support internationalized email templates. The design includes:
+
+1. **Locale-aware email template loading**: Load templates from locale-specific directories
+2. **Locale storage in user profiles**: Store user's locale preference in the database
+3. **Locale propagation from frontend to backend**: Send locale with API requests
+4. **Fallback mechanism**: Fall back to English when locale-specific templates are missing
+
+### Updated Email Service Design
+
+```python
+# email_service_i18n.py
+import os
+from pathlib import Path
+from typing import Optional, Dict
+from enum import Enum
+
+class Locale(Enum):
+    EN = "en"
+    JA = "ja"
+    ES = "es"
+
+class EmailServiceI18N:
+    """Internationalized email service"""
+    
+    def __init__(self, templates_base_dir: Optional[str] = None):
+        """
+        Initialize internationalized email service.
+        
+        Args:
+            templates_base_dir: Base directory for email templates
+        """
+        if templates_base_dir:
+            self.templates_base_dir = Path(templates_base_dir)
+        else:
+            backend_dir = Path(__file__).parent.parent
+            self.templates_base_dir = backend_dir / "email_templates"
+        
+        # Verify template directories exist
+        self._verify_template_directories()
+    
+    def _verify_template_directories(self):
+        """Verify that all required template directories exist."""
+        for locale in Locale:
+            locale_dir = self.templates_base_dir / locale.value
+            if not locale_dir.exists():
+                logger.warning(f"Locale directory not found: {locale_dir}")
+                # Create directory if it doesn't exist
+                locale_dir.mkdir(parents=True, exist_ok=True)
+    
+    def _get_template_path(self, template_name: str, locale: Locale) -> Path:
+        """
+        Get template path for specific locale.
+        
+        Args:
+            template_name: Name of template file (e.g., 'welcome.html')
+            locale: Locale for template selection
+            
+        Returns:
+            Path to locale-specific template
+        """
+        # Try locale-specific template first
+        locale_path = self.templates_base_dir / locale.value / template_name
+        
+        if locale_path.exists():
+            return locale_path
+        
+        # Fall back to English if locale-specific template doesn't exist
+        if locale != Locale.EN:
+            en_path = self.templates_base_dir / Locale.EN.value / template_name
+            if en_path.exists():
+                logger.warning(f"Locale-specific template not found for {locale}, falling back to English")
+                return en_path
+        
+        # If English template also doesn't exist, raise error
+        raise FileNotFoundError(f"Email template not found: {template_name} for locale {locale}")
+    
+    def _load_template(self, template_name: str, locale: Locale) -> str:
+        """
+        Load email template for specific locale.
+        
+        Args:
+            template_name: Name of template file
+            locale: Locale for template selection
+            
+        Returns:
+            Template content as string
+        """
+        template_path = self._get_template_path(template_name, locale)
+        
+        with open(template_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    
+    async def send_welcome_email_i18n(
+        self,
+        to_email: str,
+        username: str,
+        temporary_password: str,
+        locale: Locale = Locale.EN
+    ) -> bool:
+        """
+        Send welcome email with locale support.
+        
+        Args:
+            to_email: User's email address
+            username: User's username
+            temporary_password: Temporary password
+            locale: User's locale preference
+            
+        Returns:
+            True if email sent successfully, False otherwise
+        """
+        # Get localized subject based on locale
+        subjects = {
+            Locale.EN: "Welcome to CTF Platform - Your Account Credentials",
+            Locale.JA: "CTFプラットフォームへようこそ - アカウント認証情報",
+            Locale.ES: "Bienvenido a la Plataforma CTF - Sus Credenciales de Cuenta"
+        }
+        
+        subject = subjects.get(locale, subjects[Locale.EN])
+        
+        try:
+            # Load localized templates
+            html_template = self._load_template("welcome.html", locale)
+            text_template = self._load_template("welcome.txt", locale)
+            
+            variables = {
+                "username": username,
+                "temporary_password": temporary_password
+            }
+            
+            body_html = self._render_template(html_template, variables)
+            body_text = self._render_template(text_template, variables)
+            
+            return await self.send_email(to_email, subject, body_text, body_html)
+            
+        except FileNotFoundError as e:
+            logger.error(f"Email template not found: {e}")
+            return False
+    
+    async def send_password_reset_email_i18n(
+        self,
+        to_email: str,
+        reset_token: str,
+        reset_url: str,
+        locale: Locale = Locale.EN
+    ) -> bool:
+        """
+        Send password reset email with locale support.
+        
+        Args:
+            to_email: User's email address
+            reset_token: Password reset token
+            reset_url: Base URL for password reset
+            locale: User's locale preference
+            
+        Returns:
+            True if email sent successfully, False otherwise
+        """
+        reset_link = f"{reset_url}?token={reset_token}"
+        
+        # Get localized subject based on locale
+        subjects = {
+            Locale.EN: "CTF Platform - Password Reset Request",
+            Locale.JA: "CTFプラットフォーム - パスワードリセットリクエスト",
+            Locale.ES: "Plataforma CTF - Solicitud de Restablecimiento de Contraseña"
+        }
+        
+        subject = subjects.get(locale, subjects[Locale.EN])
+        
+        try:
+            # Load localized templates
+            html_template = self._load_template("password_reset.html", locale)
+            text_template = self._load_template("password_reset.txt", locale)
+            
+            variables = {
+                "reset_link": reset_link
+            }
+            
+            body_html = self._render_template(html_template, variables)
+            body_text = self._render_template(text_template, variables)
+            
+            return await self.send_email(to_email, subject, body_text, body_html)
+            
+        except FileNotFoundError as e:
+            logger.error(f"Email template not found: {e}")
+            return False
+```
+
+### Email Template Directory Structure
+
+```
+backend/email_templates/
+├── en/                    # English templates
+│   ├── welcome.html
+│   ├── welcome.txt
+│   ├── password_reset.html
+│   ├── password_reset.txt
+│   ├── 2fa_disabled.html
+│   └── 2fa_disabled.txt
+├── ja/                    # Japanese templates
+│   ├── welcome.html
+│   ├── welcome.txt
+│   ├── password_reset.html
+│   ├── password_reset.txt
+│   ├── 2fa_disabled.html
+│   └── 2fa_disabled.txt
+└── es/                    # Spanish templates
+    ├── welcome.html
+    ├── welcome.txt
+    ├── password_reset.html
+    ├── password_reset.txt
+    ├── 2fa_disabled.html
+    └── 2fa_disabled.txt
+```
+
+### Frontend-Backend Locale Integration
+
+#### User Registration with Locale
+
+```typescript
+// Frontend: User registration API call
+interface RegisterUserRequest {
+  email: string;
+  password: string;
+  name: string;
+  locale: Locale; // 'en', 'ja', or 'es'
+}
+
+const registerUser = async (userData: RegisterUserRequest) => {
+  const response = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(userData),
+  });
+  return response.json();
+};
+```
+
+#### Backend: User Model with Locale
+
+```python
+# models/user.py
+from enum import Enum
+from pydantic import BaseModel
+
+class UserLocale(str, Enum):
+    EN = "en"
+    JA = "ja"
+    ES = "es"
+
+class User(BaseModel):
+    email: str
+    name: str
+    hashed_password: str
+    locale: UserLocale = UserLocale.EN  # Default to English
+    created_at: datetime
+    updated_at: datetime
+```
+
+#### API Endpoint with Locale Support
+
+```python
+# routes/auth.py
+from fastapi import APIRouter, HTTPException
+from models.user import User, UserLocale
+from services.email_service_i18n import EmailServiceI18N, Locale
+
+router = APIRouter()
+email_service = EmailServiceI18N()
+
+@router.post("/register")
+async def register_user(user_data: dict):
+    # Extract locale from request
+    locale_str = user_data.get("locale", "en")
+    try:
+        locale = Locale(locale_str)
+    except ValueError:
+        locale = Locale.EN  # Default to English
+    
+    # Create user with locale
+    user = User(
+        email=user_data["email"],
+        name=user_data["name"],
+        hashed_password=hash_password(user_data["password"]),
+        locale=locale
+    )
+    
+    # Save user to database
+    await save_user(user)
+    
+    # Send welcome email in user's locale
+    await email_service.send_welcome_email_i18n(
+        to_email=user.email,
+        username=user.name,
+        temporary_password=user_data.get("temporary_password"),
+        locale=locale
+    )
+    
+    return {"message": "User registered successfully", "locale": locale.value}
+```
+
+### Email Template Translation Structure
+
+#### English Template (en/welcome.html)
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to CTF Platform</title>
+</head>
+<body>
+    <h1>Welcome to CTF Platform</h1>
+    <p>Hello {{username}},</p>
+    <p>Your account has been created successfully.</p>
+    <p>Your temporary password is: <strong>{{temporary_password}}</strong></p>
+    <p>Please change your password after first login.</p>
+</body>
+</html>
+```
+
+#### Japanese Template (ja/welcome.html)
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CTFプラットフォームへようこそ</title>
+</head>
+<body>
+    <h1>CTFプラットフォームへようこそ</h1>
+    <p>{{username}}様、</p>
+    <p>アカウントが正常に作成されました。</p>
+    <p>一時パスワード: <strong>{{temporary_password}}</strong></p>
+    <p>初回ログイン後にパスワードを変更してください。</p>
+</body>
+</html>
+```
+
+#### Spanish Template (es/welcome.html)
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Bienvenido a la Plataforma CTF</title>
+</head>
+<body>
+    <h1>Bienvenido a la Plataforma CTF</h1>
+    <p>Hola {{username}},</p>
+    <p>Tu cuenta ha sido creada exitosamente.</p>
+    <p>Tu contraseña temporal es: <strong>{{temporary_password}}</strong></p>
+    <p>Por favor cambia tu contraseña después del primer inicio de sesión.</p>
+</body>
+</html>
+```
+
+### Locale Detection and Propagation
+
+#### Frontend Locale Detection
+
+```typescript
+// Frontend: Locale detection and storage
+import { Locale } from './i18n';
+
+export const detectUserLocale = (): Locale => {
+  // 1. Check localStorage for saved preference
+  const savedLocale = localStorage.getItem('i18nextLng') as Locale;
+  if (savedLocale && Object.values(Locale).includes(savedLocale)) {
+    return savedLocale;
+  }
+  
+  // 2. Check browser language
+  const browserLang = navigator.language.split('-')[0] as Locale;
+  if (Object.values(Locale).includes(browserLang)) {
+    return browserLang;
+  }
+  
+  // 3. Default to English
+  return Locale.EN;
+};
+
+export const setUserLocale = (locale: Locale) => {
+  // Save to localStorage
+  localStorage.setItem('i18nextLng', locale);
+  
+  // Update i18n instance
+  i18n.changeLanguage(locale);
+  
+  // Send to backend for email preferences
+  updateUserLocalePreference(locale);
+};
+```
+
+#### Backend Locale Storage
+
+```python
+# services/user_manager.py
+from models.user import User, UserLocale
+from database import get_db
+
+async def update_user_locale(user_id: str, locale: UserLocale) -> bool:
+    """
+    Update user's locale preference.
+    
+    Args:
+        user_id: User ID
+        locale: New locale preference
+        
+    Returns:
+        True if update successful, False otherwise
+    """
+    db = await get_db()
+    
+    try:
+        await db.users.update_one(
+            {"_id": user_id},
+            {"$set": {"locale": locale.value, "updated_at": datetime.utcnow()}}
+        )
+        return True
+    except Exception as e:
+        logger.error(f"Failed to update user locale: {e}")
+        return False
+
+async def get_user_locale(user_id: str) -> UserLocale:
+    """
+    Get user's locale preference.
+    
+    Args:
+        user_id: User ID
+        
+    Returns:
+        User's locale preference
+    """
+    db = await get_db()
+    
+    user = await db.users.find_one({"_id": user_id})
+    if not user:
+        return UserLocale.EN  # Default to English
+    
+    return UserLocale(user.get("locale", "en"))
+```
+
+### Testing Email Internationalization
+
+#### Property Test for Email Localization
+
+```typescript
+// email-i18n.property.test.ts
+import fc from 'fast-check';
+import { runPropertyTest } from './test-config';
+
+describe('Email Internationalization Properties', () => {
+  runPropertyTest(
+    30,
+    'Email Template Localization',
+    fc.record({
+      locale: fc.constantFrom('en', 'ja', 'es'),
+      username: fc.string({ minLength: 1, maxLength: 50 }),
+      temporaryPassword: fc.string({ minLength: 8, maxLength: 20 }),
+    }),
+    ({ locale, username, temporaryPassword }) => {
+      // Test that email service loads correct template for locale
+      const templatePath = emailService._get_template_path('welcome.html', locale);
+      
+      // Verify template exists for locale or falls back to English
+      expect(templatePath).toExist();
+      
+      // Verify template contains locale-specific content
+      const templateContent = emailService._load_template('welcome.html', locale);
+      
+      // Each locale should have appropriate greeting
+      if (locale === 'ja') {
+        expect(templateContent).toContain('様'); // Japanese honorific
+      } else if (locale === 'es') {
+        expect(templateContent).toContain('Hola'); // Spanish greeting
+      } else {
+        expect(templateContent).toContain('Hello'); // English greeting
+      }
+    }
+  );
+});
+```
+
+#### Unit Test for Locale Fallback
+
+```python
+# test_email_i18n.py
+import pytest
+from services.email_service_i18n import EmailServiceI18N, Locale
+
+def test_locale_fallback():
+    """Test that email service falls back to English when locale template is missing."""
+    email_service = EmailServiceI18N()
+    
+    # Test with Japanese locale (should fall back to English if Japanese template missing)
+    try:
+        template = email_service._load_template("welcome.html", Locale.JA)
+        assert template is not None
+    except FileNotFoundError:
+        # If Japanese template doesn't exist, it should fall back to English
+        template = email_service._load_template("welcome.html", Locale.EN)
+        assert template is not None
+        assert "Welcome" in template  # English content
+
+def test_locale_specific_subjects():
+    """Test that email subjects are locale-specific."""
+    email_service = EmailServiceI18N()
+    
+    # Mock send_email to capture subject
+    captured_subjects = []
+    
+    async def mock_send_email(to_email, subject, body_text, body_html):
+        captured_subjects.append(subject)
+        return True
+    
+    email_service.send_email = mock_send_email
+    
+    # Test different locales
+    test_cases = [
+        (Locale.EN, "Welcome to CTF Platform"),
+        (Locale.JA, "CTFプラットフォームへようこそ"),
+        (Locale.ES, "Bienvenido a la Plataforma CTF"),
+    ]
+    
+    for locale, expected_subject in test_cases:
+        await email_service.send_welcome_email_i18n(
+            "test@example.com",
+            "Test User",
+            "temp123",
+            locale
+        )
+        
+        assert captured_subjects[-1] == expected_subject
+```
+
+### Implementation Notes
+
+1. **Backward Compatibility**: The new email service should maintain backward compatibility with existing code
+2. **Template Management**: Consider using a translation management system for maintaining email templates
+3. **Performance**: Cache loaded templates to avoid file I/O on every email send
+4. **Testing**: Ensure comprehensive testing of all locale combinations and fallback scenarios
+5. **Deployment**: Template directories should be included in deployment artifacts
+
+### Migration Strategy
+
+1. **Phase 1**: Add locale field to user model with default value
+2. **Phase 2**: Update email service to support locale parameter (optional)
+3. **Phase 3**: Create localized email templates for supported languages
+4. **Phase 4**: Update frontend to send locale with registration/password reset requests
+5. **Phase 5**: Update all email sending endpoints to use locale-aware methods
+6. **Phase 6**: Add locale preference update functionality in user settings
+
+This design ensures that users receive emails in their preferred language, improving user experience and accessibility for international users.

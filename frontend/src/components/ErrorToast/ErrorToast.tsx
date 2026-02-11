@@ -27,6 +27,9 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
       variant="dark"
       padding="md"
       className="fixed bottom-4 right-4 max-w-md border-accent-pink flex items-center justify-between gap-md z-50"
+      role="alert"
+      aria-live="assertive"
+      aria-label="Error notification"
     >
       <span className="font-pixel text-sm text-accent-pink">
         {message}
@@ -34,8 +37,15 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
       {dismissible && onDismiss && (
         <button
           onClick={onDismiss}
-          className="font-pixel text-sm text-white hover:text-accent-pink transition-colors"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onDismiss();
+            }
+          }}
+          className="font-pixel text-sm text-white hover:text-accent-pink transition-colors focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2"
           aria-label="Dismiss error"
+          tabIndex={0}
         >
           ✕
         </button>

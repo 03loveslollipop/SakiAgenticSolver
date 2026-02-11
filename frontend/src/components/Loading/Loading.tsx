@@ -4,11 +4,13 @@ import React from 'react';
 export interface LoadingProps {
   size?: 'sm' | 'md' | 'lg';
   text?: string;
+  'aria-label'?: string;
 }
 
 export const Loading: React.FC<LoadingProps> = ({
   size = 'md',
   text = 'Loading...',
+  'aria-label': ariaLabel,
 }) => {
   const sizeClasses = {
     sm: 'w-4 h-4',
@@ -17,8 +19,13 @@ export const Loading: React.FC<LoadingProps> = ({
   };
   
   return (
-    <div className="flex flex-col items-center justify-center gap-md">
-      <div className={`${sizeClasses[size]} relative`}>
+    <div 
+      className="flex flex-col items-center justify-center gap-md" 
+      role="status"
+      aria-live="polite"
+      aria-label={ariaLabel || text}
+    >
+      <div className={`${sizeClasses[size]} relative`} aria-hidden="true">
         {/* 8-bit style loading animation using CSS */}
         <div className="absolute inset-0 border-4 border-primary-yellow border-t-transparent animate-spin-pixel" />
       </div>

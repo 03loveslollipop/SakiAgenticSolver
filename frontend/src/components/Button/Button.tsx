@@ -7,6 +7,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: ButtonVariant;
   fullWidth?: boolean;
   children: React.ReactNode;
+  'aria-label'?: string;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -14,9 +15,10 @@ export const Button: React.FC<ButtonProps> = ({
   fullWidth = false,
   children,
   className = '',
+  'aria-label': ariaLabel,
   ...props
 }) => {
-  const baseClasses = 'font-pixel text-sm px-md py-sm border-4 border-solid transition-all hover:translate-y-[-2px] active:translate-y-[2px] disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses = 'font-pixel text-sm px-md py-sm border-4 border-solid transition-all hover:translate-y-[-2px] active:translate-y-[2px] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2';
   
   const variantClasses = {
     normal: 'bg-neutral-olive border-neutral-teal text-white hover:bg-neutral-teal',
@@ -31,6 +33,7 @@ export const Button: React.FC<ButtonProps> = ({
   return (
     <button
       className={`${baseClasses} ${variantClasses[variant]} ${widthClass} ${className}`}
+      aria-label={ariaLabel}
       {...props}
     >
       {children}

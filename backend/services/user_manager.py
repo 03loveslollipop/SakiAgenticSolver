@@ -87,7 +87,8 @@ class UserManager:
         self,
         email: str,
         role: str = "user",
-        created_by: Optional[str] = None
+        created_by: Optional[str] = None,
+        locale: str = "en"
     ) -> tuple[User, str]:
         """
         Create new user with generated password.
@@ -107,7 +108,8 @@ class UserManager:
             email=email.lower(),
             password_hash=password_hash,
             role=role,
-            created_by=created_by
+            created_by=created_by,
+            locale=locale
         )
         
         # Insert into MongoDB

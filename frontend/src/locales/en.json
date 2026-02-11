@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "home": "Home",
+    "explore": "Explore",
+    "login": "Login",
+    "signup": "Sign Up",
+    "dashboard": "Dashboard",
+    "vms": "Virtual Machines",
+    "createVm": "Create VM",
+    "settings": "Settings"
+  },
+  "landing": {
+    "hero": {
+      "title": "Welcome to CTF Automation Platform",
+      "subtitle": "Launch and manage your CTF environments with ease",
+      "ctaExplore": "Explore",
+      "ctaJoin": "Join Community"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "email": "Email",
+      "password": "Password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "submit": "Login",
+      "switchToSignup": "Don't have an account? Sign up"
+    },
+    "signup": {
+      "title": "Sign Up",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "submit": "Sign Up",
+      "switchToLogin": "Already have an account? Login"
+    }
+  },
+  "vm": {
+    "create": {
+      "title": "Create Virtual Machine",
+      "basicInfo": "Basic Information",
+      "name": "VM Name",
+      "os": "Operating System",
+      "resources": "Resources",
+      "cpu": "CPU Cores",
+      "ram": "RAM (GB)",
+      "storage": "Storage (GB)",
+      "network": "Network Configuration",
+      "setupMode": "Setup Mode",
+      "setupModeGemini": "Gemini CLI",
+      "setupModeManual": "Manual",
+      "setupModeGeminiDesc": "Pre-configured with Gemini CLI for AI-powered development",
+      "setupModeManualDesc": "Basic tools and SSH access - configure your own environment",
+      "advanced": "Advanced Options",
+      "submit": "Create VM",
+      "cancel": "Cancel"
+    },
+    "list": {
+      "title": "Agent Sessions",
+      "noSessions": "No active sessions",
+      "setupMode": "Setup Mode",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "delete": {
+      "button": "Delete Infrastructure",
+      "modalTitle": "Delete Agent Infrastructure",
+      "warning": "This action will permanently destroy all cloud resources associated with this session.",
+      "sessionIdLabel": "Enter Session ID to confirm",
+      "sessionIdPlaceholder": "Type session ID here",
+      "confirmPhraseLabel": "Type the confirmation phrase",
+      "confirmPhrasePlaceholder": "delete agent infrastructure",
+      "confirmPhraseRequired": "delete agent infrastructure",
+      "submit": "Delete Infrastructure",
+      "cancel": "Cancel",
+      "deleting": "Deleting infrastructure...",
+      "success": "Infrastructure deleted successfully",
+      "error": "Failed to delete infrastructure"
+    }
+  },
+  "errors": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "passwordMismatch": "Passwords do not match",
+    "networkError": "Network error. Please try again.",
+    "authFailed": "Authentication failed. Please check your credentials."
+  },
+  "common": {
+    "loading": "Loading...",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close"
+  }
+}

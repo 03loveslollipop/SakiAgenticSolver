@@ -29,3 +29,8 @@ export type { HeroPixelAnimationProps } from './PixelArt';
 
 export { LoginForm } from './LoginForm';
 export type { LoginFormProps, LoginFormData } from './LoginForm';
+
+export { SetupModeSelector } from './SetupModeSelector';
+export type { SetupModeSelectorProps, SetupMode } from './SetupModeSelector';
+
+export { LanguageSelector } from './LanguageSelector';

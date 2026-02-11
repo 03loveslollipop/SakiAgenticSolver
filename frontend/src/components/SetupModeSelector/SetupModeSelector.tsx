@@ -15,26 +15,43 @@ export const SetupModeSelector: React.FC<SetupModeSelectorProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const modes: Array<{ id: SetupMode; icon: string }> = [
-    { id: 'gemini', icon: '🤖' },
-    { id: 'manual', icon: '🔧' },
+  const modes: Array<{ id: SetupMode; icon: string; title: string; description: string }> = [
+    { 
+      id: 'gemini', 
+      icon: '🤖',
+      title: t('vm.create.setupModeGemini') || 'Gemini CLI',
+      description: t('vm.create.setupModeGeminiDesc') || 'Pre-configured with Gemini CLI for AI-powered development'
+    },
+    { 
+      id: 'manual', 
+      icon: '🔧',
+      title: t('vm.create.setupModeManual') || 'Manual',
+      description: t('vm.create.setupModeManualDesc') || 'Basic tools and SSH access - configure your own environment'
+    },
   ];
 
   return (
     <div className="setup-mode-selector">
-      <label className="form-label">{t('vm.create.setupMode') || 'Setup Mode'}</label>
       <div className="modes-grid">
         {modes.map((mode) => (
           <button
             key={mode.id}
             type="button"
             onClick={() => onChange(mode.id)}
-            className={`mode-button ${value === mode.id ? 'selected' : ''}`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onChange(mode.id);
+              }
+            }}
+            className={`mode-button ${value === mode.id ? 'selected' : ''} focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2`}
+            aria-pressed={value === mode.id}
+            tabIndex={0}
           >
             <div className="mode-content">
               <span className="mode-icon">{mode.icon}</span>
-              <span className="mode-title">{t(`vm.create.setupMode${mode.id.charAt(0).toUpperCase() + mode.id.slice(1)}`) || mode.id}</span>
-              <span className="mode-desc">{t(`vm.create.setupMode${mode.id.charAt(0).toUpperCase() + mode.id.slice(1)}Desc`) || ''}</span>
+              <span className="mode-title">{mode.title}</span>
+              <span className="mode-desc">{mode.description}</span>
             </div>
           </button>
         ))}

@@ -1,9 +1,109 @@
-.dimmed-backdrop{position:fixed;inset:0;background:rgba(8,7,14,0.75);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
-.delete-modal{width:100%;max-width:720px;background:#fff;padding:20px;border:4px solid #5c3947}
-.delete-header{display:flex;justify-content:space-between;align-items:center}
-.delete-warning{background:rgba(219,100,149,0.08);padding:12px;border:4px solid #db6495;margin-top:12px}
-.session-info{margin-top:12px}
-.confirmation-inputs{margin-top:12px;display:flex;flex-direction:column;gap:12px}
-.delete-error{margin-top:12px;background:rgba(219,100,149,0.08);padding:8px;border:4px solid #db6495}
-.delete-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:16px}
-.close-button{background:transparent;border:none;font-size:18px;cursor:pointer;color:#5c3947}
+.dimmed-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 7, 14, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 50;
+}
+
+.delete-modal {
+  width: 100%;
+  max-width: 720px;
+  background: #fff;
+  padding: 20px;
+  border: 4px solid #5c3947;
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+}
+
+.delete-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.delete-header h2 {
+  font-size: 16px;
+  color: #5c3947;
+  margin: 0;
+}
+
+.delete-warning {
+  background: rgba(219, 100, 149, 0.08);
+  padding: 12px;
+  border: 4px solid #db6495;
+  margin-top: 12px;
+  font-size: 10px;
+  color: #5c3947;
+}
+
+.session-info {
+  margin-top: 12px;
+  font-size: 10px;
+  color: #5c3947;
+}
+
+.session-info p {
+  margin: 4px 0;
+}
+
+.confirmation-inputs {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.delete-error {
+  margin-top: 12px;
+  background: rgba(219, 100, 149, 0.08);
+  padding: 8px;
+  border: 4px solid #db6495;
+  font-size: 10px;
+  color: #5c3947;
+}
+
+.delete-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #5c3947;
+  padding: 4px 8px;
+  border: 2px solid transparent;
+}
+
+.close-button:hover {
+  color: #db6495;
+}
+
+.close-button:focus {
+  outline: none;
+  border: 2px solid #1abbdb;
+}
+
+/* Focus styles for accessibility */
+.delete-modal :focus {
+  outline: 2px solid #1abbdb;
+  outline-offset: 2px;
+}
+
+.delete-modal button:focus {
+  outline: 2px solid #1abbdb;
+  outline-offset: 2px;
+}
+
+.delete-modal input:focus {
+  outline: 2px solid #1abbdb;
+  outline-offset: 2px;
+}

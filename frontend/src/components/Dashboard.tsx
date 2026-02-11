@@ -56,25 +56,25 @@ const Dashboard = () => {
     navigate('/users');
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString();
-  };
+  // const formatDate = (dateString: string) => {
+  //   const date = new Date(dateString);
+  //   return date.toLocaleString();
+  // };
 
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'running':
-        return 'status-badge status-running';
-      case 'creating':
-        return 'status-badge status-creating';
-      case 'stopped':
-        return 'status-badge status-stopped';
-      case 'error':
-        return 'status-badge status-error';
-      default:
-        return 'status-badge';
-    }
-  };
+  // const getStatusBadgeClass = (status: string) => {
+  //   switch (status) {
+  //     case 'running':
+  //       return 'status-badge status-running';
+  //     case 'creating':
+  //       return 'status-badge status-creating';
+  //     case 'stopped':
+  //       return 'status-badge status-stopped';
+  //     case 'error':
+  //       return 'status-badge status-error';
+  //     default:
+  //       return 'status-badge';
+  //   }
+  // };
 
   if (loading) {
     return (

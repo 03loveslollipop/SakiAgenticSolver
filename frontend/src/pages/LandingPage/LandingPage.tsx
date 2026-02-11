@@ -1,6 +1,7 @@
 // LandingPage.tsx - 8-bit styled landing page
 import React, { Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Navigation } from '../../components/Navigation';
 import { Button } from '../../components/Button';
 import { Container } from '../../components/Container';
@@ -11,14 +12,17 @@ import { useResponsive } from '../../hooks/useResponsive';
 const PixelArt = lazy(() => import('../../components/PixelArt').then(module => ({ default: module.PixelArt })));
 const HeroPixelAnimation = lazy(() => import('../../components/PixelArt').then(module => ({ default: module.HeroPixelAnimation })));
 
-const navigationItems = [
-  { id: 'explore', label: 'Explore', path: '/explore', variant: 'normal' as const },
-  { id: 'login', label: 'Login', path: '/login', variant: 'primary' as const },
-];
+
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { isMobile } = useResponsive();
+  const { t } = useTranslation();
+
+  const navigationItems = [
+    { id: 'explore', label: t('nav.explore'), path: '/explore', variant: 'normal' as const },
+    { id: 'login', label: t('nav.login'), path: '/login', variant: 'primary' as const },
+  ];
 
   return (
     <div 
@@ -35,10 +39,10 @@ export const LandingPage: React.FC = () => {
           {/* Hero Content */}
           <div className={`${isMobile ? 'w-full text-center' : 'w-1/2'} space-y-lg`}>
             <h1 className="font-pixel text-2xl text-white leading-relaxed">
-              CTF Automation Platform
+              {t('landing.hero.title')}
             </h1>
             <p className="font-pixel text-base text-white leading-relaxed">
-              Launch virtual machines, solve challenges, and master cybersecurity skills
+              {t('landing.hero.subtitle')}
             </p>
             
             <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-md ${isMobile ? 'items-stretch' : 'items-center'}`}>
@@ -47,14 +51,14 @@ export const LandingPage: React.FC = () => {
                 onClick={() => navigate('/dashboard')}
                 fullWidth={isMobile}
               >
-                Get Started
+                {t('landing.hero.ctaJoin')}
               </Button>
               <Button 
                 variant="normal" 
                 onClick={() => navigate('/explore')}
                 fullWidth={isMobile}
               >
-                Explore
+                {t('landing.hero.ctaExplore')}
               </Button>
             </div>
           </div>

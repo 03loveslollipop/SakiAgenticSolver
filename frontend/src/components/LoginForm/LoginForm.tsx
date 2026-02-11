@@ -152,9 +152,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         <button
           type="button"
           onClick={handleForgotPassword}
-          className="font-pixel text-xs text-accent-cyan hover:text-accent-pink disabled:opacity-50 disabled:cursor-not-allowed"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleForgotPassword();
+            }
+          }}
+          className="font-pixel text-xs text-accent-cyan hover:text-accent-pink disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2"
           disabled={isLoading}
           aria-label="Forgot password"
+          tabIndex={0}
         >
           Forgot password?
         </button>
