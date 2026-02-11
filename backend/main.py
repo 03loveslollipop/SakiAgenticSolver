@@ -509,30 +509,6 @@ async def create_session(request: VMCreationRequest):
 
 @app.get("/api/sessions")
 async def list_sessions():
-        # Client errors (validation, etc.)
-        logger.error(f"Validation error creating session: {e}")
-        raise
-    except Exception as e:
-        # Server errors
-        logger.error(f"Unexpected error creating session: {e}", exc_info=True)
-        
-        # Try to clean up if we have a session_id
-        if session_id:
-            try:
-                session_manager = get_session_manager()
-                await session_manager.update_session_status(
-                    session_id,
-                    "error",
-                    f"Unexpected error: {str(e)}"
-                )
-            except:
-                pass
-        
-        raise Exception(f"Failed to create VM session: {str(e)}")
-
-
-@app.get("/api/sessions")
-async def list_sessions():
     """
     List all VM sessions sorted by creation time (newest first).
     
