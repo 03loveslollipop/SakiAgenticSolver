@@ -6,11 +6,14 @@ export type SessionStatus = 'creating' | 'running' | 'stopped' | 'error';
 export type WriteupCategory = 'pwn' | 'crypto' | 'reversing' | 'web' | 'forensics' | 'misc';
 export type UserRole = 'admin' | 'user';
 
+export type SetupMode = 'gemini' | 'manual';
+
 export interface Session {
   id: string;
   vmSize: VMSize;
   agentType: AgentType;
   agentModel: string;
+  setupMode?: SetupMode;
   challengeUrls: string[];
   instructions: string;
   createdAt: string;
@@ -28,6 +31,7 @@ export interface VMCreationRequest {
   agentType: AgentType;
   agentModel: string;
   vmSize: VMSize;
+  setupMode?: SetupMode;
 }
 
 export interface SSHConnectionInfo {

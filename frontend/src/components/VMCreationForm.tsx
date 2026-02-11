@@ -1,8 +1,10 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { VMCreationRequest, VMSize, AgentType } from '../types';
+import { VMCreationRequest, VMSize, AgentType, SetupMode } from '../types';
 import apiClient from '../services/api';
 import './VMCreationForm.css';
+import SetupModeSelector from './SetupModeSelector/SetupModeSelector';
+
 
 interface FormErrors {
   challengeUrls?: string;
@@ -19,6 +21,7 @@ const VMCreationForm = () => {
   const [agentType, setAgentType] = useState<AgentType>('codex');
   const [agentModel, setAgentModel] = useState('gpt-4');
   const [vmSize, setVmSize] = useState<VMSize>('small');
+  const [setupMode, setSetupMode] = useState<SetupMode>('manual');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -96,6 +99,7 @@ const VMCreationForm = () => {
         agentType,
         agentModel: agentModel.trim(),
         vmSize,
+        setupMode,
       };
 
       const session = await apiClient.createSession(request);
@@ -241,6 +245,11 @@ const VMCreationForm = () => {
               </span>
             </label>
           </div>
+        </div>
+
+        {/* Setup Mode */}
+        <div className="form-section">
+          <SetupModeSelector value={setupMode} onChange={setSetupMode} />
         </div>
 
         {/* Submit Error */}
