@@ -3,8 +3,10 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, Literal
 import logging
+import secrets
+import string
 
 from services.user_manager import UserManager
 from services.auth_service import AuthService
@@ -46,6 +48,22 @@ class TwoFASetupVerifyRequest(BaseModel):
     """2FA setup verification request"""
     email: EmailStr
     totp_code: str
+
+
+class PasswordResetRequest(BaseModel):
+    """Password reset request"""
+    email: EmailStr
+
+
+class PasswordResetVerifyRequest(BaseModel):
+    """Password reset verification request"""
+    token: str
+    new_password: str
+
+
+class UpdateLocaleRequest(BaseModel):
+    """Update user locale request"""
+    locale: Literal['en', 'ja', 'es']
 
 
 class TokenResponse(BaseModel):
@@ -362,3 +380,169 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     Get current authenticated user information.
     """
     return current_user
+
+
+@router.post("/password-reset/request", response_model=MessageResponse)
+async def request_password_reset(
+    request: PasswordResetRequest,
+    user_manager: UserManager = Depends(get_user_manager),
+    email_service: EmailService = Depends(get_email_service)
+):
+    """
+    Request password reset for a user.
+    Generates reset token and sends email with reset link.
+    """
+    try:
+        # Get user by email
+        user = await user_manager.get_user_by_email(request.email)
+        
+        if not user:
+            # Don't reveal if user exists or not for security
+            logger.info(f"Password reset requested for email (user may not exist): {request.email}")
+            return MessageResponse(
+                message="If the email exists, a password reset link has been sent"
+            )
+        
+        if not user.is_active:
+            logger.warning(f"Password reset requested for inactive user: {request.email}")
+            return MessageResponse(
+                message="If the email exists, a password reset link has been sent"
+            )
+        
+        # Generate reset token (simple random string for now)
+        # In production, use JWT with expiration
+        alphabet = string.ascii_letters + string.digits
+        reset_token = ''.join(secrets.choice(alphabet) for _ in range(32))
+        
+        # TODO: Store reset token in database with expiration
+        # For now, we'll just send the email
+        
+        # Get frontend URL from environment or use default
+        import os
+        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+        reset_url = f"{frontend_url}/reset-password"
+        
+        # Send password reset email with user's locale
+        email_sent = await email_service.send_password_reset_email(
+            to_email=user.email,
+            reset_token=reset_token,
+            reset_url=reset_url,
+            locale=user.locale
+        )
+        
+        if email_sent:
+            logger.info(f"Password reset email sent to: {user.email}")
+            return MessageResponse(
+                message="If the email exists, a password reset link has been sent"
+            )
+        else:
+            logger.error(f"Failed to send password reset email to: {user.email}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send password reset email"
+            )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Password reset request error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred during password reset request"
+        )
+
+
+@router.post("/password-reset/verify", response_model=MessageResponse)
+async def verify_password_reset(
+    request: PasswordResetVerifyRequest,
+    user_manager: UserManager = Depends(get_user_manager)
+):
+    """
+    Verify password reset token and update password.
+    """
+    try:
+        # TODO: Validate reset token from database
+        # For now, we'll skip token validation and just update password
+        
+        # In production, you would:
+        # 1. Look up token in database
+        # 2. Check expiration
+        # 3. Get user_id from token
+        # 4. Update password
+        # 5. Delete/invalidate token
+        
+        # For this implementation, we'll need a way to get user from token
+        # Since we don't have token storage, we'll return an error
+        
+        logger.warning("Password reset token validation not implemented")
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Password reset functionality requires token storage implementation"
+        )
+        
+        # Example implementation if we had token storage:
+        # user_id = await get_user_id_from_reset_token(request.token)
+        # if not user_id:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_400_BAD_REQUEST,
+        #         detail="Invalid or expired reset token"
+        #     )
+        # 
+        # success = await user_manager.update_password(user_id, request.new_password)
+        # if success:
+        #     logger.info(f"Password reset successful for user: {user_id}")
+        #     return MessageResponse(
+        #         message="Password has been reset successfully"
+        #     )
+        # else:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        #         detail="Failed to update password"
+        #     )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Password reset verification error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred during password reset verification"
+        )
+
+
+@router.put("/me/locale", response_model=MessageResponse)
+async def update_user_locale(
+    request: UpdateLocaleRequest,
+    current_user: dict = Depends(get_current_user),
+    user_manager: UserManager = Depends(get_user_manager)
+):
+    """
+    Update current user's locale preference.
+    """
+    try:
+        # Update user locale
+        user = await user_manager.update_user(
+            current_user["user_id"],
+            {"locale": request.locale}
+        )
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        logger.info(f"User locale updated: {current_user['email']} -> {request.locale}")
+        
+        return MessageResponse(
+            message=f"Locale updated to {request.locale}"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Locale update error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred during locale update"
+        )
