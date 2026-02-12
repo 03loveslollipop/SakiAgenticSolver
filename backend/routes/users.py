@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, EmailStr
-from typing import List, Optional
+from typing import List, Optional, Literal
 from datetime import datetime
 import logging
 
@@ -23,6 +23,7 @@ class CreateUserRequest(BaseModel):
     """Request to create a new user"""
     email: EmailStr
     role: str = "user"
+    locale: Literal['en', 'ja', 'es'] = 'en'
 
 
 class CreateUserResponse(BaseModel):
@@ -35,6 +36,7 @@ class UpdateUserRequest(BaseModel):
     """Request to update user"""
     role: Optional[str] = None
     is_active: Optional[bool] = None
+    locale: Optional[Literal['en', 'ja', 'es']] = None
 
 
 class UserResponse(BaseModel):
@@ -47,6 +49,7 @@ class UserResponse(BaseModel):
     created_at: datetime
     last_login: Optional[datetime]
     created_by: Optional[str]
+    locale: str
 
 
 class UsersListResponse(BaseModel):
@@ -106,18 +109,20 @@ async def create_user(
                 detail="Role must be 'admin' or 'user'"
             )
         
-        # Create user
+        # Create user with locale
         user, temp_password = await user_manager.create_user(
             email=request.email,
             role=request.role,
-            created_by=current_user["user_id"]
+            created_by=current_user["user_id"],
+            locale=request.locale
         )
         
-        # Send welcome email
+        # Send welcome email with user's locale
         email_sent = await email_service.send_welcome_email(
             to_email=user.email,
             username=user.email,
-            temporary_password=temp_password
+            temporary_password=temp_password,
+            locale=user.locale
         )
         
         if not email_sent:
@@ -132,7 +137,8 @@ async def create_user(
                 "role": user.role,
                 "is_2fa_enabled": user.is_2fa_enabled,
                 "is_active": user.is_active,
-                "created_at": user.created_at.isoformat()
+                "created_at": user.created_at.isoformat(),
+                "locale": user.locale
             },
             message=f"User created successfully. Welcome email sent to {user.email}"
         )
@@ -171,7 +177,8 @@ async def list_users(
                 is_active=user.is_active,
                 created_at=user.created_at,
                 last_login=user.last_login,
-                created_by=user.created_by
+                created_by=user.created_by,
+                locale=user.locale
             )
             for user in users
         ]
@@ -215,7 +222,8 @@ async def get_user(
             is_active=user.is_active,
             created_at=user.created_at,
             last_login=user.last_login,
-            created_by=user.created_by
+            created_by=user.created_by,
+            locale=user.locale
         )
         
     except HTTPException:
@@ -253,6 +261,14 @@ async def update_user(
         if request.is_active is not None:
             updates["is_active"] = request.is_active
         
+        if request.locale is not None:
+            if request.locale not in ["en", "ja", "es"]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Locale must be 'en', 'ja', or 'es'"
+                )
+            updates["locale"] = request.locale
+        
         if not updates:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -278,7 +294,8 @@ async def update_user(
             is_active=user.is_active,
             created_at=user.created_at,
             last_login=user.last_login,
-            created_by=user.created_by
+            created_by=user.created_by,
+            locale=user.locale
         )
         
     except HTTPException:

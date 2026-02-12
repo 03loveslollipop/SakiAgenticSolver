@@ -236,7 +236,8 @@ async def test_verify_password_inactive_user(user_manager, mock_mongo_client):
         "is_active": False,  # Inactive
         "created_at": datetime.utcnow(),
         "last_login": None,
-        "created_by": None
+        "created_by": None,
+        "locale": "en"
     }
     
     users_collection.find_one = AsyncMock(return_value=user_doc)
@@ -262,7 +263,8 @@ async def test_setup_2fa(user_manager, mock_mongo_client):
         "is_active": True,
         "created_at": datetime.utcnow(),
         "last_login": None,
-        "created_by": None
+        "created_by": None,
+        "locale": "en"
     }
     
     users_collection.find_one = AsyncMock(return_value=user_doc)
@@ -304,7 +306,8 @@ async def test_verify_2fa_valid_code(user_manager, mock_mongo_client):
         "is_active": True,
         "created_at": datetime.utcnow(),
         "last_login": None,
-        "created_by": None
+        "created_by": None,
+        "locale": "en"
     }
     
     users_collection.find_one = AsyncMock(return_value=user_doc)
@@ -333,7 +336,8 @@ async def test_verify_2fa_invalid_code(user_manager, mock_mongo_client):
         "is_active": True,
         "created_at": datetime.utcnow(),
         "last_login": None,
-        "created_by": None
+        "created_by": None,
+        "locale": "en"
     }
     
     users_collection.find_one = AsyncMock(return_value=user_doc)
@@ -380,7 +384,8 @@ async def test_list_users(user_manager, mock_mongo_client):
             "is_active": True,
             "created_at": datetime.utcnow(),
             "last_login": None,
-            "created_by": None
+            "created_by": None,
+            "locale": "en"
         },
         {
             "_id": "user2",
@@ -392,7 +397,8 @@ async def test_list_users(user_manager, mock_mongo_client):
             "is_active": True,
             "created_at": datetime.utcnow(),
             "last_login": None,
-            "created_by": None
+            "created_by": None,
+            "locale": "ja"
         }
     ]
     
@@ -433,7 +439,8 @@ async def test_update_user(user_manager, mock_mongo_client):
         "is_active": True,
         "created_at": datetime.utcnow(),
         "last_login": None,
-        "created_by": None
+        "created_by": None,
+        "locale": "en"
     }
     
     users_collection.find_one = AsyncMock(return_value=updated_user_doc)

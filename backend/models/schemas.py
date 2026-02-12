@@ -18,6 +18,7 @@ class User(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     last_login: Optional[datetime] = None
     created_by: Optional[str] = None  # User ID of admin who created this user
+    locale: Literal['en', 'ja', 'es'] = 'en'  # User's preferred language
     
     model_config = {
         "populate_by_name": True,

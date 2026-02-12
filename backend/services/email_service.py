@@ -58,21 +58,33 @@ class EmailService:
         if not self.smtp_user or not self.smtp_password:
             logger.warning("SMTP credentials not configured. Email sending will fail.")
     
-    def _load_template(self, template_name: str) -> str:
+    def _load_template(self, template_name: str, locale: str = "en") -> str:
         """
-        Load email template from file.
+        Load email template from file with locale support.
         
         Args:
             template_name: Name of template file (e.g., 'welcome.html')
+            locale: Locale code (en, ja, es) - defaults to 'en'
             
         Returns:
             Template content as string
         """
-        template_path = self.templates_dir / template_name
+        # Try locale-specific directory first
+        locale_dir = self.templates_dir / locale
+        template_path = locale_dir / template_name
+        
+        # If locale-specific template doesn't exist, fall back to English
+        if not template_path.exists():
+            if locale != "en":
+                logger.warning(f"Template not found for locale '{locale}': {template_name}, falling back to English")
+                template_path = self.templates_dir / "en" / template_name
+            else:
+                # For English, check root directory for backward compatibility
+                template_path = self.templates_dir / template_name
         
         if not template_path.exists():
             logger.error(f"Template not found: {template_path}")
-            raise FileNotFoundError(f"Email template not found: {template_name}")
+            raise FileNotFoundError(f"Email template not found: {template_name} for locale {locale}")
         
         with open(template_path, 'r', encoding='utf-8') as f:
             return f.read()
@@ -152,7 +164,8 @@ class EmailService:
         self,
         to_email: str,
         username: str,
-        temporary_password: str
+        temporary_password: str,
+        locale: str = "en"
     ) -> bool:
         """
         Send welcome email with credentials to new user.
@@ -161,16 +174,23 @@ class EmailService:
             to_email: User's email address
             username: User's username (email)
             temporary_password: Temporary password for first login
+            locale: Locale code (en, ja, es) - defaults to 'en'
             
         Returns:
             True if email sent successfully, False otherwise
         """
-        subject = "Welcome to CTF Platform - Your Account Credentials"
+        # Locale-specific subject lines
+        subject_by_locale = {
+            "en": "Welcome to CTF Platform - Your Account Credentials",
+            "ja": "CTFプラットフォームへようこそ - アカウント認証情報",
+            "es": "Bienvenido a la Plataforma CTF - Sus Credenciales de Cuenta"
+        }
+        subject = subject_by_locale.get(locale, subject_by_locale["en"])
         
         # Load and render templates
         try:
-            html_template = self._load_template("welcome.html")
-            text_template = self._load_template("welcome.txt")
+            html_template = self._load_template("welcome.html", locale)
+            text_template = self._load_template("welcome.txt", locale)
             
             variables = {
                 "username": username,
@@ -190,7 +210,8 @@ class EmailService:
         self,
         to_email: str,
         reset_token: str,
-        reset_url: str
+        reset_url: str,
+        locale: str = "en"
     ) -> bool:
         """
         Send password reset email with reset link.
@@ -199,18 +220,25 @@ class EmailService:
             to_email: User's email address
             reset_token: Password reset token
             reset_url: Base URL for password reset
+            locale: Locale code (en, ja, es) - defaults to 'en'
             
         Returns:
             True if email sent successfully, False otherwise
         """
         reset_link = f"{reset_url}?token={reset_token}"
         
-        subject = "CTF Platform - Password Reset Request"
+        # Locale-specific subject lines
+        subject_by_locale = {
+            "en": "CTF Platform - Password Reset Request",
+            "ja": "CTFプラットフォーム - パスワードリセットリクエスト",
+            "es": "Plataforma CTF - Solicitud de Restablecimiento de Contraseña"
+        }
+        subject = subject_by_locale.get(locale, subject_by_locale["en"])
         
         # Load and render templates
         try:
-            html_template = self._load_template("password_reset.html")
-            text_template = self._load_template("password_reset.txt")
+            html_template = self._load_template("password_reset.html", locale)
+            text_template = self._load_template("password_reset.txt", locale)
             
             variables = {
                 "reset_link": reset_link
@@ -228,7 +256,8 @@ class EmailService:
     async def send_2fa_disabled_notification(
         self,
         to_email: str,
-        username: str
+        username: str,
+        locale: str = "en"
     ) -> bool:
         """
         Send notification when 2FA is disabled for an account.
@@ -236,16 +265,23 @@ class EmailService:
         Args:
             to_email: User's email address
             username: User's username
+            locale: Locale code (en, ja, es) - defaults to 'en'
             
         Returns:
             True if email sent successfully, False otherwise
         """
-        subject = "CTF Platform - 2FA Disabled for Your Account"
+        # Locale-specific subject lines
+        subject_by_locale = {
+            "en": "CTF Platform - 2FA Disabled for Your Account",
+            "ja": "CTFプラットフォーム - アカウントの2FAが無効化されました",
+            "es": "Plataforma CTF - 2FA Deshabilitado para Su Cuenta"
+        }
+        subject = subject_by_locale.get(locale, subject_by_locale["en"])
         
         # Load and render templates
         try:
-            html_template = self._load_template("2fa_disabled.html")
-            text_template = self._load_template("2fa_disabled.txt")
+            html_template = self._load_template("2fa_disabled.html", locale)
+            text_template = self._load_template("2fa_disabled.txt", locale)
             
             variables = {
                 "username": username
@@ -259,3 +295,38 @@ class EmailService:
         except FileNotFoundError as e:
             logger.error(f"Email template not found: {e}")
             return False
+    # Backward compatibility methods (without locale parameter)
+    async def send_welcome_email_legacy(
+        self,
+        to_email: str,
+        username: str,
+        temporary_password: str
+    ) -> bool:
+        """
+        Legacy method for backward compatibility.
+        Sends welcome email in English.
+        """
+        return await self.send_welcome_email(to_email, username, temporary_password, locale="en")
+    
+    async def send_password_reset_email_legacy(
+        self,
+        to_email: str,
+        reset_token: str,
+        reset_url: str
+    ) -> bool:
+        """
+        Legacy method for backward compatibility.
+        Sends password reset email in English.
+        """
+        return await self.send_password_reset_email(to_email, reset_token, reset_url, locale="en")
+    
+    async def send_2fa_disabled_notification_legacy(
+        self,
+        to_email: str,
+        username: str
+    ) -> bool:
+        """
+        Legacy method for backward compatibility.
+        Sends 2FA disabled notification in English.
+        """
+        return await self.send_2fa_disabled_notification(to_email, username, locale="en")

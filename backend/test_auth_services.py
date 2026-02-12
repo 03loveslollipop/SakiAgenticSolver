@@ -402,7 +402,7 @@ class TestEmailService:
         """Test loading email template"""
         # This will fail if template doesn't exist, which is expected
         try:
-            content = email_service._load_template("welcome.html")
+            content = email_service._load_template("welcome.html", locale="en")
             assert content is not None
             assert len(content) > 0
         except FileNotFoundError:

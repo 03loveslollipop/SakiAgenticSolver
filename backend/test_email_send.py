@@ -44,7 +44,8 @@ async def main():
     success = await email_service.send_welcome_email(
         to_email=to_email,
         username=username,
-        temporary_password=temporary_password
+        temporary_password=temporary_password,
+        locale="en"
     )
     
     if success:

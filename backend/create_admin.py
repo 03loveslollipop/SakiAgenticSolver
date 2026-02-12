@@ -74,7 +74,9 @@ async def create_admin_user(email: str):
         try:
             await email_service.send_welcome_email(
                 to_email=user.email,
-                temporary_password=temp_password
+                username=user.email,
+                temporary_password=temp_password,
+                locale="en"
             )
             print("✅ Welcome email sent successfully!")
         except Exception as e:

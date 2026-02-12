@@ -226,11 +226,12 @@ async def send_test_email(email: str = "quizgamer234@gmail.com"):
         # Initialize email service
         email_service = EmailService()
         
-        # Send welcome email
+        # Send welcome email with default English locale
         success = await email_service.send_welcome_email(
             to_email=email,
             username=email,
-            temporary_password="TempPass123!@#"
+            temporary_password="TempPass123!@#",
+            locale="en"
         )
         
         if success:
