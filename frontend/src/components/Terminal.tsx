@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Terminal as XTerm } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { WebLinksAddon } from 'xterm-addon-web-links';
@@ -11,6 +12,7 @@ interface TerminalProps {
 }
 
 const Terminal = ({ sessionId }: TerminalProps) => {
+  const { t } = useTranslation();
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<XTerm | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -22,7 +24,6 @@ const Terminal = ({ sessionId }: TerminalProps) => {
   useEffect(() => {
     if (!terminalRef.current) return;
 
-    // Initialize xterm.js
     const term = new XTerm({
       cursorBlink: true,
       fontSize: 14,
@@ -48,16 +49,13 @@ const Terminal = ({ sessionId }: TerminalProps) => {
     xtermRef.current = term;
     fitAddonRef.current = fitAddon;
 
-    // Connect to WebSocket
     connectWebSocket();
 
-    // Handle window resize
     const handleResize = () => {
       fitAddon.fit();
     };
     window.addEventListener('resize', handleResize);
 
-    // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
       if (reconnectTimeoutRef.current) {
@@ -68,7 +66,7 @@ const Terminal = ({ sessionId }: TerminalProps) => {
       }
       term.dispose();
     };
-  }, [sessionId]);
+  }, [sessionId, t]);
 
   const connectWebSocket = () => {
     const wsUrl = apiClient.getTerminalWebSocketURL(sessionId);
@@ -78,7 +76,7 @@ const Terminal = ({ sessionId }: TerminalProps) => {
       setConnected(true);
       setError(null);
       if (xtermRef.current) {
-        xtermRef.current.writeln('Connected to terminal...\r\n');
+        xtermRef.current.writeln(`${t('terminal.connectedMessage')}\r\n`);
       }
     };
 
@@ -90,21 +88,20 @@ const Terminal = ({ sessionId }: TerminalProps) => {
 
     ws.onerror = (event) => {
       console.error('WebSocket error:', event);
-      setError('WebSocket connection error');
+      setError(t('terminal.websocketError'));
     };
 
     ws.onclose = (event) => {
       setConnected(false);
       if (xtermRef.current) {
-        xtermRef.current.writeln('\r\n\r\nConnection closed.');
+        xtermRef.current.writeln(`\r\n\r\n${t('terminal.connectionClosed')}`);
       }
 
-      // Attempt to reconnect after 3 seconds if not a normal closure
       if (event.code !== 1000) {
-        setError('Connection lost. Attempting to reconnect...');
+        setError(t('terminal.connectionLost'));
         reconnectTimeoutRef.current = setTimeout(() => {
           if (xtermRef.current) {
-            xtermRef.current.writeln('Reconnecting...\r\n');
+            xtermRef.current.writeln(`${t('terminal.reconnectingMessage')}\r\n`);
           }
           connectWebSocket();
         }, 3000);
@@ -113,7 +110,6 @@ const Terminal = ({ sessionId }: TerminalProps) => {
 
     wsRef.current = ws;
 
-    // Handle terminal input
     if (xtermRef.current) {
       xtermRef.current.onData((data) => {
         if (ws.readyState === WebSocket.OPEN) {
@@ -135,16 +131,16 @@ const Terminal = ({ sessionId }: TerminalProps) => {
     <div className="terminal-container">
       <div className="terminal-header">
         <div className="terminal-status">
-          <span className={`status-indicator ${connected ? 'connected' : 'disconnected'}`}></span>
+          <span className={`status-indicator ${connected ? 'connected' : 'disconnected'}`} />
           <span className="status-text">
-            {connected ? 'Connected' : 'Disconnected'}
+            {connected ? t('terminal.connected') : t('terminal.disconnected')}
           </span>
         </div>
         {error && (
           <div className="terminal-error">
             <span>{error}</span>
             <button onClick={handleReconnect} className="btn btn-small btn-secondary">
-              Reconnect
+              {t('terminal.reconnect')}
             </button>
           </div>
         )}

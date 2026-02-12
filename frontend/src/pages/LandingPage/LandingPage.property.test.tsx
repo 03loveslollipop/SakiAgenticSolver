@@ -8,44 +8,38 @@ import { runPropertyTest } from '../../test-utils/test-config';
 describe('LandingPage Properties', () => {
   runPropertyTest(
     3,
-    'Navigation Behavior',
+    'CTA Buttons Are Enabled',
     fc.record({
-      buttonType: fc.constantFrom('get-started', 'explore', 'login'),
+      cta: fc.constantFrom<'login' | 'features'>('login', 'features'),
     }),
-    async ({ buttonType }) => {
+    ({ cta }) => {
+      // jsdom doesn't implement this; LandingPage uses it for the Features CTA.
+      if (!HTMLElement.prototype.scrollIntoView) {
+        Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+          value: jest.fn(),
+          configurable: true,
+          writable: true,
+        });
+      }
+
+      const scrollSpy = jest.spyOn(HTMLElement.prototype, 'scrollIntoView');
+
       render(<LandingPage />);
-      
-      let button: HTMLElement | null = null;
-      let expectedPath = '';
-      
-      switch (buttonType) {
-        case 'get-started':
-          button = screen.getByRole('button', { name: /get started/i });
-          expectedPath = '/dashboard';
-          break;
-        case 'explore':
-          button = screen.getByRole('button', { name: /explore/i });
-          expectedPath = '/explore';
-          break;
-        case 'login':
-          button = screen.getByText('Login').closest('button');
-          expectedPath = '/login';
-          break;
-      }
-      
-      // Verify button exists
-      expect(button).toBeTruthy();
-      
-      // Verify button is clickable (not disabled)
-      expect(button).not.toBeDisabled();
-      
-      // Click the button
-      if (button) {
+
+      if (cta === 'login') {
+        const loginButtons = screen.getAllByRole('button', { name: /login/i });
+        const button = loginButtons[0];
+        expect(button).toBeTruthy();
+        expect(button).not.toBeDisabled();
         button.click();
+      } else {
+        const button = screen.getByRole('button', { name: /^features$/i });
+        expect(button).not.toBeDisabled();
+        button.click();
+        expect(scrollSpy).toHaveBeenCalled();
       }
-      
-      // Verify navigation was triggered (button should still be in document)
-      expect(button).toBeInTheDocument();
+
+      scrollSpy.mockRestore();
     }
   );
 });

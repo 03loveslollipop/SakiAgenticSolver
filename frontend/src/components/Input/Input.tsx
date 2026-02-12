@@ -13,12 +13,15 @@ export const Input: React.FC<InputProps> = ({
   helperText,
   className = '',
   id,
+  'aria-errormessage': ariaErrorMessage,
   ...props
 }) => {
   const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
-  const errorId = error ? `${inputId}-error` : undefined;
+  // If consumers provide aria-errormessage, prefer to use it as the error element id.
+  const errorId = error ? (ariaErrorMessage || `${inputId}-error`) : undefined;
   const helperId = helperText && !error ? `${inputId}-helper` : undefined;
   const describedBy = [errorId, helperId].filter(Boolean).join(' ') || undefined;
+  const ariaInvalid = error ? 'true' : undefined;
   
   const inputClasses = `
     w-full px-sm py-sm
@@ -40,8 +43,9 @@ export const Input: React.FC<InputProps> = ({
       <input
         id={inputId}
         className={inputClasses}
-        aria-invalid={!!error}
+        aria-invalid={ariaInvalid}
         aria-describedby={describedBy}
+        aria-errormessage={error ? errorId : undefined}
         {...props}
       />
       {error && (

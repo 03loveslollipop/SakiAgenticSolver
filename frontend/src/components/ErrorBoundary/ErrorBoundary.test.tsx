@@ -75,7 +75,7 @@ describe('ErrorBoundary Component', () => {
         </ErrorBoundary>
       );
       
-      expect(screen.getByText('An unexpected error occurred')).toBeInTheDocument();
+      expect(screen.getByText(/an unexpected error occurred/i)).toBeInTheDocument();
     });
   });
 
@@ -122,10 +122,11 @@ describe('ErrorBoundary Component', () => {
         </ErrorBoundary>
       );
       
-      expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
     });
 
     it('resets error state when try again is clicked', async () => {
+      const user = userEvent.setup();
       let shouldThrow = true;
       
       const { rerender } = render(
@@ -138,16 +139,14 @@ describe('ErrorBoundary Component', () => {
       
       // Change the component to not throw
       shouldThrow = false;
-      
-      const tryAgainButton = screen.getByRole('button', { name: /try again/i });
-      await userEvent.click(tryAgainButton);
-      
-      // Re-render with non-throwing component
       rerender(
         <ErrorBoundary>
           <ThrowError shouldThrow={shouldThrow} />
         </ErrorBoundary>
       );
+      
+      const tryAgainButton = screen.getByRole('button', { name: /retry/i });
+      await user.click(tryAgainButton);
       
       expect(screen.getByText('No error')).toBeInTheDocument();
     });

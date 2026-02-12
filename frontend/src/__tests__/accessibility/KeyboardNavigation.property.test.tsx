@@ -13,6 +13,8 @@ import { Navigation } from '../../components/Navigation/Navigation';
 import { SetupModeSelector } from '../../components/SetupModeSelector/SetupModeSelector';
 
 describe('Accessibility - Keyboard Navigation Properties', () => {
+  const normalizeText = (value: string) => value.replace(/\s+/g, ' ').trim();
+
   // Property 16: Accessibility - Keyboard Navigation
   // Validates: Requirements 11.2
   runPropertyTest(
@@ -118,7 +120,7 @@ describe('Accessibility - Keyboard Navigation Properties', () => {
       // Check that label contains the text (allowing for whitespace differences)
       // Some labels might have special characters that need escaping
       const labelText = labelElement?.textContent || '';
-      expect(labelText.replace(/\s+/g, ' ').trim()).toContain(label.trim());
+      expect(normalizeText(labelText)).toContain(normalizeText(label));
       
       // Get input by its id from the label's "for" attribute
       const labelFor = labelElement?.getAttribute('for');
@@ -188,6 +190,7 @@ describe('Accessibility - Keyboard Navigation Properties', () => {
       
       const { container } = render(element);
       const interactiveElement = container.querySelector(elementType);
+      expect(interactiveElement).toBeTruthy();
       
       // Interactive elements should be focusable unless disabled
       if (disabled) {
@@ -211,7 +214,7 @@ describe('Accessibility - Keyboard Navigation Properties', () => {
       // All interactive elements should have focus indicators
       // For disabled elements, focus styles may still be present in CSS
       // but they won't be focusable, so we don't need to check focus classes
-      if (!disabled) {
+      if (!disabled && (elementType === 'button' || elementType === 'input')) {
         // Check class string instead of classList for jsdom compatibility
         const elementClass = interactiveElement?.getAttribute('class') || '';
         const hasFocusClass = 

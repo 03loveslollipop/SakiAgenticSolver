@@ -59,7 +59,7 @@ describe('Navigation Component', () => {
   describe('Logo', () => {
     it('logo links to home page', () => {
       render(<Navigation />);
-      const logoLink = screen.getByRole('link', { name: '' });
+      const logoLink = screen.getByRole('link', { name: /home/i });
       expect(logoLink).toHaveAttribute('href', '/');
     });
 

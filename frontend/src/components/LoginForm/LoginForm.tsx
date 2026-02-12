@@ -1,5 +1,6 @@
 // LoginForm.tsx - 8-bit styled login form component
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../Button';
 import { Input } from '../Input';
 import { Loading } from '../Loading';
@@ -23,6 +24,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   initialEmail = '',
   initialRememberMe = false,
 }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<LoginFormData>({
     email: initialEmail,
     password: '',
@@ -32,47 +34,43 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const [errors, setErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({});
   const [submitError, setSubmitError] = useState<string>('');
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = event.target;
+    setFormData((previous) => ({
+      ...previous,
       [name]: type === 'checkbox' ? checked : value,
     }));
-    
-    // Clear error for this field when user starts typing
+
     if (errors[name as keyof LoginFormData]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
+      setErrors((previous) => ({ ...previous, [name]: undefined }));
     }
-    
-    // Clear submit error when user makes any change
+
     if (submitError) {
       setSubmitError('');
     }
   };
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof LoginFormData, string>> = {};
+    const nextErrors: Partial<Record<keyof LoginFormData, string>> = {};
 
-    // Email validation
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      nextErrors.email = t('errors.emailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      nextErrors.email = t('errors.invalidEmail');
     }
 
-    // Password validation
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      nextErrors.password = t('errors.passwordRequired');
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      nextErrors.password = t('errors.passwordMinLength');
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setSubmitError('');
 
     if (!validateForm()) {
@@ -82,24 +80,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     try {
       await onSubmit(formData);
     } catch (error) {
-      setSubmitError(
-        error instanceof Error 
-          ? error.message 
-          : 'Login failed. Please try again.'
-      );
-      // Re-throw the error so tests can catch it
-      throw error;
+      setSubmitError(error instanceof Error ? error.message : t('errors.loginFailed'));
     }
   };
 
   const handleForgotPassword = () => {
-    // This would typically navigate to a password reset page
-    // For now, we'll just show an alert
-    alert('Password reset functionality would be implemented here');
+    alert(t('auth.login.forgotPasswordInfo'));
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-md">
+    <form onSubmit={handleSubmit} noValidate className="space-y-md">
       {submitError && (
         <div className="p-sm border-4 border-accent-pink bg-white">
           <p className="font-pixel text-xs text-accent-pink" role="alert">
@@ -109,26 +99,26 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       )}
 
       <Input
-        label="Email"
+        label={t('auth.login.email')}
         name="email"
         type="email"
         value={formData.email}
         onChange={handleInputChange}
         error={errors.email}
-        placeholder="your.email@example.com"
+        placeholder={t('auth.login.emailPlaceholder')}
         required
         disabled={isLoading}
         autoComplete="email"
       />
 
       <Input
-        label="Password"
+        label={t('auth.login.password')}
         name="password"
         type="password"
         value={formData.password}
         onChange={handleInputChange}
         error={errors.password}
-        placeholder="Enter your password"
+        placeholder={t('auth.login.passwordPlaceholder')}
         required
         disabled={isLoading}
         autoComplete="current-password"
@@ -143,42 +133,42 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             onChange={handleInputChange}
             disabled={isLoading}
             className="w-4 h-4 cursor-pointer"
-            aria-label="Remember me"
+            aria-label={t('auth.login.rememberMe')}
           />
           <span className="font-pixel text-xs text-neutral-darkPurple">
-            Remember me
+            {t('auth.login.rememberMe')}
           </span>
         </label>
         <button
           type="button"
           onClick={handleForgotPassword}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
               handleForgotPassword();
             }
           }}
           className="font-pixel text-xs text-accent-cyan hover:text-accent-pink disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2"
           disabled={isLoading}
-          aria-label="Forgot password"
+          aria-label={t('auth.login.forgotPassword')}
           tabIndex={0}
         >
-          Forgot password?
+          {t('auth.login.forgotPassword')}
         </button>
       </div>
 
       {isLoading ? (
         <div className="flex justify-center py-md">
-          <Loading size="md" text="Signing in..." />
+          <Loading size="md" text={t('auth.login.signingIn')} />
         </div>
       ) : (
-        <Button 
-          type="submit" 
-          variant="primary" 
+        <Button
+          type="submit"
+          variant="primary"
           fullWidth
-          aria-label="Sign in"
+          aria-label={t('auth.login.submit')}
         >
-          Sign In
+          {t('auth.login.submit')}
         </Button>
       )}
     </form>

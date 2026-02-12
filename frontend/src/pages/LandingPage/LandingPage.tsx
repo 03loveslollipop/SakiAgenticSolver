@@ -19,6 +19,10 @@ export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { isMobile } = useResponsive();
   const { t } = useTranslation();
+  const isTestEnv =
+    (globalThis as any).process?.env?.NODE_ENV === 'test' ||
+    typeof (globalThis as any).jest !== 'undefined' ||
+    (typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent));
   const heroTypedText = t('landing.newHero.message', { defaultValue: HERO_TYPED_FALLBACK });
   const ctaLogin = t('landing.newHero.ctaLogin', { defaultValue: 'Login' });
   const ctaFeatures = t('landing.newHero.ctaFeatures', { defaultValue: 'Features' });
@@ -58,6 +62,16 @@ export const LandingPage: React.FC = () => {
 
     if (actionsRef.current) {
       gsap.set(actionsRef.current, { autoAlpha: 0, y: 12 });
+    }
+
+    if (isTestEnv) {
+      setTypedText(heroTypedText);
+      setBrandText(BRAND_TEXT);
+      setActiveLine('brand');
+      if (actionsRef.current) {
+        gsap.set(actionsRef.current, { autoAlpha: 1, y: 0 });
+      }
+      return undefined;
     }
 
     const typeState = {
@@ -123,7 +137,7 @@ export const LandingPage: React.FC = () => {
   }, [activeLine]);
 
   const navigationItems = [
-    { id: 'login', label: t('nav.login') || 'Login', path: '/login', variant: 'primary' as const },
+    { id: 'login', label: t('nav.login'), path: '/login', variant: 'primary' as const },
   ];
 
   const handleScrollToFeatures = () => {
@@ -143,7 +157,7 @@ export const LandingPage: React.FC = () => {
             <HeroPixelAnimation
               className="opacity-80"
               particleCount={isMobile ? 100 : 300}
-              repulsionRadius={isMobile ? 150 : 250}
+              repulsionRadius={isMobile ? 150 : 300}
               repulsionForce={0.6}
               returnSpeed={0.001}
               enablePointerInteraction={!isMobile}

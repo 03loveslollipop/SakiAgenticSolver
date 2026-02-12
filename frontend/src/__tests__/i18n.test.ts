@@ -51,14 +51,14 @@ describe('i18n Integration', () => {
 
   test('i18n loads Japanese translations', () => {
     const t = i18n.getFixedT('ja');
-    expect(t('nav.home')).toBe('ホーム');
+    expect(t('nav.home')).toBe('家');
     expect(t('nav.login')).toBe('ログイン');
   });
 
   test('i18n loads Spanish translations', () => {
     const t = i18n.getFixedT('es');
-    expect(t('nav.home')).toBe('Inicio');
-    expect(t('nav.login')).toBe('Iniciar Sesión');
+    expect(t('nav.home')).toBe('Hogar');
+    expect(t('nav.login')).toBe('Acceso');
   });
 
   test('i18n falls back to English for missing keys', () => {

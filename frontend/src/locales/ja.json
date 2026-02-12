@@ -1,122 +1,565 @@
 {
   "nav": {
-    "home": "ホーム",
-    "explore": "探索",
+    "home": "家",
+    "explore": "探検する",
     "login": "ログイン",
     "signup": "サインアップ",
     "dashboard": "ダッシュボード",
     "vms": "仮想マシン",
-    "createVm": "VM作成",
-    "settings": "設定"
+    "createVm": "VMの作成",
+    "writeups": "追記",
+    "settings": "設定",
+    "mainNavigation": "メインナビゲーション",
+    "openMenu": "ナビゲーションメニューを開く",
+    "closeMenu": "ナビゲーションメニューを閉じる",
+    "collapseSidebar": "サイドバーを折りたたむ",
+    "expandSidebar": "サイドバーを展開する",
+    "appLogo": "アプリケーションのロゴ"
   },
   "landing": {
     "hero": {
-      "title": "CTF自動化プラットフォームへようこそ",
-      "subtitle": "CTF環境を簡単に起動・管理",
-      "ctaExplore": "探索",
-      "ctaJoin": "コミュニティに参加"
+      "title": "CTF 自動化プラットフォームへようこそ",
+      "subtitle": "CTF 環境を簡単に起動して管理する",
+      "ctaExplore": "探検する",
+      "ctaJoin": "コミュニティに参加する"
     },
     "newHero": {
-      "message": "\u30bb\u30ad\u30e5\u30ea\u30c6\u30a3\u30e6\u30fc\u30b9\u30b1\u30fc\u30b9\u5411\u3051\u306bAI\u30a8\u30fc\u30b8\u30a7\u30f3\u30c8\u306e\u30d1\u30a4\u30d7\u30e9\u30a4\u30f3\u3068\u74b0\u5883\u3092\u81ea\u52d5\u5316",
-      "ctaLogin": "\u30ed\u30b0\u30a4\u30f3",
-      "ctaFeatures": "\u6a5f\u80fd",
+      "message": "セキュリティのユースケース向けに AI エージェントのパイプラインと環境を自動化する",
+      "ctaLogin": "ログイン",
+      "ctaFeatures": "特徴",
       "features": {
-        "title": "\u6a5f\u80fd",
+        "title": "特徴",
         "vm": {
-          "title": "VM\u7ba1\u7406",
-          "description": "\u4eee\u60f3\u30de\u30b7\u30f3\u3092\u7c21\u5358\u306b\u8d77\u52d5\u3057\u3066\u7ba1\u7406\u3067\u304d\u307e\u3059\u3002"
+          "title": "VM管理",
+          "description": "仮想マシンを簡単に起動して管理します。"
         },
         "security": {
-          "title": "\u30bb\u30ad\u30e5\u30ea\u30c6\u30a3",
-          "description": "\u5b89\u5168\u306a\u74b0\u5883\u3067\u30b5\u30a4\u30d0\u30fc\u30bb\u30ad\u30e5\u30ea\u30c6\u30a3\u3092\u5b9f\u8df5\u3067\u304d\u307e\u3059\u3002"
+          "title": "安全",
+          "description": "安全な環境でサイバーセキュリティを実践してください。"
         },
         "progress": {
-          "title": "\u9032\u6357\u7ba1\u7406",
-          "description": "\u5b66\u7fd2\u306e\u9032\u6357\u3068\u9054\u6210\u72b6\u6cc1\u3092\u8ffd\u8de1\u3067\u304d\u307e\u3059\u3002"
+          "title": "進捗状況の追跡",
+          "description": "学習の過程と成果をモニタリングします。"
         }
       },
       "footer": {
-        "copyright": "(c) {{year}} CTF\u81ea\u52d5\u5316\u30d7\u30e9\u30c3\u30c8\u30d5\u30a9\u30fc\u30e0"
+        "copyright": "(c) {{year}} CTF自動化プラットフォーム"
       }
     }
   },
   "auth": {
+    "checkingAuthentication": "認証を確認しています...",
+    "note": {
+      "title": "注記：",
+      "body": "ユーザー アカウントは管理者によって作成されます。アクセスが必要な場合は、管理者に問い合わせてください。"
+    },
+    "twoFactor": {
+      "enterCode": "認証アプリから 6 桁のコードを入力します。",
+      "codeLabel": "認証コード",
+      "codePlaceholder": "000000",
+      "verify": "確認する",
+      "verifying": "確認中...",
+      "completeSetup": "セットアップを完了する",
+      "setupInstructions": "認証アプリでこの QR コードをスキャンし、生成されたコードを入力します。",
+      "qrAlt": "2FA QRコード",
+      "manualCode": "マニュアルコード"
+    },
     "login": {
       "title": "ログイン",
-      "email": "メールアドレス",
+      "welcomeDescription": "サインインして仮想マシンにアクセスし、サイバーセキュリティへの取り組みを続けます。",
+      "email": "電子メール",
+      "emailPlaceholder": "your.email@example.com",
       "password": "パスワード",
-      "rememberMe": "ログイン状態を保持",
+      "passwordPlaceholder": "パスワードを入力してください",
+      "rememberMe": "私を覚えてますか",
       "forgotPassword": "パスワードをお忘れですか？",
-      "submit": "ログイン",
-      "switchToSignup": "アカウントをお持ちでない方はこちら"
+      "forgotPasswordInfo": "パスワード リセット機能はここに実装されます。",
+      "signingIn": "サインイン中...",
+      "submit": "サインイン",
+      "switchToSignup": "アカウントをお持ちでない場合は、サインアップ"
     },
     "signup": {
       "title": "サインアップ",
       "name": "名前",
-      "email": "メールアドレス",
+      "email": "電子メール",
       "password": "パスワード",
-      "confirmPassword": "パスワード確認",
+      "confirmPassword": "パスワードを認証する",
       "submit": "サインアップ",
-      "switchToLogin": "既にアカウントをお持ちの方はこちら"
+      "switchToLogin": "すでにアカウントをお持ちですか?ログイン"
+    }
+  },
+  "app": {
+    "loadingPage": "ページを読み込み中...",
+    "loadingAria": "アプリケーションをロード中です"
+  },
+  "dashboard": {
+    "subtitle": "{{email}} としてサインインしています",
+    "loadingSessions": "セッションを読み込んでいます...",
+    "stats": {
+      "totalSessions": "合計セッション数",
+      "running": "ランニング",
+      "errors": "エラー"
+    },
+    "sections": {
+      "recentSessions": "最近のセッション",
+      "sessions": "セッション",
+      "quickActions": "クイックアクション"
+    },
+    "empty": {
+      "noSessions": "セッションが見つかりませんでした。"
+    },
+    "actions": {
+      "createNewVm": "新しい VM の作成",
+      "browseWriteups": "書き込みを閲覧する",
+      "openSettings": "設定を開く"
     }
   },
   "vm": {
     "create": {
-      "title": "仮想マシンを作成",
+      "title": "仮想マシンの作成",
+      "subtitle": "新しいバックエンド セッションを構成し、チャレンジ環境を起動します。",
       "basicInfo": "基本情報",
       "name": "VM名",
-      "os": "オペレーティングシステム",
+      "os": "オペレーティング·システム",
       "resources": "リソース",
-      "cpu": "CPUコア数",
+      "cpu": "CPUコア",
       "ram": "RAM (GB)",
       "storage": "ストレージ (GB)",
-      "network": "ネットワーク設定",
+      "network": "ネットワーク構成",
       "setupMode": "セットアップモード",
       "setupModeGemini": "Gemini CLI",
       "setupModeManual": "マニュアル",
-      "setupModeGeminiDesc": "AI開発支援のためのGemini CLIが事前設定済み",
-      "setupModeManualDesc": "基本ツールとSSHアクセスのみ - 独自の環境を設定",
+      "setupModeGeminiDesc": "AI を活用した開発用に Gemini CLI で事前構成されています。",
+      "setupModeManualDesc": "基本ツールと SSH アクセス - 独自の環境を構成します。",
       "advanced": "詳細オプション",
-      "submit": "VM作成",
+      "challengeUrlsTitle": "チャレンジ URL",
+      "challengeUrlLabel": "チャレンジ URL {{index}}",
+      "challengeUrlPlaceholder": "https://example.com/challenge.bin",
+      "addUrl": "URLを追加",
+      "removeUrl": "取り除く",
+      "instructionsTitle": "チャレンジの手順",
+      "instructionsLabel": "説明書",
+      "instructionsPlaceholder": "課題のコンテキストとエージェントが何を優先すべきかを説明します。",
+      "agentConfigTitle": "エージェント構成",
+      "agentType": "エージェントの種類",
+      "agentTypes": {
+        "codex": "Codex",
+        "copilot": "Copilot"
+      },
+      "agentPresets": {
+        "codexCli": "Codex CLI",
+        "codexCliDesc": "依存関係と Codex CLI をインストールし、認証して、指示に基づいてエージェントを開始します。",
+        "copilotCli": "Copilot CLI",
+        "copilotCliDesc": "依存関係と Copilot CLI をインストールし、認証して、指示に基づいてエージェントを開始します。",
+        "geminiCli": "Gemini CLI",
+        "geminiCliDesc": "依存関係と Gemini CLI をインストールし、認証して、指示に基づいてエージェントを開始します。",
+        "mixtralVibeCli": "Mixtral Vibe CLI",
+        "mixtralVibeCliDesc": "依存関係と Mixtral Vibe CLI をインストールし、認証して、指示に基づいてエージェントを開始します。",
+        "manual": "マニュアル (ツールのみ)",
+        "manualDesc": "VM をデプロイして CTF ツールをインストールしますが、エージェントはデプロイしません。",
+        "manualToolsOnlyNote": "マニュアルモードが選択されました。VM をプロビジョニングしてツールをインストールしますが、エージェントはデプロイされません。",
+        "bootstrapScriptNote": "VM の準備ができたら、~/bootstrap_agent.sh を実行して認証し、エージェントを(再)起動できます。"
+      },
+      "agentModelLabel": "エージェントモデル",
+      "agentModelPlaceholder": "gpt-4",
+      "infrastructureSizeTitle": "インフラストラクチャの規模",
+      "vmSizeLabel": "VMのサイズ",
+      "sizeOptions": {
+        "small": {
+          "label": "小さい",
+          "details": "2 vCPU、2GB RAM、30GB ディスク"
+        },
+        "medium": {
+          "label": "中くらい",
+          "details": "2 vCPU、4GB RAM、30GB ディスク"
+        },
+        "large": {
+          "label": "大きい",
+          "details": "2 vCPU、8GB RAM、30GB ディスク"
+        }
+      },
+      "backToDashboard": "ダッシュボードに戻る",
+      "creating": "VMを作成しています...",
+      "submit": "VMの作成",
       "cancel": "キャンセル"
     },
     "list": {
       "title": "エージェントセッション",
-      "noSessions": "アクティブなセッションがありません",
+      "noSessions": "アクティブなセッションはありません",
       "setupMode": "セットアップモード",
-      "status": "ステータス",
-      "actions": "アクション"
+      "status": "状態",
+      "actions": "アクション",
+      "ariaLabel": "エージェントセッションリスト",
+      "sessionAria": "セッション: {{name}}",
+      "sessionDetailsAria": "セッション詳細",
+      "setupModeAria": "セットアップモード: {{mode}}",
+      "statusAria": "ステータス: {{status}}",
+      "ipAria": "IPアドレス: {{ip}}",
+      "sessionIdAria": "セッションID: {{id}}",
+      "connectAria": "セッション {{name}} に接続します",
+      "deleteAria": "セッション {{name}} のインフラストラクチャを削除します"
     },
     "delete": {
-      "button": "インフラストラクチャを削除",
-      "modalTitle": "エージェントインフラストラクチャを削除",
-      "warning": "このアクションは、このセッションに関連するすべてのクラウドリソースを完全に破棄します。",
-      "sessionIdLabel": "確認のためセッションIDを入力",
-      "sessionIdPlaceholder": "セッションIDを入力",
-      "confirmPhraseLabel": "確認フレーズを入力",
-      "confirmPhrasePlaceholder": "delete agent infrastructure",
-      "confirmPhraseRequired": "delete agent infrastructure",
-      "submit": "インフラストラクチャを削除",
+      "button": "インフラストラクチャの削除",
+      "modalTitle": "エージェントインフラストラクチャの削除",
+      "warning": "このアクションにより、このセッションに関連付けられたすべてのクラウド リソースが永久に破棄されます。",
+      "sessionInfoAria": "セッション情報",
+      "sessionLabel": "セッション",
+      "sessionNameAria": "セッション名: {{name}}",
+      "sessionIdTitle": "セッションID",
+      "sessionIdAria": "セッションID: {{id}}",
+      "sessionIdLabel": "確認のためにセッションIDを入力してください",
+      "sessionIdPlaceholder": "ここにセッション ID を入力します",
+      "sessionIdInstruction": "削除を確認するには、上に表示されている正確なセッション ID を入力します。",
+      "confirmPhraseLabel": "確認フレーズを入力します",
+      "confirmPhrasePlaceholder": "エージェントインフラストラクチャを削除する",
+      "confirmPhraseRequired": "エージェントインフラストラクチャを削除する",
+      "confirmPhraseInstruction": "削除を確認するには、正確な語句「{{phrase}}」を入力します。",
+      "submit": "インフラストラクチャの削除",
       "cancel": "キャンセル",
-      "deleting": "インフラストラクチャを削除中...",
+      "cancelAria": "削除のキャンセル",
+      "deleting": "インフラストラクチャを削除しています...",
+      "enabledDescription": "削除ボタンが有効になります。 Enter キーを押して削除するか、Tab キーを押してキャンセルします。",
+      "disabledDescription": "削除ボタンが無効になっています。両方の確認フィールドに正しく入力する必要があります。",
       "success": "インフラストラクチャが正常に削除されました",
       "error": "インフラストラクチャの削除に失敗しました"
     }
   },
+  "writeups": {
+    "title": "追記",
+    "subtitle": "バックエンドに保存されているチャレンジの書き込みを参照して検索します。",
+    "searchPlaceholder": "キーワード...",
+    "searching": "検索中...",
+    "category": "カテゴリ",
+    "allCategories": "すべてのカテゴリ",
+    "categories": {
+      "pwn": "PWN",
+      "crypto": "Crypto",
+      "reversing": "Reversing",
+      "web": "Web",
+      "forensics": "Forensics",
+      "misc": "Misc"
+    },
+    "loading": "書き込みを読み込んでいます...",
+    "empty": "現在のフィルターに関する書き込みは見つかりませんでした。",
+    "page": "ページ {{page}}",
+    "card": {
+      "session": "セッション {{id}}",
+      "agent": "エージェント: {{agentType}} ({{agentModel}})",
+      "completed": "完了: {{time}}",
+      "noPreview": "プレビューは利用できません。",
+      "view": "書き込みを見る"
+    }
+  },
+  "settings": {
+    "subtitle": "アカウントとバックエンドの接続ステータス。",
+    "sections": {
+      "account": "アカウント",
+      "backendStatus": "バックエンドのステータス",
+      "admin": "管理者"
+    },
+    "labels": {
+      "email": "電子メール:",
+      "role": "役割：",
+      "locale": "ロケール:",
+      "twoFactorEnabled": "2FA 有効:",
+      "api": "API:"
+    },
+    "actions": {
+      "refreshAccount": "アカウントを更新する",
+      "refreshingAccount": "アカウントを更新しています...",
+      "checkBackend": "バックエンドのチェック",
+      "checkingBackend": "バックエンドをチェックしています...",
+      "manageUsers": "ユーザーの管理"
+    },
+    "backend": {
+      "status": {
+        "healthy": "接続済み",
+        "unhealthy": "利用不可",
+        "unknown": "未知"
+      }
+    }
+  },
+  "sessionDetail": {
+    "loading": "セッションを読み込み中...",
+    "errorTitle": "セッションの読み込みエラー",
+    "notFound": "セッションが見つかりません",
+    "back": "<-戻る",
+    "backToDashboard": "ダッシュボードに戻る",
+    "title": "セッション {{id}}",
+    "deleteSession": "セッションの削除",
+    "deleteConfirm": "このセッションを削除してもよろしいですか?これにより VM が終了し、元に戻すことはできません。",
+    "info": {
+      "vmSize": "VM サイズ:",
+      "agent": "エージェント：",
+      "created": "作成:",
+      "ip": "IP:"
+    },
+    "tabs": {
+      "terminal": "ターミナル",
+      "agentMd": "AGENT.md",
+      "basePrompt": "BASE_PROMPT.md",
+      "toolsMd": "TOOLS.md",
+      "changelog": "変更履歴",
+      "discoveries": "発見",
+      "writeup": "書き込み",
+      "sshInfo": "SSH 情報"
+    },
+    "files": {
+      "basePromptTitle": "BASE_PROMPT.md (読み取り専用)",
+      "basePromptDescription": "このファイルには、エージェントに対する不変のシステム命令が含まれています。",
+      "toolsTitle": "TOOLS.md (読み取り専用)",
+      "toolsDescription": "インストールされているすべてのツールとそのバージョンのドキュメント。",
+      "changelogTitle": "変更履歴",
+      "changelogDescription": "エージェントによって実行されたすべてのコマンドとアクションのタイムスタンプ付きログ。",
+      "discoveriesTitle": "発見",
+      "discoveriesDescription": "挑戦中に発見された洞察、発見、分析。"
+    }
+  },
+  "writeupDetail": {
+    "loading": "書き込みを読み込んでいます...",
+    "errorTitle": "書き込みの読み込みエラー",
+    "notFound": "書き込みが見つかりません",
+    "backToWriteups": "追記に戻る",
+    "title": "書き込み - セッション {{id}}",
+    "viewSession": "セッションを見る",
+    "contentTitle": "書き込み内容",
+    "metadata": {
+      "category": "カテゴリ：",
+      "agent": "エージェント：",
+      "completed": "完了:",
+      "sessionId": "セッションID:",
+      "technologies": "テクノロジーとテクニック:",
+      "challengeFiles": "チャレンジファイル:"
+    }
+  },
+  "writeupUploader": {
+    "title": "書き込み",
+    "subtitle": "今後の参照のために、チャレンジの書き込みをデータベースにアップロードします。",
+    "loadFromVmInfo": "VM から書き込みをロードするには、[ターミナル] タブからコンテンツをコピーするか、SSH を使用してファイルを取得します。",
+    "uploadSuccessAlert": "書き込みはデータベースに正常にアップロードされました。",
+    "uploadedBanner": "書き込みが正常にアップロードされました。これは書き込みデータベースで利用できるようになりました。",
+    "formatInstructionsTitle": "フォーマット手順",
+    "formatInstructionsBody": "カテゴリとテクノロジーを含む記事の先頭に YAML フロントマターを含めます。",
+    "metadataFallbackHint": "または、frontmatter を使用しない場合は、以下のメタデータ フィールドに入力します。",
+    "categoryLabel": "カテゴリ (前付の場合はオプション)",
+    "categoryPlaceholder": "カテゴリを選択してください...",
+    "technologiesLabel": "テクノロジー (フロントマターの場合はオプション、カンマ区切り)",
+    "technologiesPlaceholder": "例: バッファ オーバーフロー、gdb、pwntools",
+    "contentLabel": "書き込み内容 *",
+    "contentPlaceholder": "書いた内容をここに貼り付けます...",
+    "uploading": "アップロード中...",
+    "upload": "データベースにアップロードする",
+    "actions": {
+      "pasteExample": "貼り付け例",
+      "loadFromVm": "VMからロード"
+    }
+  },
+  "agentMdEditor": {
+    "title": "AGENT.md",
+    "subtitle": "AI エージェントのユーザーが変更可能なルールと設定。",
+    "loading": "AGENT.mdを読み込んでいます...",
+    "saving": "保存中...",
+    "saveChanges": "変更を保存",
+    "placeholder": "エージェントのルールと設定を入力してください...",
+    "noContent": "まだコンテンツはありません。",
+    "editingNote": "AGENT.md への変更はすぐに適用され、エージェントには構成の更新が通知されます。",
+    "saveSuccessAlert": "AGENT.md が正常に更新されました。エージェントには変更が通知されました。"
+  },
+  "fileViewer": {
+    "loading": "{{title}}を読み込んでいます...",
+    "autoRefresh": "自動更新",
+    "noContent": "まだコンテンツはありません。"
+  },
+  "terminal": {
+    "connected": "接続済み",
+    "disconnected": "切断されました",
+    "reconnect": "再接続",
+    "connectedMessage": "端末に接続されています...",
+    "connectionClosed": "接続が閉じられました。",
+    "connectionLost": "接続が失われました。再接続しようとしています...",
+    "reconnectingMessage": "再接続中...",
+    "websocketError": "WebSocket接続エラー"
+  },
+  "sshInfo": {
+    "title": "SSH接続情報",
+    "subtitle": "これらの資格情報を使用して、SSH 経由で VM に接続します。",
+    "loading": "SSH 情報を読み込み中...",
+    "notAvailable": "SSH情報が利用できません",
+    "copied": "クリップボードにコピーされました。",
+    "copyFailed": "クリップボードへのコピーに失敗しました。",
+    "commandTitle": "SSHコマンド",
+    "copyCommand": "コピーコマンド",
+    "publicKeyTitle": "SSH公開鍵",
+    "publicKeyDescription": "VM で認証するための SSH 公開キーをダウンロードします。",
+    "downloadKey": "SSHキーをダウンロードする",
+    "downloadingKey": "ダウンロード中...",
+    "instructionsTitle": "接続手順",
+    "labels": {
+      "hostname": "ホスト名:",
+      "port": "ポート：",
+      "username": "ユーザー名:"
+    },
+    "instructions": {
+      "step1": "上のボタンを使用して SSH 公開キーをダウンロードします。",
+      "step2": "キーを ~/.ssh/ ディレクトリに保存します。",
+      "step3": "適切な権限を設定します: chmod 600 ~/.ssh/key-file。",
+      "step4Prefix": "以下を使用して接続します。"
+    }
+  },
+  "userManagement": {
+    "title": "ユーザー管理",
+    "subtitle": "ユーザーアカウントと権限を管理します。",
+    "loading": "ユーザーを読み込んでいます...",
+    "currentUser": "あなた",
+    "roles": {
+      "user": "ユーザー",
+      "admin": "管理者"
+    },
+    "status": {
+      "twoFactorEnabled": "有効",
+      "twoFactorNotSetUp": "セットアップされていません",
+      "active": "アクティブ",
+      "disabled": "無効"
+    },
+    "table": {
+      "email": "電子メール",
+      "role": "役割",
+      "twoFactorStatus": "2FA ステータス",
+      "status": "状態",
+      "created": "作成されました",
+      "lastLogin": "最終ログイン",
+      "actions": "アクション"
+    },
+    "actions": {
+      "createNewUser": "新しいユーザーの作成",
+      "createUser": "ユーザーの作成",
+      "creating": "作成...",
+      "disable": "無効にする",
+      "disableUser": "ユーザーを無効にする",
+      "makeAdmin": "-> 管理者",
+      "makeUser": "-> ユーザー",
+      "changeRoleTitle": "ロールを {{role}} に変更します"
+    },
+    "confirm": {
+      "disableUser": "ユーザー {{email}} を無効にしてもよろしいですか?",
+      "changeRole": "{{email}} ロールを {{currentRole}} から {{newRole}} に変更しますか?"
+    },
+    "success": {
+      "userCreated": "ユーザーが正常に作成されました。",
+      "userDisabled": "ユーザー {{email}} は無効化されました。",
+      "roleUpdated": "ユーザー {{email}} ロールが {{role}} に更新されました。"
+    },
+    "createModal": {
+      "title": "新しいユーザーの作成",
+      "emailLabel": "電子メールアドレス",
+      "emailPlaceholder": "user@example.com",
+      "emailHelp": "一時的なパスワードが生成され、この電子メール アドレスに送信されます。",
+      "roleLabel": "役割",
+      "roleHelp": "管理者はユーザーを管理し、すべての機能に完全にアクセスできます。"
+    }
+  },
+  "notFound": {
+    "title": "ページが見つかりません",
+    "support": "これがエラーであると思われる場合は、サポートにお問い合わせください。",
+    "actions": {
+      "home": "ホームに戻る",
+      "dashboard": "ダッシュボードに移動"
+    },
+    "terminal": {
+      "error": "エラー: ページが見つかりません",
+      "resourceMissing": "要求されたリソースがシステム メモリに見つかりませんでした。",
+      "possibleCauses": "考えられる原因:",
+      "causeInvalidUrl": "- 無効な URL",
+      "causeMovedDeleted": "- ページが移動または削除されました",
+      "causeTypo": "- 住所のタイプミス"
+    }
+  },
   "errors": {
     "required": "この項目は必須です",
-    "invalidEmail": "無効なメールアドレスです",
+    "emailRequired": "電子メールは必須です。",
+    "invalidEmail": "無効なメールアドレス",
+    "passwordRequired": "パスワードが必要です。",
+    "passwordMinLength": "パスワードは6文字以上である必要があります。",
     "passwordMismatch": "パスワードが一致しません",
-    "networkError": "ネットワークエラーが発生しました。もう一度お試しください。",
-    "authFailed": "認証に失敗しました。認証情報を確認してください。"
+    "networkError": "ネットワークエラー。もう一度試してください。",
+    "authFailed": "認証に失敗しました。資格情報を確認してください。",
+    "loginFailed": "ログインに失敗しました。もう一度試してください。",
+    "unknownFileType": "不明なファイルタイプです。",
+    "failedToLoadFileType": "{{fileType}} のロードに失敗しました。",
+    "failedToLoadSessions": "セッションのロードに失敗しました。",
+    "failedToLoadSession": "セッションのロードに失敗しました。",
+    "failedToDeleteSession": "セッションの削除に失敗しました。",
+    "failedToCreateVm": "VMセッションの作成に失敗しました。",
+    "failedToLoadWriteups": "書き込みをロードできませんでした。",
+    "failedToSearchWriteups": "書き込みの検索に失敗しました。",
+    "failedToLoadWriteup": "書き込みの読み込みに失敗しました。",
+    "failedToUploadWriteup": "書き込みのアップロードに失敗しました。",
+    "failedToLoadWriteupFromVm": "VM からの書き込みのロードに失敗しました。",
+    "writeupContentRequired": "書き込み内容は必須です。",
+    "failedToRefreshAccount": "アカウントの詳細を更新できませんでした。",
+    "failedToLoadUsers": "ユーザーのロードに失敗しました。",
+    "failedToCreateUser": "ユーザーの作成に失敗しました。",
+    "failedToDisableUser": "ユーザーを無効化できませんでした。",
+    "failedToUpdateUserRole": "ユーザー役割の更新に失敗しました。",
+    "failedToLoadAgentMd": "AGENT.mdの読み込みに失敗しました。",
+    "failedToSaveAgentMd": "AGENT.mdの保存に失敗しました。",
+    "failedToLoadSshInfo": "SSH情報の読み込みに失敗しました。",
+    "failedToDownloadSshKey": "SSHキーのダウンロードに失敗しました。",
+    "sessionIdMismatch": "セッションIDが一致しません。",
+    "confirmPhraseMismatch": "確認フレーズが一致しません。",
+    "boundary": {
+      "ariaLabel": "エラー境界",
+      "title": "おっと！何か問題が発生しました",
+      "defaultMessage": "予期しないエラーが発生しました。"
+    },
+    "toast": {
+      "ariaLabel": "エラー通知",
+      "dismiss": "エラーを無視する"
+    },
+    "vmCreate": {
+      "challengeUrlRequired": "少なくとも 1 つのチャレンジ URL が必要です。",
+      "invalidChallengeUrl": "チャレンジ URL は http:// または https:// で始まる必要があります。",
+      "instructionsRequired": "チャレンジの指示が必要です。",
+      "agentModelRequired": "エージェントモデルは必須です。"
+    }
   },
   "common": {
     "loading": "読み込み中...",
     "back": "戻る",
+    "backArrow": "<-",
+    "goBack": "戻る",
     "save": "保存",
     "cancel": "キャンセル",
-    "delete": "削除",
+    "delete": "消去",
     "edit": "編集",
-    "close": "閉じる"
+    "close": "近い",
+    "refresh": "リフレッシュ",
+    "refreshing": "爽やかな...",
+    "retry": "リトライ",
+    "logout": "ログアウト",
+    "search": "検索",
+    "clearSearch": "検索をクリア",
+    "previous": "前の",
+    "next": "次",
+    "copy": "コピー",
+    "connect": "接続する",
+    "id": "ID",
+    "ip": "IP",
+    "yes": "はい",
+    "no": "いいえ",
+    "never": "一度もない",
+    "warning": "警告",
+    "error": "エラー",
+    "unknown": "未知",
+    "unknownUser": "不明なユーザー",
+    "unknownTime": "不明な時間",
+    "selectLanguage": "?????",
+    "status": {
+      "running": "ランニング",
+      "stopped": "停止しました",
+      "creating": "作成",
+      "error": "エラー"
+    }
   }
 }

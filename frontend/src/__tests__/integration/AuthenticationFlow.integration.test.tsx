@@ -1,21 +1,24 @@
 // AuthenticationFlow.integration.test.tsx - Integration test for authentication flow
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '../../contexts/AuthContext';
-import { LoadingProvider } from '../../contexts/LoadingContext';
-import { ErrorProvider } from '../../contexts/ErrorContext';
-import { ThemeProvider } from '../../theme';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import App8Bit from '../../App8Bit';
 import { apiClient } from '../../services/api';
 
-// Mock the API client
 jest.mock('../../services/api', () => ({
-  apiClient: {
-    login: jest.fn(),
-    getCurrentUser: jest.fn(),
-    logout: jest.fn(),
-  },
+  __esModule: true,
+  ...(function () {
+    const client = {
+      login: jest.fn(),
+      loginWith2FA: jest.fn(),
+      logout: jest.fn(),
+      refreshToken: jest.fn(),
+      getCurrentUser: jest.fn(),
+      getSessions: jest.fn(),
+    };
+
+    return { apiClient: client, default: client };
+  })(),
 }));
 
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
@@ -23,7 +26,7 @@ const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
 describe('Authentication Flow Integration Test', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Mock localStorage
+
     Object.defineProperty(window, 'localStorage', {
       value: {
         getItem: jest.fn(),
@@ -35,154 +38,136 @@ describe('Authentication Flow Integration Test', () => {
     });
   });
 
-  const renderApp = () => {
-    return render(
-      <BrowserRouter>
-        <AuthProvider>
-          <LoadingProvider>
-            <ErrorProvider>
-              <ThemeProvider>
-                <App8Bit />
-              </ThemeProvider>
-            </ErrorProvider>
-          </LoadingProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    );
-  };
+  const renderApp = () => render(<App8Bit />);
 
   test('should redirect authenticated users from login to dashboard', async () => {
-    // Mock user is already authenticated
     mockApiClient.getCurrentUser.mockResolvedValue({
       id: 'user-123',
       email: 'test@example.com',
       role: 'user',
-      is_active: true,
-      created_at: new Date().toISOString(),
-    });
+      is_2fa_enabled: true,
+      locale: 'en',
+    } as any);
+    mockApiClient.getSessions.mockResolvedValue([]);
 
-    // Mock localStorage to return a token
     (window.localStorage.getItem as jest.Mock).mockImplementation((key: string) => {
       if (key === 'access_token') return 'mock-token';
       if (key === 'user') return JSON.stringify({ id: 'user-123', email: 'test@example.com' });
       return null;
     });
 
+    window.history.pushState({}, 'Login', '/login');
     renderApp();
 
-    // Navigate to login page
-    window.history.pushState({}, 'Login', '/login');
-
-    // Should redirect to dashboard
-    await waitFor(() => {
-      expect(window.location.pathname).toBe('/dashboard');
-    });
+    expect(await screen.findByRole('heading', { level: 1, name: /dashboard/i }, { timeout: 5000 })).toBeInTheDocument();
   });
 
   test('should show login form for unauthenticated users', async () => {
-    // Mock no user is authenticated
     mockApiClient.getCurrentUser.mockRejectedValue(new Error('Not authenticated'));
-    
-    // Mock localStorage to return no token
     (window.localStorage.getItem as jest.Mock).mockReturnValue(null);
 
+    window.history.pushState({}, 'Login', '/login');
     renderApp();
 
-    // Navigate to login page
-    window.history.pushState({}, 'Login', '/login');
-
-    // Should show login form
     await waitFor(() => {
       expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/enter your password/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
     });
   });
 
-  test('should handle login submission', async () => {
-    // Mock successful login
+  test('should handle login + 2FA verification and persist tokens', async () => {
+    const user = userEvent.setup();
+
+    mockApiClient.getCurrentUser.mockRejectedValue(new Error('Not authenticated'));
     mockApiClient.login.mockResolvedValue({
+      requires_2fa_setup: false,
+      message: 'OK',
+    } as any);
+    mockApiClient.loginWith2FA.mockResolvedValue({
       access_token: 'new-token',
       refresh_token: 'refresh-token',
+      token_type: 'bearer',
       user: {
         id: 'user-123',
         email: 'test@example.com',
         role: 'user',
-        is_active: true,
-        created_at: new Date().toISOString(),
+        is_2fa_enabled: true,
+        locale: 'en',
       },
-    });
+    } as any);
+    mockApiClient.getSessions.mockResolvedValue([]);
 
-    // Mock no initial user
-    mockApiClient.getCurrentUser.mockRejectedValue(new Error('Not authenticated'));
     (window.localStorage.getItem as jest.Mock).mockReturnValue(null);
 
+    window.history.pushState({}, 'Login', '/login');
     renderApp();
 
-    // Navigate to login page
-    window.history.pushState({}, 'Login', '/login');
+    const emailInput = await screen.findByLabelText(/email/i);
+    const passwordInput = screen.getByPlaceholderText(/enter your password/i);
+    const signInButton = screen.getByRole('button', { name: /sign in/i });
 
-    // Wait for form to load
+    await user.type(emailInput, 'test@example.com');
+    await user.type(passwordInput, 'password123');
+    await user.click(signInButton);
+
+    // 2FA step should appear
+    expect(await screen.findByLabelText(/authentication code/i)).toBeInTheDocument();
+
+    const codeInput = screen.getByLabelText(/authentication code/i);
+    const verifyButton = screen.getByRole('button', { name: /verify/i });
+
+    await user.type(codeInput, '123456');
+    await user.click(verifyButton);
+
     await waitFor(() => {
-      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    });
-
-    // Fill in login form
-    const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
-    const loginButton = screen.getByRole('button', { name: /login/i });
-
-    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.click(loginButton);
-
-    // Verify API was called
-    await waitFor(() => {
-      expect(mockApiClient.login).toHaveBeenCalledWith({
+      expect(mockApiClient.loginWith2FA).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'password123',
+        totp_code: '123456',
       });
     });
 
-    // Verify tokens were stored
-    await waitFor(() => {
-      expect(window.localStorage.setItem).toHaveBeenCalledWith('access_token', 'new-token');
-      expect(window.localStorage.setItem).toHaveBeenCalledWith('refresh_token', 'refresh-token');
-      expect(window.localStorage.setItem).toHaveBeenCalledWith(
-        'user',
-        expect.stringContaining('test@example.com')
-      );
-    });
-  });
+    expect(window.localStorage.setItem).toHaveBeenCalledWith('access_token', 'new-token');
+    expect(window.localStorage.setItem).toHaveBeenCalledWith('refresh_token', 'refresh-token');
+    expect(window.localStorage.setItem).toHaveBeenCalledWith('user', expect.stringContaining('test@example.com'));
 
-  test('should handle logout', async () => {
-    // Mock authenticated user
+    // Should end up on dashboard
+    expect(await screen.findByRole('heading', { level: 1, name: /dashboard/i }, { timeout: 5000 })).toBeInTheDocument();
+  }, 15_000);
+
+  test('should handle logout and return to login', async () => {
+    const user = userEvent.setup();
+
     mockApiClient.getCurrentUser.mockResolvedValue({
       id: 'user-123',
       email: 'test@example.com',
       role: 'user',
-      is_active: true,
-      created_at: new Date().toISOString(),
-    });
+      is_2fa_enabled: true,
+      locale: 'en',
+    } as any);
+    mockApiClient.getSessions.mockResolvedValue([]);
+    mockApiClient.logout.mockResolvedValue(undefined);
 
-    mockApiClient.logout.mockResolvedValue();
-
-    // Mock localStorage to return a token
     (window.localStorage.getItem as jest.Mock).mockImplementation((key: string) => {
       if (key === 'access_token') return 'mock-token';
       if (key === 'user') return JSON.stringify({ id: 'user-123', email: 'test@example.com' });
       return null;
     });
 
+    window.history.pushState({}, 'Dashboard', '/dashboard');
     renderApp();
 
-    // Should start on dashboard (redirected from root)
+    expect(await screen.findByRole('heading', { level: 1, name: /dashboard/i }, { timeout: 5000 })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /logout/i }));
+
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/dashboard');
+      expect(window.location.pathname).toBe('/login');
     });
 
-    // Note: In the actual app, logout would be triggered from a component
-    // For this test, we'll verify the logout API is available
-    expect(mockApiClient.logout).toBeDefined();
+    expect(window.localStorage.removeItem).toHaveBeenCalledWith('access_token');
+    expect(window.localStorage.removeItem).toHaveBeenCalledWith('refresh_token');
+    expect(window.localStorage.removeItem).toHaveBeenCalledWith('user');
   });
 });

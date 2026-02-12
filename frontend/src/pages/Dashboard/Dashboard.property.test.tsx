@@ -5,6 +5,19 @@ import fc from 'fast-check';
 import { Dashboard } from './Dashboard';
 import { runPropertyTest } from '../../test-utils/test-config';
 
+jest.mock('../../services/api', () => ({
+  apiClient: {
+    getCurrentUser: jest.fn().mockRejectedValue(new Error('Not authenticated')),
+    getSessions: jest.fn().mockResolvedValue([]),
+    deleteSession: jest.fn().mockResolvedValue(undefined),
+  },
+  default: {
+    getCurrentUser: jest.fn().mockRejectedValue(new Error('Not authenticated')),
+    getSessions: jest.fn().mockResolvedValue([]),
+    deleteSession: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 describe('Dashboard Properties', () => {
   runPropertyTest(
     11,
@@ -32,7 +45,7 @@ describe('Dashboard Properties', () => {
         expect(sidebar).toHaveClass('h-screen');
         
         // Mobile hamburger menu should not be visible
-        const hamburger = container.querySelector('[aria-label="Open menu"]');
+        const hamburger = container.querySelector('[aria-label="Open navigation menu"]');
         expect(hamburger).toBeFalsy();
       } else {
         // On mobile, sidebar should be hidden by default
@@ -40,7 +53,7 @@ describe('Dashboard Properties', () => {
         expect(sidebar).toBeFalsy();
         
         // Mobile hamburger menu should be visible
-        const hamburger = container.querySelector('[aria-label="Open menu"]');
+        const hamburger = container.querySelector('[aria-label="Open navigation menu"]');
         expect(hamburger).toBeTruthy();
       }
       

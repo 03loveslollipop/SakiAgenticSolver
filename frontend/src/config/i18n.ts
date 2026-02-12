@@ -1,11 +1,10 @@
 import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import { initReactI18next } from 'react-i18next';
 
-// Import translation resources
 import enTranslations from '../locales/en.json';
-import jaTranslations from '../locales/ja.json';
 import esTranslations from '../locales/es.json';
+import jaTranslations from '../locales/ja.json';
 
 export const resources = {
   en: { translation: enTranslations },
@@ -19,8 +18,8 @@ export const supportedLocales: Locale[] = ['en', 'ja', 'es'];
 
 export const localeNames: Record<Locale, string> = {
   en: 'English',
-  ja: '日本語',
-  es: 'Español',
+  ja: '\u65e5\u672c\u8a9e',
+  es: 'Espa\u00f1ol',
 };
 
 i18n

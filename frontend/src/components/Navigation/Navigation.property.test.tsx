@@ -48,7 +48,10 @@ describe('Navigation Back Button Properties', () => {
     'Conditional Back Button Display',
     fc.record({
       showBackButton: fc.boolean(),
-      path: fc.string({ minLength: 1, maxLength: 30 }).map(s => `/${s}`),
+      path: fc.oneof(
+        fc.constant('/'),
+        fc.hexaString({ minLength: 1, maxLength: 30 }).map((segment) => `/${segment}`)
+      ),
     }),
     ({ showBackButton, path }) => {
       // Set the current route
@@ -63,7 +66,7 @@ describe('Navigation Back Button Properties', () => {
       if (shouldShowButton) {
         // Back button should be displayed
         expect(backButton).toBeTruthy();
-        expect(backButton?.textContent).toContain('←');
+        expect(backButton?.textContent).toContain('<-');
       } else {
         // Back button should not be displayed
         expect(backButton).toBeFalsy();

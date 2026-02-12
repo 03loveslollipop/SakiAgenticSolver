@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Session, SessionStatus } from '../../types';
-import { Container } from '../Container/Container';
 import { Button } from '../Button/Button';
+import { Container } from '../Container/Container';
 import DeleteInfrastructureModal from '../DeleteInfrastructureModal/DeleteInfrastructureModal';
 import './AgentSessionList.css';
 
@@ -21,8 +21,8 @@ export const AgentSessionList: React.FC<AgentSessionListProps> = ({
   const [deleteModalSession, setDeleteModalSession] = useState<Session | null>(null);
 
   const getSetupModeLabel = (mode?: 'gemini' | 'manual') => {
-    if (mode === 'gemini') return t('vm.create.setupModeGemini') || 'Gemini CLI';
-    return t('vm.create.setupModeManual') || 'Manual';
+    if (mode === 'gemini') return t('vm.create.setupModeGemini');
+    return t('vm.create.setupModeManual');
   };
 
   const getStatusColor = (status: SessionStatus) => {
@@ -40,107 +40,90 @@ export const AgentSessionList: React.FC<AgentSessionListProps> = ({
     }
   };
 
-  const getStatusText = (status: SessionStatus) => {
-    switch (status) {
-      case 'running':
-        return t('common.status.running') || 'Running';
-      case 'stopped':
-        return t('common.status.stopped') || 'Stopped';
-      case 'creating':
-        return t('common.status.creating') || 'Creating';
-      case 'error':
-        return t('common.status.error') || 'Error';
-      default:
-        return status;
-    }
-  };
+  const getStatusText = (status: SessionStatus) => t(`common.status.${status}`);
 
   if (sessions.length === 0) {
     return (
       <Container variant="light" padding="lg" className="text-center" role="status" aria-live="polite">
-        <p className="font-pixel text-sm text-neutral-teal">{t('vm.list.noSessions') || 'No active sessions'}</p>
+        <p className="font-pixel text-sm text-neutral-teal">{t('vm.list.noSessions')}</p>
       </Container>
     );
   }
 
   return (
-    <div className="agent-session-list" role="list" aria-label="Agent sessions list">
+    <div className="agent-session-list" role="list" aria-label={t('vm.list.ariaLabel')}>
       {sessions.map((session) => (
-        <Container 
-          key={session.id} 
-          variant="light" 
-          padding="md" 
+        <Container
+          key={session.id}
+          variant="light"
+          padding="md"
           className="session-row"
           role="listitem"
           aria-labelledby={`session-title-${session.id}`}
         >
           <div className="session-main">
-            <div 
+            <div
               id={`session-title-${session.id}`}
               className="session-title"
-              aria-label={`Session: ${session.name || session.id}`}
+              aria-label={t('vm.list.sessionAria', { name: session.name || session.id })}
             >
               {session.name || session.id}
             </div>
-            <div className="session-meta" aria-label="Session details">
+            <div className="session-meta" aria-label={t('vm.list.sessionDetailsAria')}>
               <span>
-                <strong>{t('vm.list.setupMode') || 'Setup Mode'}:</strong> 
-                <span aria-label={`Setup mode: ${getSetupModeLabel(session.setupMode)}`}>
+                <strong>{t('vm.list.setupMode')}:</strong>{' '}
+                <span aria-label={t('vm.list.setupModeAria', { mode: getSetupModeLabel(session.setupMode) })}>
                   {getSetupModeLabel(session.setupMode)}
                 </span>
               </span>
               <span className={getStatusColor(session.status)}>
-                <strong>{t('vm.list.status') || 'Status'}:</strong> 
-                <span aria-label={`Status: ${getStatusText(session.status)}`}>
+                <strong>{t('vm.list.status')}:</strong>{' '}
+                <span aria-label={t('vm.list.statusAria', { status: getStatusText(session.status) })}>
                   {getStatusText(session.status)}
                 </span>
               </span>
               {session.vmIp && (
                 <span>
-                  <strong>IP:</strong> 
-                  <span aria-label={`IP address: ${session.vmIp}`}>
-                    {session.vmIp}
-                  </span>
+                  <strong>{t('common.ip')}:</strong>{' '}
+                  <span aria-label={t('vm.list.ipAria', { ip: session.vmIp })}>{session.vmIp}</span>
                 </span>
               )}
               <span className="session-id">
-                <strong>ID:</strong> 
-                <span aria-label={`Session ID: ${session.id}`}>
-                  {session.id}
-                </span>
+                <strong>{t('common.id')}:</strong>{' '}
+                <span aria-label={t('vm.list.sessionIdAria', { id: session.id })}>{session.id}</span>
               </span>
             </div>
           </div>
 
           <div className="session-actions">
-            <Button 
-              variant="primary" 
-              onClick={() => onConnect(session.id)} 
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
+            <Button
+              variant="primary"
+              onClick={() => onConnect(session.id)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
                   onConnect(session.id);
                 }
               }}
               disabled={session.status !== 'running'}
-              aria-label={`Connect to session ${session.name || session.id}`}
+              aria-label={t('vm.list.connectAria', { name: session.name || session.id })}
               tabIndex={0}
             >
-              {t('common.connect') || 'Connect'}
+              {t('common.connect')}
             </Button>
-            <Button 
-              variant="error" 
+            <Button
+              variant="error"
               onClick={() => setDeleteModalSession(session)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
                   setDeleteModalSession(session);
                 }
               }}
-              aria-label={`Delete infrastructure for session ${session.name || session.id}`}
+              aria-label={t('vm.list.deleteAria', { name: session.name || session.id })}
               tabIndex={0}
             >
-              {t('vm.delete.button') || 'Delete Infrastructure'}
+              {t('vm.delete.button')}
             </Button>
           </div>
         </Container>

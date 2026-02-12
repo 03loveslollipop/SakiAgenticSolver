@@ -42,7 +42,7 @@ export const HeroPixelAnimation: React.FC<HeroPixelAnimationProps> = ({
   particleCount = 250,
   repulsionRadius = 75,
   repulsionForce = 0.6,
-  returnSpeed = 0.05,
+  returnSpeed = 0.0001,
   idleWaveAmplitude = 4,
   colors = DEFAULT_COLORS,
   className = '',
@@ -111,7 +111,7 @@ export const HeroPixelAnimation: React.FC<HeroPixelAnimationProps> = ({
       const maxDimension = Math.max(canvas.width, canvas.height, 1);
       const radius = Math.max(80, repulsionRadius);
       const maxOffset = radius * repulsionForce;
-      const baseReturn = Math.max(0.006, Math.min(0.09, returnSpeed * 0.65));
+      const baseReturn = Math.max(0.0000001, Math.min(0.09, returnSpeed * 0.65));
       let currentColor = '';
 
       blocksRef.current.forEach((block) => {

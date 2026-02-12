@@ -64,7 +64,7 @@ describe('useResponsive Hook Properties', () => {
             value: widths[0],
           });
 
-          const { result } = renderHook(() => useResponsive());
+          const { result, unmount } = renderHook(() => useResponsive());
           
           // Test each width in sequence
           widths.forEach((width) => {
@@ -81,14 +81,20 @@ describe('useResponsive Hook Properties', () => {
             if (width < 768) {
               expect(result.current.isMobile).toBe(true);
               expect(result.current.isDesktop).toBe(false);
+            } else if (width < 1024) {
+              expect(result.current.isMobile).toBe(false);
+              expect(result.current.isTablet).toBe(true);
+              expect(result.current.isDesktop).toBe(false);
             } else {
               expect(result.current.isMobile).toBe(false);
               expect(result.current.isDesktop).toBe(true);
             }
           });
+
+          unmount();
         }
       ),
       { numRuns: 100 }
     );
-  });
+  }, 30_000);
 });

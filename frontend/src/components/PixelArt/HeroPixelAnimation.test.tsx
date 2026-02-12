@@ -6,10 +6,40 @@ import { HeroPixelAnimation } from './HeroPixelAnimation';
 // Mock requestAnimationFrame and cancelAnimationFrame
 const mockRequestAnimationFrame = jest.fn();
 const mockCancelAnimationFrame = jest.fn();
+const mockGetContext = jest.fn();
+const mockFillRect = jest.fn();
+const mockClearRect = jest.fn();
+const mockSetTransform = jest.fn();
 
 beforeAll(() => {
   global.requestAnimationFrame = mockRequestAnimationFrame;
   global.cancelAnimationFrame = mockCancelAnimationFrame;
+
+  // Minimal canvas API to allow the effect to proceed in jsdom.
+  HTMLCanvasElement.prototype.getContext = mockGetContext;
+  mockGetContext.mockReturnValue({
+    fillRect: mockFillRect,
+    clearRect: mockClearRect,
+    setTransform: mockSetTransform,
+    fillStyle: '',
+  });
+
+  Object.defineProperty(HTMLCanvasElement.prototype, 'offsetWidth', {
+    writable: true,
+    value: 300,
+  });
+  Object.defineProperty(HTMLCanvasElement.prototype, 'offsetHeight', {
+    writable: true,
+    value: 200,
+  });
+  HTMLCanvasElement.prototype.getBoundingClientRect = jest.fn(() => ({
+    left: 0,
+    top: 0,
+    width: 300,
+    height: 200,
+    right: 300,
+    bottom: 200,
+  }));
 });
 
 afterAll(() => {
@@ -20,6 +50,10 @@ describe('HeroPixelAnimation', () => {
   beforeEach(() => {
     mockRequestAnimationFrame.mockClear();
     mockCancelAnimationFrame.mockClear();
+    mockGetContext.mockClear();
+    mockFillRect.mockClear();
+    mockClearRect.mockClear();
+    mockSetTransform.mockClear();
   });
 
   describe('Rendering', () => {

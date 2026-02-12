@@ -33,6 +33,7 @@ export interface VMCreationRequest {
   agentModel: string;
   vmSize: VMSize;
   setupMode?: SetupMode;
+  deployAgent?: boolean;
 }
 
 export interface SSHConnectionInfo {

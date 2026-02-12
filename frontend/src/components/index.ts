@@ -14,6 +14,8 @@ export type { LoadingProps } from './Loading';
 export { Sidebar } from './Sidebar';
 export type { SidebarProps, SidebarItem } from './Sidebar';
 
+export { AppShell } from './AppShell';
+
 export { Navigation } from './Navigation';
 export type { NavigationProps, NavigationItem } from './Navigation';
 
@@ -34,6 +36,7 @@ export { SetupModeSelector } from './SetupModeSelector';
 export type { SetupModeSelectorProps, SetupMode } from './SetupModeSelector';
 
 export { LanguageSelector } from './LanguageSelector';
+export type { LanguageSelectorProps } from './LanguageSelector';
 
 export { LazyImage } from './LazyImage';
 export type { LazyImageProps } from './LazyImage';

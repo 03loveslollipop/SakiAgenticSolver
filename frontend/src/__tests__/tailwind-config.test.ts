@@ -39,12 +39,12 @@ describe('Tailwind CSS 8-bit Theme Configuration', () => {
     // Check if the values are correct (may be strings or arrays)
     const getFontSize = (size: any) => Array.isArray(size) ? size[0] : size;
     
-    expect(getFontSize(fontSize.xs)).toBe('8px');
-    expect(getFontSize(fontSize.sm)).toBe('10px');
-    expect(getFontSize(fontSize.base)).toBe('12px');
-    expect(getFontSize(fontSize.lg)).toBe('16px');
-    expect(getFontSize(fontSize.xl)).toBe('20px');
-    expect(getFontSize(fontSize['2xl'])).toBe('24px');
+    expect(getFontSize(fontSize.xs)).toBe('10px');
+    expect(getFontSize(fontSize.sm)).toBe('12px');
+    expect(getFontSize(fontSize.base)).toBe('14px');
+    expect(getFontSize(fontSize.lg)).toBe('18px');
+    expect(getFontSize(fontSize.xl)).toBe('24px');
+    expect(getFontSize(fontSize['2xl'])).toBe('30px');
   });
 
   test('should have custom spacing scale', () => {

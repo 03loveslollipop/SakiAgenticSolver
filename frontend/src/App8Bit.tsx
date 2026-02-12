@@ -1,6 +1,7 @@
 // App8Bit.tsx - 8-bit redesigned application
 import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ThemeProvider } from './theme';
 import { AuthProvider } from './contexts/AuthContext';
 import { LoadingProvider } from './contexts/LoadingContext';
@@ -9,6 +10,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Loading } from './components/Loading/Loading';
 import PrivateRoute8Bit from './components/PrivateRoute8Bit';
 import PublicRoute8Bit from './components/PublicRoute8Bit';
+import AdminRoute from './components/AdminRoute';
 import GlobalLoadingIndicator from './components/GlobalLoadingIndicator';
 import './App.css';
 
@@ -17,15 +19,23 @@ const LandingPage = lazy(() => import('./pages/LandingPage').then((module) => ({
 const AuthPage = lazy(() => import('./pages/AuthPage').then((module) => ({ default: module.AuthPage })));
 const Dashboard = lazy(() => import('./pages/Dashboard').then((module) => ({ default: module.Dashboard })));
 const VMCreatePage = lazy(() => import('./pages/VMCreatePage').then((module) => ({ default: module.VMCreatePage })));
+const WriteupsPage = lazy(() => import('./pages/WriteupsPage').then((module) => ({ default: module.WriteupsPage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })));
+const SessionDetail = lazy(() => import('./components/SessionDetail'));
+const WriteupDetail = lazy(() => import('./components/WriteupDetail'));
+const UserManagement = lazy(() => import('./components/UserManagement'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
-const FullscreenRouteLoader = () => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-darkPurple/70 backdrop-blur-sm">
-    <div className="border-4 border-accent-cyan bg-neutral-darkPurple p-lg shadow-pixel-lg">
-      <Loading size="lg" text="Loading page..." />
+const FullscreenRouteLoader = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-darkPurple/70 backdrop-blur-sm">
+      <div className="border-4 border-accent-cyan bg-neutral-darkPurple p-lg shadow-pixel-lg">
+        <Loading size="lg" text={t('app.loadingPage')} />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 function App8Bit() {
   return (
@@ -87,7 +97,23 @@ function App8Bit() {
                         path="/writeups" 
                         element={
                           <PrivateRoute8Bit>
-                            <Dashboard />
+                            <WriteupsPage />
+                          </PrivateRoute8Bit>
+                        } 
+                      />
+                      <Route 
+                        path="/writeups/:sessionId" 
+                        element={
+                          <PrivateRoute8Bit>
+                            <WriteupDetail />
+                          </PrivateRoute8Bit>
+                        } 
+                      />
+                      <Route 
+                        path="/sessions/:sessionId" 
+                        element={
+                          <PrivateRoute8Bit>
+                            <SessionDetail />
                           </PrivateRoute8Bit>
                         } 
                       />
@@ -95,9 +121,17 @@ function App8Bit() {
                         path="/settings" 
                         element={
                           <PrivateRoute8Bit>
-                            <Dashboard />
+                            <SettingsPage />
                           </PrivateRoute8Bit>
                         } 
+                      />
+                      <Route
+                        path="/users"
+                        element={
+                          <AdminRoute>
+                            <UserManagement />
+                          </AdminRoute>
+                        }
                       />
                       
                       {/* 404 page */}

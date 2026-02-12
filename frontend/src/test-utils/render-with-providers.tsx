@@ -3,6 +3,9 @@ import React, { ReactElement } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '../theme';
+import { AuthProvider } from '../contexts/AuthContext';
+import { LoadingProvider } from '../contexts/LoadingContext';
+import { ErrorProvider } from '../contexts/ErrorContext';
 
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   initialRoute?: string;
@@ -11,9 +14,13 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
 const AllTheProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <BrowserRouter>
-      <ThemeProvider>
-        {children}
-      </ThemeProvider>
+      <AuthProvider>
+        <LoadingProvider>
+          <ErrorProvider>
+            <ThemeProvider>{children}</ThemeProvider>
+          </ErrorProvider>
+        </LoadingProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 };

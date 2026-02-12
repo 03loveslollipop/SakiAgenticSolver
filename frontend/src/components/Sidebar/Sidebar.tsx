@@ -1,6 +1,9 @@
 // Sidebar.tsx - 8-bit styled sidebar navigation component
 import React, { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
+import { LanguageSelector } from '../LanguageSelector';
 
 export interface SidebarItem {
   id: string;
@@ -13,22 +16,25 @@ export interface SidebarProps {
   items: SidebarItem[];
   logo?: React.ReactNode;
   collapsible?: boolean;
+  showLanguageSelector?: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   items,
   logo,
   collapsible = true,
+  showLanguageSelector = true,
 }) => {
+  const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
-  
+
   const toggleCollapse = () => {
     if (collapsible) {
       setIsCollapsed(!isCollapsed);
     }
   };
-  
+
   return (
     <aside
       className={`
@@ -37,9 +43,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ${isCollapsed ? 'w-16' : 'w-64'}
         flex flex-col
       `}
-      aria-label="Main navigation"
+      aria-label={t('nav.mainNavigation')}
     >
-      {/* Logo Section */}
       <div className="p-md border-b-4 border-neutral-teal flex items-center justify-between">
         {logo && (
           <div className={`${isCollapsed ? 'hidden' : 'block'}`}>
@@ -48,25 +53,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
         {collapsible && (
           <button
+            type="button"
             onClick={toggleCollapse}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
                 toggleCollapse();
               }
             }}
-            className="p-xs hover:bg-neutral-teal transition-colors focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2"
-            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            tabIndex={0}
+            className="p-xs text-white hover:bg-neutral-teal transition-colors focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2"
+            aria-label={isCollapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar')}
           >
-            <span className="text-white font-pixel text-xs">
-              {isCollapsed ? '>' : '<'}
-            </span>
+            {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
         )}
       </div>
-      
-      {/* Navigation Items */}
+
       <nav className="flex-1 overflow-y-auto">
         <ul className="flex flex-col">
           {items.map((item) => {
@@ -79,8 +81,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     flex items-center gap-md p-md
                     font-pixel text-sm
                     transition-colors
-                    ${isActive 
-                      ? 'bg-accent-cyan text-white border-l-4 border-primary-yellow' 
+                    ${isActive
+                      ? 'bg-accent-cyan text-white border-l-4 border-primary-yellow'
                       : 'text-white hover:bg-neutral-teal'
                     }
                   `}
@@ -93,6 +95,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </ul>
       </nav>
+
+      {showLanguageSelector && (
+        <div className="mt-auto border-t-4 border-neutral-teal p-sm flex justify-center">
+          {isCollapsed ? (
+            <LanguageSelector variant="icon" />
+          ) : (
+            <LanguageSelector variant="full" className="w-full" />
+          )}
+        </div>
+      )}
     </aside>
   );
 };

@@ -1,0 +1,2 @@
+export { WriteupsPage } from './WriteupsPage';
+

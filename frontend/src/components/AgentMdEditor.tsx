@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../services/api';
 import './AgentMdEditor.css';
 
@@ -7,6 +8,7 @@ interface AgentMdEditorProps {
 }
 
 const AgentMdEditor = ({ sessionId }: AgentMdEditorProps) => {
+  const { t } = useTranslation();
   const [content, setContent] = useState('');
   const [originalContent, setOriginalContent] = useState('');
   const [loading, setLoading] = useState(true);
@@ -26,7 +28,7 @@ const AgentMdEditor = ({ sessionId }: AgentMdEditorProps) => {
       setContent(data);
       setOriginalContent(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load AGENT.md');
+      setError(err instanceof Error ? err.message : t('errors.failedToLoadAgentMd'));
     } finally {
       setLoading(false);
     }
@@ -47,9 +49,9 @@ const AgentMdEditor = ({ sessionId }: AgentMdEditorProps) => {
       await apiClient.updateAgentMd(sessionId, content);
       setOriginalContent(content);
       setEditing(false);
-      alert('AGENT.md updated successfully! The agent has been notified of the changes.');
+      alert(t('agentMdEditor.saveSuccessAlert'));
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to save AGENT.md');
+      alert(err instanceof Error ? err.message : t('errors.failedToSaveAgentMd'));
     } finally {
       setSaving(false);
     }
@@ -59,8 +61,8 @@ const AgentMdEditor = ({ sessionId }: AgentMdEditorProps) => {
     return (
       <div className="agent-md-editor">
         <div className="loading">
-          <div className="spinner"></div>
-          <p>Loading AGENT.md...</p>
+          <div className="spinner" />
+          <p>{t('agentMdEditor.loading')}</p>
         </div>
       </div>
     );
@@ -72,7 +74,7 @@ const AgentMdEditor = ({ sessionId }: AgentMdEditorProps) => {
         <div className="error-container">
           <p className="error-message">{error}</p>
           <button onClick={loadContent} className="btn btn-primary">
-            Retry
+            {t('common.retry')}
           </button>
         </div>
       </div>
@@ -83,21 +85,21 @@ const AgentMdEditor = ({ sessionId }: AgentMdEditorProps) => {
     <div className="agent-md-editor">
       <div className="editor-header">
         <div className="editor-title">
-          <h3>AGENT.md</h3>
-          <p>User-modifiable rules and preferences for the AI agent</p>
+          <h3>{t('agentMdEditor.title')}</h3>
+          <p>{t('agentMdEditor.subtitle')}</p>
         </div>
         <div className="editor-actions">
           {!editing ? (
             <button onClick={handleEdit} className="btn btn-primary">
-              Edit
+              {t('common.edit')}
             </button>
           ) : (
             <>
               <button onClick={handleCancel} className="btn btn-secondary" disabled={saving}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button onClick={handleSave} className="btn btn-primary" disabled={saving}>
-                {saving ? 'Saving...' : 'Save Changes'}
+                {saving ? t('agentMdEditor.saving') : t('agentMdEditor.saveChanges')}
               </button>
             </>
           )}
@@ -108,20 +110,19 @@ const AgentMdEditor = ({ sessionId }: AgentMdEditorProps) => {
         {editing ? (
           <textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(event) => setContent(event.target.value)}
             className="editor-textarea"
-            placeholder="Enter agent rules and preferences..."
+            placeholder={t('agentMdEditor.placeholder')}
           />
         ) : (
-          <pre className="editor-preview">{content || 'No content yet.'}</pre>
+          <pre className="editor-preview">{content || t('agentMdEditor.noContent')}</pre>
         )}
       </div>
 
       {editing && (
         <div className="editor-info">
           <p>
-            <strong>Note:</strong> Changes to AGENT.md will be applied immediately and the agent
-            will be notified of the configuration update.
+            <strong>{t('auth.note.title')}</strong> {t('agentMdEditor.editingNote')}
           </p>
         </div>
       )}

@@ -16,17 +16,17 @@ export const SetupModeSelector: React.FC<SetupModeSelectorProps> = ({
   const { t } = useTranslation();
 
   const modes: Array<{ id: SetupMode; icon: string; title: string; description: string }> = [
-    { 
-      id: 'gemini', 
-      icon: '🤖',
-      title: t('vm.create.setupModeGemini') || 'Gemini CLI',
-      description: t('vm.create.setupModeGeminiDesc') || 'Pre-configured with Gemini CLI for AI-powered development'
+    {
+      id: 'gemini',
+      icon: '[AI]',
+      title: t('vm.create.setupModeGemini'),
+      description: t('vm.create.setupModeGeminiDesc'),
     },
-    { 
-      id: 'manual', 
-      icon: '🔧',
-      title: t('vm.create.setupModeManual') || 'Manual',
-      description: t('vm.create.setupModeManualDesc') || 'Basic tools and SSH access - configure your own environment'
+    {
+      id: 'manual',
+      icon: '[M]',
+      title: t('vm.create.setupModeManual'),
+      description: t('vm.create.setupModeManualDesc'),
     },
   ];
 
@@ -38,9 +38,9 @@ export const SetupModeSelector: React.FC<SetupModeSelectorProps> = ({
             key={mode.id}
             type="button"
             onClick={() => onChange(mode.id)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
                 onChange(mode.id);
               }
             }}

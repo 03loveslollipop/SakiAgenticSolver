@@ -1,122 +1,565 @@
 {
   "nav": {
-    "home": "Inicio",
+    "home": "Hogar",
     "explore": "Explorar",
-    "login": "Iniciar Sesión",
-    "signup": "Registrarse",
+    "login": "Acceso",
+    "signup": "Inscribirse",
     "dashboard": "Panel",
-    "vms": "Máquinas Virtuales",
-    "createVm": "Crear VM",
-    "settings": "Configuración"
+    "vms": "Máquinas virtuales",
+    "createVm": "Crear máquina virtual",
+    "writeups": "Escritos",
+    "settings": "Ajustes",
+    "mainNavigation": "Navegación principal",
+    "openMenu": "Abrir menú de navegación",
+    "closeMenu": "Cerrar menú de navegación",
+    "collapseSidebar": "Contraer barra lateral",
+    "expandSidebar": "Expandir barra lateral",
+    "appLogo": "Logotipo de la aplicación"
   },
   "landing": {
     "hero": {
-      "title": "Bienvenido a la Plataforma de Automatización CTF",
-      "subtitle": "Lanza y gestiona tus entornos CTF con facilidad",
+      "title": "Bienvenido a la plataforma de automatización CTF",
+      "subtitle": "Inicie y administre sus entornos CTF con facilidad",
       "ctaExplore": "Explorar",
-      "ctaJoin": "Unirse a la Comunidad"
+      "ctaJoin": "Únete a la comunidad"
     },
     "newHero": {
-      "message": "Automatiza pipelines y entornos de agentes de IA para casos de uso de seguridad",
-      "ctaLogin": "Iniciar sesi\u00f3n",
-      "ctaFeatures": "Funciones",
+      "message": "Automatice los canales y entornos de los agentes de IA para casos de uso de seguridad",
+      "ctaLogin": "Acceso",
+      "ctaFeatures": "Características",
       "features": {
-        "title": "Funciones",
+        "title": "Características",
         "vm": {
-          "title": "Gesti\u00f3n de VM",
-          "description": "Inicia y administra m\u00e1quinas virtuales f\u00e1cilmente."
+          "title": "Gestión de máquinas virtuales",
+          "description": "Inicie y administre máquinas virtuales con facilidad."
         },
         "security": {
           "title": "Seguridad",
-          "description": "Practica ciberseguridad en un entorno seguro."
+          "description": "Practicar la ciberseguridad en un entorno seguro."
         },
         "progress": {
-          "title": "Seguimiento de progreso",
-          "description": "Supervisa tu aprendizaje y tus logros."
+          "title": "Seguimiento del progreso",
+          "description": "Supervise su viaje de aprendizaje y sus logros."
         }
       },
       "footer": {
-        "copyright": "(c) {{year}} Plataforma de Automatizaci\u00f3n CTF"
+        "copyright": "(c) {{year}} Plataforma de automatización CTF"
       }
     }
   },
   "auth": {
+    "checkingAuthentication": "Comprobando autenticación...",
+    "note": {
+      "title": "Nota:",
+      "body": "Las cuentas de usuario son creadas por los administradores. Si necesita acceso, comuníquese con su administrador."
+    },
+    "twoFactor": {
+      "enterCode": "Ingrese el código de 6 dígitos de su aplicación de autenticación.",
+      "codeLabel": "Código de autenticación",
+      "codePlaceholder": "000000",
+      "verify": "Verificar",
+      "verifying": "Verificando...",
+      "completeSetup": "Configuración completa",
+      "setupInstructions": "Escanee este código QR en su aplicación de autenticación y luego ingrese el código generado.",
+      "qrAlt": "Código QR 2FA",
+      "manualCode": "código manual"
+    },
     "login": {
-      "title": "Iniciar Sesión",
-      "email": "Correo Electrónico",
+      "title": "Acceso",
+      "welcomeDescription": "Inicie sesión para acceder a sus máquinas virtuales y continuar su viaje de ciberseguridad.",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu.correo electrónico@ejemplo.com",
       "password": "Contraseña",
-      "rememberMe": "Recordarme",
-      "forgotPassword": "¿Olvidaste tu contraseña?",
-      "submit": "Iniciar Sesión",
-      "switchToSignup": "¿No tienes cuenta? Regístrate"
+      "passwordPlaceholder": "Introduce tu contraseña",
+      "rememberMe": "Acuérdate de mí",
+      "forgotPassword": "¿Has olvidado tu contraseña?",
+      "forgotPasswordInfo": "La funcionalidad de restablecimiento de contraseña se implementaría aquí.",
+      "signingIn": "Iniciando sesión...",
+      "submit": "Iniciar sesión",
+      "switchToSignup": "¿No tienes una cuenta? Inscribirse"
     },
     "signup": {
-      "title": "Registrarse",
+      "title": "Inscribirse",
       "name": "Nombre",
-      "email": "Correo Electrónico",
+      "email": "Correo electrónico",
       "password": "Contraseña",
-      "confirmPassword": "Confirmar Contraseña",
-      "submit": "Registrarse",
-      "switchToLogin": "¿Ya tienes cuenta? Inicia sesión"
+      "confirmPassword": "confirmar Contraseña",
+      "submit": "Inscribirse",
+      "switchToLogin": "¿Ya tienes una cuenta? Acceso"
+    }
+  },
+  "app": {
+    "loadingPage": "Cargando página...",
+    "loadingAria": "La aplicación se está cargando"
+  },
+  "dashboard": {
+    "subtitle": "Iniciado sesión como {{email}}",
+    "loadingSessions": "Cargando sesiones...",
+    "stats": {
+      "totalSessions": "Sesiones totales",
+      "running": "Correr",
+      "errors": "Errores"
+    },
+    "sections": {
+      "recentSessions": "Sesiones recientes",
+      "sessions": "Sesiones",
+      "quickActions": "Acciones rápidas"
+    },
+    "empty": {
+      "noSessions": "No se encontraron sesiones."
+    },
+    "actions": {
+      "createNewVm": "Crear nueva máquina virtual",
+      "browseWriteups": "Explorar reseñas",
+      "openSettings": "Abrir configuración"
     }
   },
   "vm": {
     "create": {
-      "title": "Crear Máquina Virtual",
-      "basicInfo": "Información Básica",
-      "name": "Nombre de VM",
-      "os": "Sistema Operativo",
+      "title": "Crear máquina virtual",
+      "subtitle": "Configure una nueva sesión de backend y lance su entorno de desafío.",
+      "basicInfo": "Información básica",
+      "name": "Nombre de la máquina virtual",
+      "os": "Sistema operativo",
       "resources": "Recursos",
       "cpu": "Núcleos de CPU",
       "ram": "RAM (GB)",
       "storage": "Almacenamiento (GB)",
-      "network": "Configuración de Red",
-      "setupMode": "Modo de Configuración",
+      "network": "Configuración de red",
+      "setupMode": "Modo de configuración",
       "setupModeGemini": "Gemini CLI",
       "setupModeManual": "Manual",
-      "setupModeGeminiDesc": "Preconfigurado con Gemini CLI para desarrollo con IA",
-      "setupModeManualDesc": "Herramientas básicas y acceso SSH - configura tu propio entorno",
-      "advanced": "Opciones Avanzadas",
-      "submit": "Crear VM",
+      "setupModeGeminiDesc": "Preconfigurado con Gemini CLI para desarrollo impulsado por IA.",
+      "setupModeManualDesc": "Herramientas básicas y acceso SSH: configure su propio entorno.",
+      "advanced": "Opciones avanzadas",
+      "challengeUrlsTitle": "URL de desafío",
+      "challengeUrlLabel": "URL del desafío {{index}}",
+      "challengeUrlPlaceholder": "https://example.com/challenge.bin",
+      "addUrl": "Agregar URL",
+      "removeUrl": "Eliminar",
+      "instructionsTitle": "Instrucciones del desafío",
+      "instructionsLabel": "Instrucciones",
+      "instructionsPlaceholder": "Describa el contexto del desafío y lo que el agente debe priorizar.",
+      "agentConfigTitle": "Configuración del agente",
+      "agentType": "Tipo de agente",
+      "agentTypes": {
+        "codex": "Codex",
+        "copilot": "Copilot"
+      },
+      "agentPresets": {
+        "codexCli": "Codex CLI",
+        "codexCliDesc": "Instale dependencias y Codex CLI, autentique y inicie el agente con sus instrucciones.",
+        "copilotCli": "Copilot CLI",
+        "copilotCliDesc": "Instale dependencias y Copilot CLI, autentique y inicie el agente con sus instrucciones.",
+        "geminiCli": "Gemini CLI",
+        "geminiCliDesc": "Instale dependencias y Gemini CLI, autentique y inicie el agente con sus instrucciones.",
+        "mixtralVibeCli": "Mixtral Vibe CLI",
+        "mixtralVibeCliDesc": "Instale dependencias y Mixtral Vibe CLI, autentique y inicie el agente con sus instrucciones.",
+        "manual": "Manual (Solo herramientas)",
+        "manualDesc": "Implemente la máquina virtual e instale herramientas CTF, pero no implemente ningún agente.",
+        "manualToolsOnlyNote": "Modo manual seleccionado. Aprovisionaremos la máquina virtual e instalaremos herramientas, pero no se desplegará ningún agente.",
+        "bootstrapScriptNote": "Cuando la VM esté lista, puede ejecutar ~/bootstrap_agent.sh para autenticarse y (re)iniciar el agente."
+      },
+      "agentModelLabel": "Modelo de agente",
+      "agentModelPlaceholder": "gpt-4",
+      "infrastructureSizeTitle": "Tamaño de la infraestructura",
+      "vmSizeLabel": "Tamaño de máquina virtual",
+      "sizeOptions": {
+        "small": {
+          "label": "Pequeño",
+          "details": "2 vCPU, 2 GB de RAM, disco de 30 GB"
+        },
+        "medium": {
+          "label": "Medio",
+          "details": "2 vCPU, 4 GB de RAM, disco de 30 GB"
+        },
+        "large": {
+          "label": "Grande",
+          "details": "2 vCPU, 8 GB de RAM, disco de 30 GB"
+        }
+      },
+      "backToDashboard": "Volver al panel",
+      "creating": "Creando máquina virtual...",
+      "submit": "Crear máquina virtual",
       "cancel": "Cancelar"
     },
     "list": {
-      "title": "Sesiones de Agente",
+      "title": "Sesiones de agentes",
       "noSessions": "No hay sesiones activas",
-      "setupMode": "Modo de Configuración",
+      "setupMode": "Modo de configuración",
       "status": "Estado",
-      "actions": "Acciones"
+      "actions": "Comportamiento",
+      "ariaLabel": "Lista de sesiones de agente",
+      "sessionAria": "Sesión: {{name}}",
+      "sessionDetailsAria": "Detalles de la sesión",
+      "setupModeAria": "Modo de configuración: {{mode}}",
+      "statusAria": "Estado: {{status}}",
+      "ipAria": "Dirección IP: {{ip}}",
+      "sessionIdAria": "ID de sesión: {{id}}",
+      "connectAria": "Conéctese a la sesión {{name}}",
+      "deleteAria": "Eliminar infraestructura para la sesión {{name}}"
     },
     "delete": {
-      "button": "Eliminar Infraestructura",
-      "modalTitle": "Eliminar Infraestructura de Agente",
-      "warning": "Esta acción destruirá permanentemente todos los recursos en la nube asociados con esta sesión.",
+      "button": "Eliminar infraestructura",
+      "modalTitle": "Eliminar infraestructura del agente",
+      "warning": "Esta acción destruirá permanentemente todos los recursos de la nube asociados con esta sesión.",
+      "sessionInfoAria": "Información de la sesión",
+      "sessionLabel": "Sesión",
+      "sessionNameAria": "Nombre de la sesión: {{name}}",
+      "sessionIdTitle": "ID de sesión",
+      "sessionIdAria": "ID de sesión: {{id}}",
       "sessionIdLabel": "Ingrese el ID de sesión para confirmar",
       "sessionIdPlaceholder": "Escriba el ID de sesión aquí",
-      "confirmPhraseLabel": "Escriba la frase de confirmación",
-      "confirmPhrasePlaceholder": "delete agent infrastructure",
-      "confirmPhraseRequired": "delete agent infrastructure",
-      "submit": "Eliminar Infraestructura",
+      "sessionIdInstruction": "Ingrese la ID de sesión exacta que se muestra arriba para confirmar la eliminación.",
+      "confirmPhraseLabel": "Escribe la frase de confirmación",
+      "confirmPhrasePlaceholder": "eliminar la infraestructura del agente",
+      "confirmPhraseRequired": "eliminar la infraestructura del agente",
+      "confirmPhraseInstruction": "Escriba la frase exacta \"{{phrase}}\" para confirmar la eliminación.",
+      "submit": "Eliminar infraestructura",
       "cancel": "Cancelar",
+      "cancelAria": "Cancelar eliminación",
       "deleting": "Eliminando infraestructura...",
+      "enabledDescription": "El botón Eliminar está habilitado. Presione Entrar para eliminar o Tab para cancelar.",
+      "disabledDescription": "El botón Eliminar está deshabilitado. Ambos campos de confirmación deben estar correctamente cumplimentados.",
       "success": "Infraestructura eliminada exitosamente",
-      "error": "Error al eliminar la infraestructura"
+      "error": "No se pudo eliminar la infraestructura"
+    }
+  },
+  "writeups": {
+    "title": "Escritos",
+    "subtitle": "Explore y busque reseñas de desafíos almacenadas en el backend.",
+    "searchPlaceholder": "Palabras clave...",
+    "searching": "Búsqueda...",
+    "category": "Categoría",
+    "allCategories": "Todas las categorías",
+    "categories": {
+      "pwn": "PWN",
+      "crypto": "Crypto",
+      "reversing": "Reversing",
+      "web": "Web",
+      "forensics": "Forensics",
+      "misc": "Misc"
+    },
+    "loading": "Cargando reseñas...",
+    "empty": "No se encontraron reseñas para los filtros actuales.",
+    "page": "Página {{page}}",
+    "card": {
+      "session": "Sesión {{id}}",
+      "agent": "Agente: {{agentType}} ({{agentModel}})",
+      "completed": "Completado: {{time}}",
+      "noPreview": "No hay vista previa disponible.",
+      "view": "Ver reseña"
+    }
+  },
+  "settings": {
+    "subtitle": "Estado de la conectividad de la cuenta y del backend.",
+    "sections": {
+      "account": "Cuenta",
+      "backendStatus": "Estado del servidor",
+      "admin": "Administración"
+    },
+    "labels": {
+      "email": "Correo electrónico:",
+      "role": "Role:",
+      "locale": "Lugar:",
+      "twoFactorEnabled": "2FA habilitado:",
+      "api": "API:"
+    },
+    "actions": {
+      "refreshAccount": "Actualizar cuenta",
+      "refreshingAccount": "Actualizando cuenta...",
+      "checkBackend": "Verificar backend",
+      "checkingBackend": "Comprobando el backend...",
+      "manageUsers": "Administrar usuarios"
+    },
+    "backend": {
+      "status": {
+        "healthy": "Conectado",
+        "unhealthy": "Indisponible",
+        "unknown": "Desconocido"
+      }
+    }
+  },
+  "sessionDetail": {
+    "loading": "Cargando sesión...",
+    "errorTitle": "Error al cargar la sesión",
+    "notFound": "Sesión no encontrada",
+    "back": "<- Atrás",
+    "backToDashboard": "Volver al panel",
+    "title": "Sesión {{id}}",
+    "deleteSession": "Eliminar sesión",
+    "deleteConfirm": "¿Está seguro de que desea eliminar esta sesión? Esto finalizará la VM y no se puede deshacer.",
+    "info": {
+      "vmSize": "Tamaño de máquina virtual:",
+      "agent": "Agente:",
+      "created": "Creado:",
+      "ip": "IP:"
+    },
+    "tabs": {
+      "terminal": "Terminal",
+      "agentMd": "AGENT.md",
+      "basePrompt": "BASE_PROMPT.md",
+      "toolsMd": "TOOLS.md",
+      "changelog": "Registro de cambios",
+      "discoveries": "Descubrimientos",
+      "writeup": "redacción",
+      "sshInfo": "Información SSH"
+    },
+    "files": {
+      "basePromptTitle": "BASE_PROMPT.md (solo lectura)",
+      "basePromptDescription": "Este archivo contiene instrucciones del sistema inmutables para el agente.",
+      "toolsTitle": "HERRAMIENTAS.md (Solo lectura)",
+      "toolsDescription": "Documentación de todas las herramientas instaladas y sus versiones.",
+      "changelogTitle": "Registro de cambios",
+      "changelogDescription": "Registro con marca de tiempo de todos los comandos y acciones realizadas por el agente.",
+      "discoveriesTitle": "Descubrimientos",
+      "discoveriesDescription": "Ideas, hallazgos y análisis descubiertos durante el desafío."
+    }
+  },
+  "writeupDetail": {
+    "loading": "Cargando informe...",
+    "errorTitle": "Error al cargar la redacción",
+    "notFound": "Escritura no encontrada",
+    "backToWriteups": "Volver a reseñas",
+    "title": "Redacción: sesión {{id}}",
+    "viewSession": "Ver sesión",
+    "contentTitle": "Contenido escrito",
+    "metadata": {
+      "category": "Categoría:",
+      "agent": "Agente:",
+      "completed": "Terminado:",
+      "sessionId": "ID de sesión:",
+      "technologies": "Tecnologías y técnicas:",
+      "challengeFiles": "Archivos de desafío:"
+    }
+  },
+  "writeupUploader": {
+    "title": "redacción",
+    "subtitle": "Cargue el informe del desafío en la base de datos para referencia futura.",
+    "loadFromVmInfo": "Para cargar la redacción desde la VM, copie el contenido de la pestaña Terminal o use SSH para recuperar el archivo.",
+    "uploadSuccessAlert": "La redacción se cargó correctamente en la base de datos.",
+    "uploadedBanner": "El artículo se cargó correctamente. Ahora está disponible en la base de datos de reseñas.",
+    "formatInstructionsTitle": "Instrucciones de formato",
+    "formatInstructionsBody": "Incluya el contenido de YAML en la parte superior de su artículo con categoría y tecnologías:",
+    "metadataFallbackHint": "O complete los campos de metadatos a continuación si no utiliza frontmatter.",
+    "categoryLabel": "Categoría (opcional si está al frente)",
+    "categoryPlaceholder": "Seleccione categoría...",
+    "technologiesLabel": "Tecnologías (opcional si están al principio, separadas por comas)",
+    "technologiesPlaceholder": "por ejemplo, desbordamiento de búfer, gdb, pwntools",
+    "contentLabel": "Contenido escrito *",
+    "contentPlaceholder": "Pegue el contenido de su artículo aquí...",
+    "uploading": "Subiendo...",
+    "upload": "Subir a la base de datos",
+    "actions": {
+      "pasteExample": "Pegar ejemplo",
+      "loadFromVm": "Cargar desde VM"
+    }
+  },
+  "agentMdEditor": {
+    "title": "AGENT.md",
+    "subtitle": "Reglas y preferencias modificables por el usuario para el agente de IA.",
+    "loading": "Cargando AGENTE.md...",
+    "saving": "Ahorro...",
+    "saveChanges": "Guardar cambios",
+    "placeholder": "Ingrese las reglas y preferencias del agente...",
+    "noContent": "Aún no hay contenido.",
+    "editingNote": "Los cambios en AGENT.md se aplicarán inmediatamente y se notificará al agente sobre la actualización de la configuración.",
+    "saveSuccessAlert": "AGENT.md se actualizó correctamente. El agente ha sido notificado de los cambios."
+  },
+  "fileViewer": {
+    "loading": "Cargando {{title}}...",
+    "autoRefresh": "Actualización automática",
+    "noContent": "Aún no hay contenido."
+  },
+  "terminal": {
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "reconnect": "Reconectar",
+    "connectedMessage": "Conectado al terminal...",
+    "connectionClosed": "Conexión cerrada.",
+    "connectionLost": "Conexión perdida. Intentando volver a conectar...",
+    "reconnectingMessage": "Reconectando...",
+    "websocketError": "Error de conexión WebSocket"
+  },
+  "sshInfo": {
+    "title": "Información de conexión SSH",
+    "subtitle": "Utilice estas credenciales para conectarse a su VM a través de SSH.",
+    "loading": "Cargando información SSH...",
+    "notAvailable": "Información SSH no disponible",
+    "copied": "Copiado al portapapeles.",
+    "copyFailed": "No se pudo copiar al portapapeles.",
+    "commandTitle": "Comando SSH",
+    "copyCommand": "Copiar comando",
+    "publicKeyTitle": "Clave pública SSH",
+    "publicKeyDescription": "Descargue la clave pública SSH para autenticarse con la VM.",
+    "downloadKey": "Descargar clave SSH",
+    "downloadingKey": "Descargando...",
+    "instructionsTitle": "Instrucciones de conexión",
+    "labels": {
+      "hostname": "Nombre de host:",
+      "port": "Puerto:",
+      "username": "Nombre de usuario:"
+    },
+    "instructions": {
+      "step1": "Descargue la clave pública SSH usando el botón de arriba.",
+      "step2": "Guarde la clave en su directorio ~/.ssh/.",
+      "step3": "Establezca los permisos apropiados: chmod 600 ~/.ssh/key-file.",
+      "step4Prefix": "Conéctese usando:"
+    }
+  },
+  "userManagement": {
+    "title": "Gestión de usuarios",
+    "subtitle": "Administrar cuentas de usuario y permisos.",
+    "loading": "Cargando usuarios...",
+    "currentUser": "Tú",
+    "roles": {
+      "user": "Usuario",
+      "admin": "Administración"
+    },
+    "status": {
+      "twoFactorEnabled": "Activado",
+      "twoFactorNotSetUp": "No configurado",
+      "active": "Activo",
+      "disabled": "Desactivado"
+    },
+    "table": {
+      "email": "Correo electrónico",
+      "role": "Role",
+      "twoFactorStatus": "Estado 2FA",
+      "status": "Estado",
+      "created": "Creado",
+      "lastLogin": "Último inicio de sesión",
+      "actions": "Comportamiento"
+    },
+    "actions": {
+      "createNewUser": "Crear nuevo usuario",
+      "createUser": "Crear usuario",
+      "creating": "Creando...",
+      "disable": "Desactivar",
+      "disableUser": "Desactivar usuario",
+      "makeAdmin": "-> Administrador",
+      "makeUser": "-> Usuario",
+      "changeRoleTitle": "Cambiar rol a {{role}}"
+    },
+    "confirm": {
+      "disableUser": "¿Está seguro de que desea desactivar el usuario {{email}}?",
+      "changeRole": "¿Cambiar el rol {{email}} de {{currentRole}} a {{newRole}}?"
+    },
+    "success": {
+      "userCreated": "Usuario creado exitosamente.",
+      "userDisabled": "El usuario {{email}} ha sido deshabilitado.",
+      "roleUpdated": "Rol del usuario {{email}} actualizado a {{role}}."
+    },
+    "createModal": {
+      "title": "Crear nuevo usuario",
+      "emailLabel": "Dirección de correo electrónico",
+      "emailPlaceholder": "usuario@ejemplo.com",
+      "emailHelp": "Se generará una contraseña temporal y se enviará a esta dirección de correo electrónico.",
+      "roleLabel": "Role",
+      "roleHelp": "Los administradores pueden administrar usuarios y tener acceso completo a todas las funciones."
+    }
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "support": "Si cree que se trata de un error, comuníquese con el soporte.",
+    "actions": {
+      "home": "Regreso a casa",
+      "dashboard": "Ir al panel"
+    },
+    "terminal": {
+      "error": "ERROR: PÁGINA NO ENCONTRADA",
+      "resourceMissing": "El recurso solicitado no se pudo ubicar en la memoria del sistema.",
+      "possibleCauses": "Posibles causas:",
+      "causeInvalidUrl": "- URL no válida",
+      "causeMovedDeleted": "- Página movida o eliminada",
+      "causeTypo": "- Error tipográfico en la dirección"
     }
   },
   "errors": {
     "required": "Este campo es obligatorio",
-    "invalidEmail": "Dirección de correo electrónico inválida",
+    "emailRequired": "Se requiere correo electrónico.",
+    "invalidEmail": "Dirección de correo electrónico no válida",
+    "passwordRequired": "Se requiere contraseña.",
+    "passwordMinLength": "La contraseña debe tener al menos 6 caracteres.",
     "passwordMismatch": "Las contraseñas no coinciden",
-    "networkError": "Error de red. Por favor, intente nuevamente.",
-    "authFailed": "Autenticación fallida. Por favor, verifique sus credenciales."
+    "networkError": "Error de red. Por favor inténtalo de nuevo.",
+    "authFailed": "La autenticación falló. Por favor verifique sus credenciales.",
+    "loginFailed": "Error de inicio de sesion. Por favor inténtalo de nuevo.",
+    "unknownFileType": "Tipo de archivo desconocido.",
+    "failedToLoadFileType": "No se pudo cargar {{fileType}}.",
+    "failedToLoadSessions": "No se pudieron cargar las sesiones.",
+    "failedToLoadSession": "No se pudo cargar la sesión.",
+    "failedToDeleteSession": "No se pudo eliminar la sesión.",
+    "failedToCreateVm": "No se pudo crear la sesión de VM.",
+    "failedToLoadWriteups": "No se pudieron cargar las reseñas.",
+    "failedToSearchWriteups": "No se pudieron buscar reseñas.",
+    "failedToLoadWriteup": "No se pudo cargar la redacción.",
+    "failedToUploadWriteup": "No se pudo cargar el artículo.",
+    "failedToLoadWriteupFromVm": "No se pudo cargar la redacción desde la VM.",
+    "writeupContentRequired": "Se requiere contenido escrito.",
+    "failedToRefreshAccount": "No se pudieron actualizar los detalles de la cuenta.",
+    "failedToLoadUsers": "No se pudieron cargar los usuarios.",
+    "failedToCreateUser": "No se pudo crear el usuario.",
+    "failedToDisableUser": "No se pudo deshabilitar al usuario.",
+    "failedToUpdateUserRole": "No se pudo actualizar la función del usuario.",
+    "failedToLoadAgentMd": "No se pudo cargar AGENT.md.",
+    "failedToSaveAgentMd": "No se pudo guardar AGENT.md.",
+    "failedToLoadSshInfo": "No se pudo cargar la información SSH.",
+    "failedToDownloadSshKey": "No se pudo descargar la clave SSH.",
+    "sessionIdMismatch": "El ID de sesión no coincide.",
+    "confirmPhraseMismatch": "La frase de confirmación no coincide.",
+    "boundary": {
+      "ariaLabel": "Límite de error",
+      "title": "¡Ups! algo salió mal",
+      "defaultMessage": "Se produjo un error inesperado."
+    },
+    "toast": {
+      "ariaLabel": "Notificación de errores",
+      "dismiss": "Descartar error"
+    },
+    "vmCreate": {
+      "challengeUrlRequired": "Se requiere al menos una URL de desafío.",
+      "invalidChallengeUrl": "Las URL del desafío deben comenzar con http:// o https://.",
+      "instructionsRequired": "Se requieren instrucciones de desafío.",
+      "agentModelRequired": "Se requiere modelo de agente."
+    }
   },
   "common": {
     "loading": "Cargando...",
     "back": "Atrás",
-    "save": "Guardar",
+    "backArrow": "<-",
+    "goBack": "Volver",
+    "save": "Ahorrar",
     "cancel": "Cancelar",
-    "delete": "Eliminar",
+    "delete": "Borrar",
     "edit": "Editar",
-    "close": "Cerrar"
+    "close": "Cerca",
+    "refresh": "Refrescar",
+    "refreshing": "Refrescante...",
+    "retry": "Rever",
+    "logout": "Cerrar sesión",
+    "search": "Buscar",
+    "clearSearch": "Borrar búsqueda",
+    "previous": "Anterior",
+    "next": "Próximo",
+    "copy": "Copiar",
+    "connect": "Conectar",
+    "id": "ID",
+    "ip": "IP",
+    "yes": "Sí",
+    "no": "No",
+    "never": "Nunca",
+    "warning": "Advertencia",
+    "error": "Error",
+    "unknown": "Desconocido",
+    "unknownUser": "Usuario desconocido",
+    "unknownTime": "hora desconocida",
+    "selectLanguage": "Seleccionar idioma",
+    "status": {
+      "running": "Correr",
+      "stopped": "Interrumpido",
+      "creating": "Creando",
+      "error": "Error"
+    }
   }
 }

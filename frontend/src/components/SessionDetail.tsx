@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Session } from '../types';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router-dom';
 import apiClient from '../services/api';
-import Terminal from './Terminal';
-import SSHInfo from './SSHInfo';
+import { Session } from '../types';
 import AgentMdEditor from './AgentMdEditor';
 import FileViewer from './FileViewer';
+import SSHInfo from './SSHInfo';
+import Terminal from './Terminal';
 import WriteupUploader from './WriteupUploader';
 import './SessionDetail.css';
 
@@ -20,6 +21,7 @@ type TabType =
   | 'ssh-info';
 
 const SessionDetail = () => {
+  const { t } = useTranslation();
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
@@ -42,7 +44,7 @@ const SessionDetail = () => {
       const data = await apiClient.getSession(sessionId);
       setSession(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load session');
+      setError(err instanceof Error ? err.message : t('errors.failedToLoadSession'));
     } finally {
       setLoading(false);
     }
@@ -51,17 +53,14 @@ const SessionDetail = () => {
   const handleDeleteSession = async () => {
     if (!sessionId) return;
 
-    const confirmed = window.confirm(
-      'Are you sure you want to delete this session? This will terminate the VM and cannot be undone.'
-    );
-
+    const confirmed = window.confirm(t('sessionDetail.deleteConfirm'));
     if (!confirmed) return;
 
     try {
       await apiClient.deleteSession(sessionId);
       navigate('/dashboard');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete session');
+      alert(err instanceof Error ? err.message : t('errors.failedToDeleteSession'));
     }
   };
 
@@ -89,8 +88,8 @@ const SessionDetail = () => {
     return (
       <div className="session-detail">
         <div className="loading">
-          <div className="spinner"></div>
-          <p>Loading session...</p>
+          <div className="spinner" />
+          <p>{t('sessionDetail.loading')}</p>
         </div>
       </div>
     );
@@ -100,10 +99,10 @@ const SessionDetail = () => {
     return (
       <div className="session-detail">
         <div className="error-container">
-          <h2>Error Loading Session</h2>
-          <p className="error-message">{error || 'Session not found'}</p>
+          <h2>{t('sessionDetail.errorTitle')}</h2>
+          <p className="error-message">{error || t('sessionDetail.notFound')}</p>
           <button onClick={() => navigate('/dashboard')} className="btn btn-primary">
-            Back to Dashboard
+            {t('sessionDetail.backToDashboard')}
           </button>
         </div>
       </div>
@@ -112,41 +111,39 @@ const SessionDetail = () => {
 
   return (
     <div className="session-detail">
-      {/* Session Header */}
       <div className="session-header">
         <div className="session-header-left">
           <button onClick={() => navigate('/dashboard')} className="btn btn-secondary btn-small">
-            ← Back
+            {t('sessionDetail.back')}
           </button>
           <div className="session-title">
-            <h2>Session {session.id.substring(0, 8)}</h2>
-            <span className={getStatusBadgeClass(session.status)}>{session.status}</span>
+            <h2>{t('sessionDetail.title', { id: session.id.substring(0, 8) })}</h2>
+            <span className={getStatusBadgeClass(session.status)}>{t(`common.status.${session.status}`)}</span>
           </div>
         </div>
         <button onClick={handleDeleteSession} className="btn btn-danger">
-          Delete Session
+          {t('sessionDetail.deleteSession')}
         </button>
       </div>
 
-      {/* Session Info */}
       <div className="session-info-bar">
         <div className="info-item">
-          <span className="label">VM Size:</span>
+          <span className="label">{t('sessionDetail.info.vmSize')}</span>
           <span className="value">{session.vmSize}</span>
         </div>
         <div className="info-item">
-          <span className="label">Agent:</span>
+          <span className="label">{t('sessionDetail.info.agent')}</span>
           <span className="value">
             {session.agentType} ({session.agentModel})
           </span>
         </div>
         <div className="info-item">
-          <span className="label">Created:</span>
+          <span className="label">{t('sessionDetail.info.created')}</span>
           <span className="value">{formatDate(session.createdAt)}</span>
         </div>
         {session.vmIp && (
           <div className="info-item">
-            <span className="label">IP:</span>
+            <span className="label">{t('sessionDetail.info.ip')}</span>
             <span className="value">{session.vmIp}</span>
           </div>
         )}
@@ -154,63 +151,61 @@ const SessionDetail = () => {
 
       {session.errorMessage && (
         <div className="session-error-banner">
-          <strong>Error:</strong> {session.errorMessage}
+          <strong>{t('common.error')}:</strong> {session.errorMessage}
         </div>
       )}
 
-      {/* Tabs */}
       <div className="tabs">
         <button
           className={`tab ${activeTab === 'terminal' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('terminal')}
         >
-          Terminal
+          {t('sessionDetail.tabs.terminal')}
         </button>
         <button
           className={`tab ${activeTab === 'agent-md' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('agent-md')}
         >
-          AGENT.md
+          {t('sessionDetail.tabs.agentMd')}
         </button>
         <button
           className={`tab ${activeTab === 'base-prompt' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('base-prompt')}
         >
-          BASE_PROMPT.md
+          {t('sessionDetail.tabs.basePrompt')}
         </button>
         <button
           className={`tab ${activeTab === 'tools-md' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('tools-md')}
         >
-          TOOLS.md
+          {t('sessionDetail.tabs.toolsMd')}
         </button>
         <button
           className={`tab ${activeTab === 'changelog' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('changelog')}
         >
-          Changelog
+          {t('sessionDetail.tabs.changelog')}
         </button>
         <button
           className={`tab ${activeTab === 'discoveries' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('discoveries')}
         >
-          Discoveries
+          {t('sessionDetail.tabs.discoveries')}
         </button>
         <button
           className={`tab ${activeTab === 'writeup' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('writeup')}
         >
-          Writeup
+          {t('sessionDetail.tabs.writeup')}
         </button>
         <button
           className={`tab ${activeTab === 'ssh-info' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('ssh-info')}
         >
-          SSH Info
+          {t('sessionDetail.tabs.sshInfo')}
         </button>
       </div>
 
-      {/* Tab Content */}
       <div className="tab-content">
         {activeTab === 'terminal' && <Terminal sessionId={session.id} />}
         {activeTab === 'agent-md' && <AgentMdEditor sessionId={session.id} />}
@@ -218,24 +213,24 @@ const SessionDetail = () => {
           <FileViewer
             sessionId={session.id}
             fileType="base-prompt"
-            title="BASE_PROMPT.md (Read-Only)"
-            description="This file contains immutable system instructions for the agent."
+            title={t('sessionDetail.files.basePromptTitle')}
+            description={t('sessionDetail.files.basePromptDescription')}
           />
         )}
         {activeTab === 'tools-md' && (
           <FileViewer
             sessionId={session.id}
             fileType="tools-md"
-            title="TOOLS.md (Read-Only)"
-            description="Documentation of all installed tools and their versions."
+            title={t('sessionDetail.files.toolsTitle')}
+            description={t('sessionDetail.files.toolsDescription')}
           />
         )}
         {activeTab === 'changelog' && (
           <FileViewer
             sessionId={session.id}
             fileType="changelog"
-            title="Changelog"
-            description="Timestamped log of all commands and actions performed by the agent."
+            title={t('sessionDetail.files.changelogTitle')}
+            description={t('sessionDetail.files.changelogDescription')}
             autoRefresh
           />
         )}
@@ -243,8 +238,8 @@ const SessionDetail = () => {
           <FileViewer
             sessionId={session.id}
             fileType="discoveries"
-            title="Discoveries"
-            description="Insights, findings, and analysis discovered during the challenge."
+            title={t('sessionDetail.files.discoveriesTitle')}
+            description={t('sessionDetail.files.discoveriesDescription')}
             autoRefresh
           />
         )}

@@ -7,7 +7,14 @@
     "dashboard": "Dashboard",
     "vms": "Virtual Machines",
     "createVm": "Create VM",
-    "settings": "Settings"
+    "writeups": "Writeups",
+    "settings": "Settings",
+    "mainNavigation": "Main navigation",
+    "openMenu": "Open navigation menu",
+    "closeMenu": "Close navigation menu",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "appLogo": "Application logo"
   },
   "landing": {
     "hero": {
@@ -41,13 +48,34 @@
     }
   },
   "auth": {
+    "checkingAuthentication": "Checking authentication...",
+    "note": {
+      "title": "Note:",
+      "body": "User accounts are created by administrators. If you need access, please contact your administrator."
+    },
+    "twoFactor": {
+      "enterCode": "Enter the 6-digit code from your authenticator app.",
+      "codeLabel": "Authentication Code",
+      "codePlaceholder": "000000",
+      "verify": "Verify",
+      "verifying": "Verifying...",
+      "completeSetup": "Complete setup",
+      "setupInstructions": "Scan this QR code in your authenticator app, then enter the generated code.",
+      "qrAlt": "2FA QR code",
+      "manualCode": "Manual code"
+    },
     "login": {
       "title": "Login",
+      "welcomeDescription": "Sign in to access your virtual machines and continue your cybersecurity journey.",
       "email": "Email",
+      "emailPlaceholder": "your.email@example.com",
       "password": "Password",
+      "passwordPlaceholder": "Enter your password",
       "rememberMe": "Remember me",
       "forgotPassword": "Forgot password?",
-      "submit": "Login",
+      "forgotPasswordInfo": "Password reset functionality would be implemented here.",
+      "signingIn": "Signing in...",
+      "submit": "Sign In",
       "switchToSignup": "Don't have an account? Sign up"
     },
     "signup": {
@@ -60,9 +88,36 @@
       "switchToLogin": "Already have an account? Login"
     }
   },
+  "app": {
+    "loadingPage": "Loading page...",
+    "loadingAria": "Application is loading"
+  },
+  "dashboard": {
+    "subtitle": "Signed in as {{email}}",
+    "loadingSessions": "Loading sessions...",
+    "stats": {
+      "totalSessions": "Total Sessions",
+      "running": "Running",
+      "errors": "Errors"
+    },
+    "sections": {
+      "recentSessions": "Recent Sessions",
+      "sessions": "Sessions",
+      "quickActions": "Quick Actions"
+    },
+    "empty": {
+      "noSessions": "No sessions found."
+    },
+    "actions": {
+      "createNewVm": "Create New VM",
+      "browseWriteups": "Browse Writeups",
+      "openSettings": "Open Settings"
+    }
+  },
   "vm": {
     "create": {
       "title": "Create Virtual Machine",
+      "subtitle": "Configure a new backend session and launch your challenge environment.",
       "basicInfo": "Basic Information",
       "name": "VM Name",
       "os": "Operating System",
@@ -74,9 +129,57 @@
       "setupMode": "Setup Mode",
       "setupModeGemini": "Gemini CLI",
       "setupModeManual": "Manual",
-      "setupModeGeminiDesc": "Pre-configured with Gemini CLI for AI-powered development",
-      "setupModeManualDesc": "Basic tools and SSH access - configure your own environment",
+      "setupModeGeminiDesc": "Pre-configured with Gemini CLI for AI-powered development.",
+      "setupModeManualDesc": "Basic tools and SSH access - configure your own environment.",
       "advanced": "Advanced Options",
+      "challengeUrlsTitle": "Challenge URLs",
+      "challengeUrlLabel": "Challenge URL {{index}}",
+      "challengeUrlPlaceholder": "https://example.com/challenge.bin",
+      "addUrl": "Add URL",
+      "removeUrl": "Remove",
+      "instructionsTitle": "Challenge Instructions",
+      "instructionsLabel": "Instructions",
+      "instructionsPlaceholder": "Describe the challenge context and what the agent should prioritize.",
+      "agentConfigTitle": "Agent Configuration",
+      "agentType": "Agent Type",
+      "agentTypes": {
+        "codex": "Codex",
+        "copilot": "Copilot"
+      },
+      "agentPresets": {
+        "codexCli": "Codex CLI",
+        "codexCliDesc": "Install dependencies and Codex CLI, authenticate, and start the agent with your instructions.",
+        "copilotCli": "Copilot CLI",
+        "copilotCliDesc": "Install dependencies and Copilot CLI, authenticate, and start the agent with your instructions.",
+        "geminiCli": "Gemini CLI",
+        "geminiCliDesc": "Install dependencies and Gemini CLI, authenticate, and start the agent with your instructions.",
+        "mixtralVibeCli": "Mixtral Vibe CLI",
+        "mixtralVibeCliDesc": "Install dependencies and Mixtral Vibe CLI, authenticate, and start the agent with your instructions.",
+        "manual": "Manual (Tools Only)",
+        "manualDesc": "Deploy the VM and install CTF tools, but do not deploy any agent.",
+        "manualToolsOnlyNote": "Manual mode selected. We'll provision the VM and install tools, but no agent will be deployed.",
+        "bootstrapScriptNote": "After the VM is ready, you can run ~/bootstrap_agent.sh to authenticate and (re)start the agent."
+      },
+      "agentModelLabel": "Agent Model",
+      "agentModelPlaceholder": "gpt-4",
+      "infrastructureSizeTitle": "Infrastructure Size",
+      "vmSizeLabel": "VM Size",
+      "sizeOptions": {
+        "small": {
+          "label": "Small",
+          "details": "2 vCPU, 2GB RAM, 30GB disk"
+        },
+        "medium": {
+          "label": "Medium",
+          "details": "2 vCPU, 4GB RAM, 30GB disk"
+        },
+        "large": {
+          "label": "Large",
+          "details": "2 vCPU, 8GB RAM, 30GB disk"
+        }
+      },
+      "backToDashboard": "Back to Dashboard",
+      "creating": "Creating VM...",
       "submit": "Create VM",
       "cancel": "Cancel"
     },
@@ -85,38 +188,378 @@
       "noSessions": "No active sessions",
       "setupMode": "Setup Mode",
       "status": "Status",
-      "actions": "Actions"
+      "actions": "Actions",
+      "ariaLabel": "Agent sessions list",
+      "sessionAria": "Session: {{name}}",
+      "sessionDetailsAria": "Session details",
+      "setupModeAria": "Setup mode: {{mode}}",
+      "statusAria": "Status: {{status}}",
+      "ipAria": "IP address: {{ip}}",
+      "sessionIdAria": "Session ID: {{id}}",
+      "connectAria": "Connect to session {{name}}",
+      "deleteAria": "Delete infrastructure for session {{name}}"
     },
     "delete": {
       "button": "Delete Infrastructure",
       "modalTitle": "Delete Agent Infrastructure",
       "warning": "This action will permanently destroy all cloud resources associated with this session.",
+      "sessionInfoAria": "Session information",
+      "sessionLabel": "Session",
+      "sessionNameAria": "Session name: {{name}}",
+      "sessionIdTitle": "Session ID",
+      "sessionIdAria": "Session ID: {{id}}",
       "sessionIdLabel": "Enter Session ID to confirm",
       "sessionIdPlaceholder": "Type session ID here",
+      "sessionIdInstruction": "Enter the exact session ID shown above to confirm deletion.",
       "confirmPhraseLabel": "Type the confirmation phrase",
       "confirmPhrasePlaceholder": "delete agent infrastructure",
       "confirmPhraseRequired": "delete agent infrastructure",
+      "confirmPhraseInstruction": "Type the exact phrase \"{{phrase}}\" to confirm deletion.",
       "submit": "Delete Infrastructure",
       "cancel": "Cancel",
+      "cancelAria": "Cancel deletion",
       "deleting": "Deleting infrastructure...",
+      "enabledDescription": "Delete button is enabled. Press Enter to delete or Tab to cancel.",
+      "disabledDescription": "Delete button is disabled. Both confirmation fields must be correctly filled.",
       "success": "Infrastructure deleted successfully",
       "error": "Failed to delete infrastructure"
     }
   },
+  "writeups": {
+    "title": "Writeups",
+    "subtitle": "Browse and search challenge writeups stored in the backend.",
+    "searchPlaceholder": "Keywords...",
+    "searching": "Searching...",
+    "category": "Category",
+    "allCategories": "All Categories",
+    "categories": {
+      "pwn": "PWN",
+      "crypto": "Crypto",
+      "reversing": "Reversing",
+      "web": "Web",
+      "forensics": "Forensics",
+      "misc": "Misc"
+    },
+    "loading": "Loading writeups...",
+    "empty": "No writeups found for the current filters.",
+    "page": "Page {{page}}",
+    "card": {
+      "session": "Session {{id}}",
+      "agent": "Agent: {{agentType}} ({{agentModel}})",
+      "completed": "Completed: {{time}}",
+      "noPreview": "No preview available.",
+      "view": "View Writeup"
+    }
+  },
+  "settings": {
+    "subtitle": "Account and backend connectivity status.",
+    "sections": {
+      "account": "Account",
+      "backendStatus": "Backend Status",
+      "admin": "Admin"
+    },
+    "labels": {
+      "email": "Email:",
+      "role": "Role:",
+      "locale": "Locale:",
+      "twoFactorEnabled": "2FA Enabled:",
+      "api": "API:"
+    },
+    "actions": {
+      "refreshAccount": "Refresh Account",
+      "refreshingAccount": "Refreshing account...",
+      "checkBackend": "Check Backend",
+      "checkingBackend": "Checking backend...",
+      "manageUsers": "Manage Users"
+    },
+    "backend": {
+      "status": {
+        "healthy": "Connected",
+        "unhealthy": "Unavailable",
+        "unknown": "Unknown"
+      }
+    }
+  },
+  "sessionDetail": {
+    "loading": "Loading session...",
+    "errorTitle": "Error Loading Session",
+    "notFound": "Session not found",
+    "back": "<- Back",
+    "backToDashboard": "Back to Dashboard",
+    "title": "Session {{id}}",
+    "deleteSession": "Delete Session",
+    "deleteConfirm": "Are you sure you want to delete this session? This will terminate the VM and cannot be undone.",
+    "info": {
+      "vmSize": "VM Size:",
+      "agent": "Agent:",
+      "created": "Created:",
+      "ip": "IP:"
+    },
+    "tabs": {
+      "terminal": "Terminal",
+      "agentMd": "AGENT.md",
+      "basePrompt": "BASE_PROMPT.md",
+      "toolsMd": "TOOLS.md",
+      "changelog": "Changelog",
+      "discoveries": "Discoveries",
+      "writeup": "Writeup",
+      "sshInfo": "SSH Info"
+    },
+    "files": {
+      "basePromptTitle": "BASE_PROMPT.md (Read-Only)",
+      "basePromptDescription": "This file contains immutable system instructions for the agent.",
+      "toolsTitle": "TOOLS.md (Read-Only)",
+      "toolsDescription": "Documentation of all installed tools and their versions.",
+      "changelogTitle": "Changelog",
+      "changelogDescription": "Timestamped log of all commands and actions performed by the agent.",
+      "discoveriesTitle": "Discoveries",
+      "discoveriesDescription": "Insights, findings, and analysis discovered during the challenge."
+    }
+  },
+  "writeupDetail": {
+    "loading": "Loading writeup...",
+    "errorTitle": "Error Loading Writeup",
+    "notFound": "Writeup not found",
+    "backToWriteups": "Back to Writeups",
+    "title": "Writeup - Session {{id}}",
+    "viewSession": "View Session",
+    "contentTitle": "Writeup Content",
+    "metadata": {
+      "category": "Category:",
+      "agent": "Agent:",
+      "completed": "Completed:",
+      "sessionId": "Session ID:",
+      "technologies": "Technologies & Techniques:",
+      "challengeFiles": "Challenge Files:"
+    }
+  },
+  "writeupUploader": {
+    "title": "Writeup",
+    "subtitle": "Upload the challenge writeup to the database for future reference.",
+    "loadFromVmInfo": "To load writeup from VM, copy the content from the Terminal tab or use SSH to retrieve the file.",
+    "uploadSuccessAlert": "Writeup uploaded successfully to the database.",
+    "uploadedBanner": "Writeup uploaded successfully. It is now available in the writeups database.",
+    "formatInstructionsTitle": "Format Instructions",
+    "formatInstructionsBody": "Include YAML frontmatter at the top of your writeup with category and technologies:",
+    "metadataFallbackHint": "Or fill in the metadata fields below if not using frontmatter.",
+    "categoryLabel": "Category (optional if in frontmatter)",
+    "categoryPlaceholder": "Select category...",
+    "technologiesLabel": "Technologies (optional if in frontmatter, comma-separated)",
+    "technologiesPlaceholder": "e.g., buffer overflow, gdb, pwntools",
+    "contentLabel": "Writeup Content *",
+    "contentPlaceholder": "Paste your writeup content here...",
+    "uploading": "Uploading...",
+    "upload": "Upload to Database",
+    "actions": {
+      "pasteExample": "Paste Example",
+      "loadFromVm": "Load from VM"
+    }
+  },
+  "agentMdEditor": {
+    "title": "AGENT.md",
+    "subtitle": "User-modifiable rules and preferences for the AI agent.",
+    "loading": "Loading AGENT.md...",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "placeholder": "Enter agent rules and preferences...",
+    "noContent": "No content yet.",
+    "editingNote": "Changes to AGENT.md will be applied immediately and the agent will be notified of the configuration update.",
+    "saveSuccessAlert": "AGENT.md updated successfully. The agent has been notified of the changes."
+  },
+  "fileViewer": {
+    "loading": "Loading {{title}}...",
+    "autoRefresh": "Auto-refresh",
+    "noContent": "No content yet."
+  },
+  "terminal": {
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "reconnect": "Reconnect",
+    "connectedMessage": "Connected to terminal...",
+    "connectionClosed": "Connection closed.",
+    "connectionLost": "Connection lost. Attempting to reconnect...",
+    "reconnectingMessage": "Reconnecting...",
+    "websocketError": "WebSocket connection error"
+  },
+  "sshInfo": {
+    "title": "SSH Connection Information",
+    "subtitle": "Use these credentials to connect to your VM via SSH.",
+    "loading": "Loading SSH information...",
+    "notAvailable": "SSH info not available",
+    "copied": "Copied to clipboard.",
+    "copyFailed": "Failed to copy to clipboard.",
+    "commandTitle": "SSH Command",
+    "copyCommand": "Copy Command",
+    "publicKeyTitle": "SSH Public Key",
+    "publicKeyDescription": "Download the SSH public key to authenticate with the VM.",
+    "downloadKey": "Download SSH Key",
+    "downloadingKey": "Downloading...",
+    "instructionsTitle": "Connection Instructions",
+    "labels": {
+      "hostname": "Hostname:",
+      "port": "Port:",
+      "username": "Username:"
+    },
+    "instructions": {
+      "step1": "Download the SSH public key using the button above.",
+      "step2": "Save the key to your ~/.ssh/ directory.",
+      "step3": "Set appropriate permissions: chmod 600 ~/.ssh/key-file.",
+      "step4Prefix": "Connect using:"
+    }
+  },
+  "userManagement": {
+    "title": "User Management",
+    "subtitle": "Manage user accounts and permissions.",
+    "loading": "Loading users...",
+    "currentUser": "You",
+    "roles": {
+      "user": "User",
+      "admin": "Admin"
+    },
+    "status": {
+      "twoFactorEnabled": "Enabled",
+      "twoFactorNotSetUp": "Not Set Up",
+      "active": "Active",
+      "disabled": "Disabled"
+    },
+    "table": {
+      "email": "Email",
+      "role": "Role",
+      "twoFactorStatus": "2FA Status",
+      "status": "Status",
+      "created": "Created",
+      "lastLogin": "Last Login",
+      "actions": "Actions"
+    },
+    "actions": {
+      "createNewUser": "Create New User",
+      "createUser": "Create User",
+      "creating": "Creating...",
+      "disable": "Disable",
+      "disableUser": "Disable user",
+      "makeAdmin": "-> Admin",
+      "makeUser": "-> User",
+      "changeRoleTitle": "Change role to {{role}}"
+    },
+    "confirm": {
+      "disableUser": "Are you sure you want to disable user {{email}}?",
+      "changeRole": "Change {{email}} role from {{currentRole}} to {{newRole}}?"
+    },
+    "success": {
+      "userCreated": "User created successfully.",
+      "userDisabled": "User {{email}} has been disabled.",
+      "roleUpdated": "User {{email}} role updated to {{role}}."
+    },
+    "createModal": {
+      "title": "Create New User",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "user@example.com",
+      "emailHelp": "A temporary password will be generated and sent to this email address.",
+      "roleLabel": "Role",
+      "roleHelp": "Admins can manage users and have full access to all features."
+    }
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "support": "If you believe this is an error, please contact support.",
+    "actions": {
+      "home": "Return to Home",
+      "dashboard": "Go to Dashboard"
+    },
+    "terminal": {
+      "error": "ERROR: PAGE NOT FOUND",
+      "resourceMissing": "The requested resource could not be located in system memory.",
+      "possibleCauses": "Possible causes:",
+      "causeInvalidUrl": "- Invalid URL",
+      "causeMovedDeleted": "- Page moved or deleted",
+      "causeTypo": "- Typo in address"
+    }
+  },
   "errors": {
     "required": "This field is required",
+    "emailRequired": "Email is required.",
     "invalidEmail": "Invalid email address",
+    "passwordRequired": "Password is required.",
+    "passwordMinLength": "Password must be at least 6 characters.",
     "passwordMismatch": "Passwords do not match",
     "networkError": "Network error. Please try again.",
-    "authFailed": "Authentication failed. Please check your credentials."
+    "authFailed": "Authentication failed. Please check your credentials.",
+    "loginFailed": "Login failed. Please try again.",
+    "unknownFileType": "Unknown file type.",
+    "failedToLoadFileType": "Failed to load {{fileType}}.",
+    "failedToLoadSessions": "Failed to load sessions.",
+    "failedToLoadSession": "Failed to load session.",
+    "failedToDeleteSession": "Failed to delete session.",
+    "failedToCreateVm": "Failed to create VM session.",
+    "failedToLoadWriteups": "Failed to load writeups.",
+    "failedToSearchWriteups": "Failed to search writeups.",
+    "failedToLoadWriteup": "Failed to load writeup.",
+    "failedToUploadWriteup": "Failed to upload writeup.",
+    "failedToLoadWriteupFromVm": "Failed to load writeup from VM.",
+    "writeupContentRequired": "Writeup content is required.",
+    "failedToRefreshAccount": "Failed to refresh account details.",
+    "failedToLoadUsers": "Failed to load users.",
+    "failedToCreateUser": "Failed to create user.",
+    "failedToDisableUser": "Failed to disable user.",
+    "failedToUpdateUserRole": "Failed to update user role.",
+    "failedToLoadAgentMd": "Failed to load AGENT.md.",
+    "failedToSaveAgentMd": "Failed to save AGENT.md.",
+    "failedToLoadSshInfo": "Failed to load SSH info.",
+    "failedToDownloadSshKey": "Failed to download SSH key.",
+    "sessionIdMismatch": "Session ID does not match.",
+    "confirmPhraseMismatch": "Confirmation phrase does not match.",
+    "boundary": {
+      "ariaLabel": "Error boundary",
+      "title": "Oops! Something went wrong",
+      "defaultMessage": "An unexpected error occurred."
+    },
+    "toast": {
+      "ariaLabel": "Error notification",
+      "dismiss": "Dismiss error"
+    },
+    "vmCreate": {
+      "challengeUrlRequired": "At least one challenge URL is required.",
+      "invalidChallengeUrl": "Challenge URLs must start with http:// or https://.",
+      "instructionsRequired": "Challenge instructions are required.",
+      "agentModelRequired": "Agent model is required."
+    }
   },
   "common": {
     "loading": "Loading...",
     "back": "Back",
+    "backArrow": "<-",
+    "goBack": "Go back",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
-    "close": "Close"
+    "close": "Close",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing...",
+    "retry": "Retry",
+    "logout": "Logout",
+    "search": "Search",
+    "clearSearch": "Clear Search",
+    "previous": "Previous",
+    "next": "Next",
+    "copy": "Copy",
+    "connect": "Connect",
+    "id": "ID",
+    "ip": "IP",
+    "yes": "Yes",
+    "no": "No",
+    "never": "Never",
+    "warning": "Warning",
+    "error": "Error",
+    "unknown": "Unknown",
+    "unknownUser": "Unknown user",
+    "unknownTime": "Unknown time",
+    "selectLanguage": "Select language",
+    "status": {
+      "running": "Running",
+      "stopped": "Stopped",
+      "creating": "Creating",
+      "error": "Error"
+    }
   }
 }

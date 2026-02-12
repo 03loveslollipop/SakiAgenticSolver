@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Input } from '../Input/Input';
 import { Button } from '../Button/Button';
+import { Input } from '../Input/Input';
 import './DeleteInfrastructureModal.css';
 
 export interface DeleteInfrastructureModalProps {
@@ -25,14 +25,12 @@ export const DeleteInfrastructureModal: React.FC<DeleteInfrastructureModalProps>
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
-  // const firstInputRef = useRef<HTMLInputElement>(null);
 
-  const requiredPhrase = 'delete agent infrastructure';
+  const requiredPhrase = t('vm.delete.confirmPhraseRequired');
   const isSessionIdValid = enteredSessionId === sessionId;
   const isPhraseValid = enteredPhrase === requiredPhrase;
   const canDelete = isSessionIdValid && isPhraseValid && !isDeleting;
 
-  // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
       setEnteredSessionId('');
@@ -41,27 +39,6 @@ export const DeleteInfrastructureModal: React.FC<DeleteInfrastructureModalProps>
       setIsDeleting(false);
     }
   }, [isOpen]);
-
-  // Handle Escape key to close modal
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape' && isOpen) {
-      e.preventDefault();
-      onClose();
-    }
-    
-    // Handle Enter key on delete button when enabled
-    if (e.key === 'Enter' && isOpen && canDelete && !isDeleting) {
-      e.preventDefault();
-      handleConfirm();
-    }
-  }, [isOpen, onClose, canDelete, isDeleting]);
-
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [handleKeyDown]);
 
   const handleConfirm = async () => {
     if (!canDelete) return;
@@ -73,106 +50,131 @@ export const DeleteInfrastructureModal: React.FC<DeleteInfrastructureModalProps>
       await onConfirm();
       onClose();
     } catch (err) {
-      setError((err as Error)?.message || t('vm.delete.error') || 'Failed to delete infrastructure');
+      setError((err as Error)?.message || t('vm.delete.error'));
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const handleSessionIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEnteredSessionId(e.target.value);
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.key === 'Escape' && isOpen) {
+      event.preventDefault();
+      onClose();
+    }
+
+    if (event.key === 'Enter' && isOpen && canDelete && !isDeleting) {
+      event.preventDefault();
+      handleConfirm();
+    }
+  }, [isOpen, onClose, canDelete, isDeleting]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
+
+  const handleSessionIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEnteredSessionId(event.target.value);
     if (error) setError(null);
   };
 
-  const handlePhraseChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEnteredPhrase(e.target.value);
+  const handlePhraseChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEnteredPhrase(event.target.value);
     if (error) setError(null);
   };
 
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="dimmed-backdrop" 
-      role="dialog" 
+    <div
+      className="dimmed-backdrop"
+      role="dialog"
       aria-modal="true"
       aria-labelledby="delete-modal-title"
       aria-describedby="delete-modal-description"
     >
-      <div 
-        className="delete-modal" 
+      <div
+        className="delete-modal"
         ref={modalRef}
         role="document"
         tabIndex={-1}
       >
         <div className="delete-header">
-          <h2 id="delete-modal-title">
-            {t('vm.delete.modalTitle') || 'Delete Agent Infrastructure'}
-          </h2>
-          <button 
-            aria-label={t('common.close') || 'Close modal'}
+          <h2 id="delete-modal-title">{t('vm.delete.modalTitle')}</h2>
+          <button
+            aria-label={t('common.close')}
             onClick={onClose}
             className="close-button"
             disabled={isDeleting}
             tabIndex={0}
           >
-            ✕
+            X
           </button>
         </div>
 
-        <div 
-          className="delete-warning" 
+        <div
+          className="delete-warning"
           id="delete-modal-description"
           role="alert"
           aria-live="assertive"
         >
-          <p>⚠️ {t('vm.delete.warning') || 'This action will permanently destroy all cloud resources associated with this session.'}</p>
+          <p>
+            {t('common.warning')}: {t('vm.delete.warning')}
+          </p>
         </div>
 
-        <div className="session-info" aria-label="Session information">
+        <div className="session-info" aria-label={t('vm.delete.sessionInfoAria')}>
           <p>
-            <strong>{t('vm.delete.sessionLabel') || 'Session'}:</strong> 
-            <span aria-label={`Session name: ${sessionName}`}> {sessionName}</span>
+            <strong>{t('vm.delete.sessionLabel')}:</strong>
+            <span aria-label={t('vm.delete.sessionNameAria', { name: sessionName || sessionId })}>
+              {' '}
+              {sessionName || sessionId}
+            </span>
           </p>
           <p>
-            <strong>{t('vm.delete.sessionIdLabel') || 'Session ID'}:</strong> 
-            <span aria-label={`Session ID: ${sessionId}`}> {sessionId}</span>
+            <strong>{t('vm.delete.sessionIdTitle')}:</strong>
+            <span aria-label={t('vm.delete.sessionIdAria', { id: sessionId })}>
+              {' '}
+              {sessionId}
+            </span>
           </p>
         </div>
 
         <div className="confirmation-inputs">
           <Input
-            label={t('vm.delete.sessionIdLabel') || 'Enter Session ID to confirm'}
-            placeholder={t('vm.delete.sessionIdPlaceholder') || 'Type session ID here'}
+            label={t('vm.delete.sessionIdLabel')}
+            placeholder={t('vm.delete.sessionIdPlaceholder')}
             value={enteredSessionId}
             onChange={handleSessionIdChange}
-            error={enteredSessionId && !isSessionIdValid ? t('errors.sessionIdMismatch') || 'Session ID does not match' : undefined}
+            error={enteredSessionId && !isSessionIdValid ? t('errors.sessionIdMismatch') : undefined}
             aria-describedby="session-id-instruction"
             disabled={isDeleting}
             aria-invalid={enteredSessionId ? !isSessionIdValid : undefined}
           />
           <div id="session-id-instruction" className="sr-only">
-            {t('vm.delete.sessionIdInstruction') || 'Enter the exact session ID shown above to confirm deletion'}
+            {t('vm.delete.sessionIdInstruction')}
           </div>
 
           <Input
-            label={t('vm.delete.confirmPhraseLabel') || 'Type the confirmation phrase'}
-            placeholder={t('vm.delete.confirmPhrasePlaceholder') || 'delete agent infrastructure'}
+            label={t('vm.delete.confirmPhraseLabel')}
+            placeholder={t('vm.delete.confirmPhrasePlaceholder')}
             value={enteredPhrase}
             onChange={handlePhraseChange}
-            error={enteredPhrase && !isPhraseValid ? t('errors.confirmPhraseMismatch') || 'Confirmation phrase does not match' : undefined}
+            error={enteredPhrase && !isPhraseValid ? t('errors.confirmPhraseMismatch') : undefined}
             aria-describedby="confirm-phrase-instruction"
             disabled={isDeleting}
             aria-invalid={enteredPhrase ? !isPhraseValid : undefined}
           />
           <div id="confirm-phrase-instruction" className="sr-only">
-            {t('vm.delete.confirmPhraseInstruction') || 'Type the exact phrase "delete agent infrastructure" to confirm deletion'}
+            {t('vm.delete.confirmPhraseInstruction', { phrase: requiredPhrase })}
           </div>
         </div>
 
         {error && (
-          <div 
-            className="delete-error" 
+          <div
+            className="delete-error"
             role="alert"
             aria-live="assertive"
           >
@@ -181,43 +183,35 @@ export const DeleteInfrastructureModal: React.FC<DeleteInfrastructureModalProps>
         )}
 
         <div className="delete-actions">
-          <Button 
-            variant="normal" 
-            onClick={onClose} 
+          <Button
+            variant="normal"
+            onClick={onClose}
             disabled={isDeleting}
-            aria-label={t('common.cancel') || 'Cancel deletion'}
+            aria-label={t('vm.delete.cancelAria')}
             tabIndex={0}
           >
-            {t('common.cancel') || 'Cancel'}
+            {t('common.cancel')}
           </Button>
-          <Button 
-            variant="error" 
-            onClick={handleConfirm} 
+          <Button
+            variant="error"
+            onClick={handleConfirm}
             disabled={!canDelete}
-            aria-label={t('vm.delete.submit') || 'Delete infrastructure'}
+            aria-label={t('vm.delete.submit')}
             tabIndex={0}
             aria-describedby={canDelete ? 'delete-enabled-description' : 'delete-disabled-description'}
           >
-            {isDeleting 
-              ? (t('vm.delete.deleting') || 'Deleting...') 
-              : (t('vm.delete.submit') || 'Delete Infrastructure')
-            }
+            {isDeleting ? t('vm.delete.deleting') : t('vm.delete.submit')}
           </Button>
           <div id="delete-enabled-description" className="sr-only">
-            {t('vm.delete.enabledDescription') || 'Delete button is enabled. Press Enter to delete or Tab to cancel.'}
+            {t('vm.delete.enabledDescription')}
           </div>
           <div id="delete-disabled-description" className="sr-only">
-            {t('vm.delete.disabledDescription') || 'Delete button is disabled. Both confirmation fields must be correctly filled.'}
+            {t('vm.delete.disabledDescription')}
           </div>
         </div>
       </div>
     </div>
   );
 };
-
-// Add CSS for screen reader only class
-const style = document.createElement('style');
-style.textContent = '.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }';
-document.head.appendChild(style);
 
 export default DeleteInfrastructureModal;

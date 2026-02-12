@@ -94,7 +94,10 @@ describe('Accessibility - Form Labels Properties', () => {
     18.1,
     'Accessibility - Form Labels - Checkbox and Radio Labels',
     fc.record({
-      labelText: fc.string({ minLength: 1, maxLength: 30 }),
+      labelText: fc
+        .string({ minLength: 1, maxLength: 30 })
+        .map((value) => value.replace(/\s+/g, ' ').trim())
+        .filter((value) => value.length > 0),
       inputType: fc.constantFrom<'checkbox' | 'radio'>('checkbox', 'radio'),
       checked: fc.boolean(),
       disabled: fc.boolean(),
@@ -149,7 +152,10 @@ describe('Accessibility - Form Labels Properties', () => {
     18.2,
     'Accessibility - Form Labels - Form Field Groups',
     fc.record({
-      groupLabel: fc.string({ minLength: 1, maxLength: 30 }),
+      groupLabel: fc
+        .string({ minLength: 1, maxLength: 30 })
+        .map((value) => value.replace(/\s+/g, ' ').trim())
+        .filter((value) => value.length > 0),
       fieldCount: fc.integer({ min: 1, max: 5 }),
       hasLegend: fc.boolean(),
     }),
@@ -200,7 +206,10 @@ describe('Accessibility - Form Labels Properties', () => {
     18.3,
     'Accessibility - Form Labels - Button Labels in Forms',
     fc.record({
-      buttonText: fc.string({ minLength: 1, maxLength: 20 }),
+      buttonText: fc
+        .string({ minLength: 1, maxLength: 20 })
+        .map((value) => value.replace(/\s+/g, ' ').trim())
+        .filter((value) => value.length > 0),
       buttonType: fc.constantFrom<'submit' | 'button' | 'reset'>('submit', 'button', 'reset'),
       hasAriaLabel: fc.boolean(),
     }),
@@ -238,9 +247,14 @@ describe('Accessibility - Form Labels Properties', () => {
     18.4,
     'Accessibility - Form Labels - Complex Form Validation',
     fc.record({
-      fieldName: fc.string({ minLength: 1, maxLength: 20 }),
+      fieldName: fc.string({ minLength: 1, maxLength: 20 })
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0 && !/\s/.test(value)),
       isValid: fc.boolean(),
-      validationMessage: fc.string({ minLength: 1, maxLength: 50 }),
+      validationMessage: fc
+        .string({ minLength: 1, maxLength: 50 })
+        .map((value) => value.replace(/\s+/g, ' ').trim())
+        .filter((value) => value.length > 0),
     }),
     ({ fieldName, isValid, validationMessage }) => {
       const error = !isValid ? validationMessage : undefined;
@@ -266,12 +280,10 @@ describe('Accessibility - Form Labels Properties', () => {
         expect(input).toHaveAttribute('aria-invalid', 'true');
         
         // Input should have aria-errormessage pointing to error element
-        const errorElement = screen.getByText(validationMessage);
+        const errorElement = screen.getByRole('alert');
+        expect(errorElement).toHaveTextContent(validationMessage);
         const errorId = errorElement.id;
         expect(input).toHaveAttribute('aria-errormessage', errorId);
-        
-        // Error element should have role="alert"
-        expect(errorElement).toHaveAttribute('role', 'alert');
       } else {
         // Input should not have aria-invalid when valid
         expect(input).not.toHaveAttribute('aria-invalid');
@@ -289,11 +301,19 @@ describe('Accessibility - Form Labels Properties', () => {
   runPropertyTest(
     18.5,
     'Accessibility - Form Labels - Missing Labels Fallback',
-    fc.record({
-      hasLabel: fc.boolean(),
-      hasAriaLabel: fc.boolean(),
-      placeholder: fc.oneof(fc.constant(undefined), fc.string({ minLength: 1, maxLength: 30 })),
-    }),
+    fc
+      .record({
+        hasLabel: fc.boolean(),
+        hasAriaLabel: fc.boolean(),
+        placeholder: fc.oneof(
+          fc.constant(undefined),
+          fc.string({ minLength: 1, maxLength: 30 })
+            .map((value) => value.trim())
+            .filter((value) => value.length > 0)
+        ),
+      })
+      // It is invalid to render an input without any accessible label mechanism at all.
+      .filter(({ hasLabel, hasAriaLabel, placeholder }) => hasLabel || hasAriaLabel || !!placeholder),
     ({ hasLabel, hasAriaLabel, placeholder }) => {
       const label = hasLabel ? 'Email Address' : undefined;
       const ariaLabel = hasAriaLabel ? 'Enter your email' : undefined;
@@ -309,7 +329,7 @@ describe('Accessibility - Form Labels Properties', () => {
       const input = screen.getByRole('textbox');
       
       // Input must have at least one form of label
-      const hasAnyLabel = hasLabel || hasAriaLabel || placeholder;
+      const hasAnyLabel = hasLabel || hasAriaLabel || !!placeholder;
       expect(hasAnyLabel).toBe(true);
       
       if (hasLabel) {

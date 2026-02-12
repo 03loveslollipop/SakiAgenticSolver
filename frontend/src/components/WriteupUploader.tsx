@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { WriteupCategory } from '../types';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../services/api';
+import { WriteupCategory } from '../types';
 import './WriteupUploader.css';
 
 interface WriteupUploaderProps {
@@ -8,6 +9,7 @@ interface WriteupUploaderProps {
 }
 
 const WriteupUploader = ({ sessionId }: WriteupUploaderProps) => {
+  const { t } = useTranslation();
   const [content, setContent] = useState('');
   const [category, setCategory] = useState<WriteupCategory | ''>('');
   const [technologies, setTechnologies] = useState('');
@@ -33,13 +35,11 @@ const WriteupUploader = ({ sessionId }: WriteupUploaderProps) => {
     let parsedCategory: WriteupCategory | undefined;
     let parsedTechnologies: string[] = [];
 
-    // Parse category
     const categoryMatch = frontmatter.match(/category:\s*(\w+)/);
     if (categoryMatch) {
       parsedCategory = categoryMatch[1] as WriteupCategory;
     }
 
-    // Parse technologies (array format)
     const techMatches = frontmatter.match(/technologies:\s*\n((?:\s*-\s*.+\n?)+)/);
     if (techMatches) {
       parsedTechnologies = techMatches[1]
@@ -58,19 +58,15 @@ const WriteupUploader = ({ sessionId }: WriteupUploaderProps) => {
   const handleLoadFromVM = async () => {
     try {
       setError(null);
-      // Try to load writeup.md from the VM (this would need a new API endpoint)
-      // For now, we'll show a message
-      alert(
-        'To load writeup from VM, you can copy the content from the Terminal tab or use SSH to retrieve the file.'
-      );
+      alert(t('writeupUploader.loadFromVmInfo'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load writeup from VM');
+      setError(err instanceof Error ? err.message : t('errors.failedToLoadWriteupFromVm'));
     }
   };
 
   const handleUpload = async () => {
     if (!content.trim()) {
-      setError('Writeup content is required');
+      setError(t('errors.writeupContentRequired'));
       return;
     }
 
@@ -78,21 +74,18 @@ const WriteupUploader = ({ sessionId }: WriteupUploaderProps) => {
       setUploading(true);
       setError(null);
 
-      // Parse YAML frontmatter if present
       const parsed = parseYamlFrontmatter(content);
-
-      // Use parsed values or form values
       const finalCategory = parsed.category || (category as WriteupCategory) || undefined;
       const finalTechnologies =
         parsed.technologies ||
-        (technologies ? technologies.split(',').map((t) => t.trim()) : []);
+        (technologies ? technologies.split(',').map((value) => value.trim()) : []);
 
       await apiClient.uploadWriteup(sessionId, content, finalCategory, finalTechnologies);
 
       setUploaded(true);
-      alert('Writeup uploaded successfully to the database!');
+      alert(t('writeupUploader.uploadSuccessAlert'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload writeup');
+      setError(err instanceof Error ? err.message : t('errors.failedToUploadWriteup'));
     } finally {
       setUploading(false);
     }
@@ -131,37 +124,35 @@ Step-by-step solution...
     <div className="writeup-uploader">
       <div className="uploader-header">
         <div className="uploader-title">
-          <h3>Writeup</h3>
-          <p>Upload the challenge writeup to the database for future reference</p>
+          <h3>{t('writeupUploader.title')}</h3>
+          <p>{t('writeupUploader.subtitle')}</p>
         </div>
         <div className="uploader-actions">
           <button onClick={handlePasteExample} className="btn btn-secondary btn-small">
-            Paste Example
+            {t('writeupUploader.actions.pasteExample')}
           </button>
           <button onClick={handleLoadFromVM} className="btn btn-secondary btn-small">
-            Load from VM
+            {t('writeupUploader.actions.loadFromVm')}
           </button>
         </div>
       </div>
 
       {uploaded && (
         <div className="success-banner">
-          ✓ Writeup uploaded successfully! It's now available in the writeups database.
+          {t('writeupUploader.uploadedBanner')}
         </div>
       )}
 
       {error && (
         <div className="error-banner">
-          <strong>Error:</strong> {error}
+          <strong>{t('common.error')}:</strong> {error}
         </div>
       )}
 
       <div className="uploader-content">
         <div className="uploader-info">
-          <h4>Format Instructions</h4>
-          <p>
-            Include YAML frontmatter at the top of your writeup with category and technologies:
-          </p>
+          <h4>{t('writeupUploader.formatInstructionsTitle')}</h4>
+          <p>{t('writeupUploader.formatInstructionsBody')}</p>
           <pre className="format-example">
             {`---
 category: pwn|crypto|reversing|web|forensics|misc
@@ -171,47 +162,45 @@ technologies:
   - concept1
 ---`}
           </pre>
-          <p>Or fill in the metadata fields below if not using frontmatter.</p>
+          <p>{t('writeupUploader.metadataFallbackHint')}</p>
         </div>
 
         <div className="metadata-fields">
           <div className="field-group">
-            <label className="field-label">Category (optional if in frontmatter)</label>
+            <label className="field-label">{t('writeupUploader.categoryLabel')}</label>
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value as WriteupCategory)}
+              onChange={(event) => setCategory(event.target.value as WriteupCategory)}
               className="field-select"
             >
-              <option value="">Select category...</option>
-              <option value="pwn">PWN</option>
-              <option value="crypto">Crypto</option>
-              <option value="reversing">Reversing</option>
-              <option value="web">Web</option>
-              <option value="forensics">Forensics</option>
-              <option value="misc">Misc</option>
+              <option value="">{t('writeupUploader.categoryPlaceholder')}</option>
+              <option value="pwn">{t('writeups.categories.pwn')}</option>
+              <option value="crypto">{t('writeups.categories.crypto')}</option>
+              <option value="reversing">{t('writeups.categories.reversing')}</option>
+              <option value="web">{t('writeups.categories.web')}</option>
+              <option value="forensics">{t('writeups.categories.forensics')}</option>
+              <option value="misc">{t('writeups.categories.misc')}</option>
             </select>
           </div>
 
           <div className="field-group">
-            <label className="field-label">
-              Technologies (optional if in frontmatter, comma-separated)
-            </label>
+            <label className="field-label">{t('writeupUploader.technologiesLabel')}</label>
             <input
               type="text"
               value={technologies}
-              onChange={(e) => setTechnologies(e.target.value)}
-              placeholder="e.g., buffer overflow, gdb, pwntools"
+              onChange={(event) => setTechnologies(event.target.value)}
+              placeholder={t('writeupUploader.technologiesPlaceholder')}
               className="field-input"
             />
           </div>
         </div>
 
         <div className="content-editor">
-          <label className="field-label">Writeup Content *</label>
+          <label className="field-label">{t('writeupUploader.contentLabel')}</label>
           <textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Paste your writeup content here..."
+            onChange={(event) => setContent(event.target.value)}
+            placeholder={t('writeupUploader.contentPlaceholder')}
             className="content-textarea"
             rows={20}
           />
@@ -223,7 +212,7 @@ technologies:
             className="btn btn-primary"
             disabled={uploading || !content.trim()}
           >
-            {uploading ? 'Uploading...' : 'Upload to Database'}
+            {uploading ? t('writeupUploader.uploading') : t('writeupUploader.upload')}
           </button>
         </div>
       </div>

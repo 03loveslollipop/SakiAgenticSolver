@@ -1,19 +1,20 @@
 // NavigationFlow.integration.test.tsx - Integration test for navigation between pages
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '../../contexts/AuthContext';
-import { LoadingProvider } from '../../contexts/LoadingContext';
-import { ErrorProvider } from '../../contexts/ErrorContext';
-import { ThemeProvider } from '../../theme';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import App8Bit from '../../App8Bit';
 import { apiClient } from '../../services/api';
 
-// Mock the API client
 jest.mock('../../services/api', () => ({
-  apiClient: {
-    getCurrentUser: jest.fn(),
-  },
+  __esModule: true,
+  ...(function () {
+    const client = {
+      getCurrentUser: jest.fn(),
+      getSessions: jest.fn(),
+    };
+
+    return { apiClient: client, default: client };
+  })(),
 }));
 
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
@@ -21,6 +22,7 @@ const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
 describe('Navigation Flow Integration Test', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
     // Mock localStorage
     Object.defineProperty(window, 'localStorage', {
       value: {
@@ -33,132 +35,87 @@ describe('Navigation Flow Integration Test', () => {
     });
   });
 
-  const renderApp = () => {
-    return render(
-      <BrowserRouter>
-        <AuthProvider>
-          <LoadingProvider>
-            <ErrorProvider>
-              <ThemeProvider>
-                <App8Bit />
-              </ThemeProvider>
-            </ErrorProvider>
-          </LoadingProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    );
-  };
+  const renderApp = () => render(<App8Bit />);
 
   test('should navigate from landing page to login page', async () => {
-    // Mock no user is authenticated
+    const user = userEvent.setup();
+
     mockApiClient.getCurrentUser.mockRejectedValue(new Error('Not authenticated'));
     (window.localStorage.getItem as jest.Mock).mockReturnValue(null);
 
+    window.history.pushState({}, 'Landing', '/');
     renderApp();
 
-    // Start on landing page (root)
-    window.history.pushState({}, 'Landing', '/');
+    expect(await screen.findByRole('heading', { level: 1, name: /saki/i })).toBeInTheDocument();
 
-    // Should show landing page
-    await waitFor(() => {
-      expect(screen.getByText(/welcome to ctf automation platform/i)).toBeInTheDocument();
-    });
+    const loginButtons = screen.getAllByRole('button', { name: /login/i });
+    await user.click(loginButtons[0]);
 
-    // Find and click login link/button
-    // Note: In the actual LandingPage component, there should be a login link/button
-    // For now, we'll test navigation by changing URL
-    window.history.pushState({}, 'Login', '/login');
-
-    // Should show login form
     await waitFor(() => {
       expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/enter your password/i)).toBeInTheDocument();
     });
   });
 
-  test('should navigate between dashboard pages when authenticated', async () => {
-    // Mock authenticated user
+  test('should navigate between dashboard and create VM when authenticated', async () => {
+    const user = userEvent.setup();
+
     mockApiClient.getCurrentUser.mockResolvedValue({
       id: 'user-123',
       email: 'test@example.com',
       role: 'user',
-      is_active: true,
-      created_at: new Date().toISOString(),
-    });
+      is_2fa_enabled: true,
+      locale: 'en',
+    } as any);
+    mockApiClient.getSessions.mockResolvedValue([]);
 
-    // Mock localStorage to return a token
     (window.localStorage.getItem as jest.Mock).mockImplementation((key: string) => {
       if (key === 'access_token') return 'mock-token';
       if (key === 'user') return JSON.stringify({ id: 'user-123', email: 'test@example.com' });
       return null;
     });
 
+    window.history.pushState({}, 'Dashboard', '/dashboard');
     renderApp();
 
-    // Start on dashboard
-    window.history.pushState({}, 'Dashboard', '/dashboard');
+    expect(await screen.findByRole('heading', { level: 1, name: /dashboard/i })).toBeInTheDocument();
 
-    // Should show dashboard
-    await waitFor(() => {
-      expect(window.location.pathname).toBe('/dashboard');
-    });
+    const createVmLink = screen.getByRole('link', { name: /create vm/i });
+    await user.click(createVmLink);
 
-    // Navigate to VM creation page
-    window.history.pushState({}, 'Create VM', '/vms/create');
+    expect(await screen.findByRole('heading', { level: 1, name: /create virtual machine/i })).toBeInTheDocument();
 
-    // Should be on VM creation page
-    await waitFor(() => {
-      expect(window.location.pathname).toBe('/vms/create');
-    });
+    const dashboardLink = screen.getByRole('link', { name: /^dashboard$/i });
+    await user.click(dashboardLink);
 
-    // Navigate to VM list page
-    window.history.pushState({}, 'VM List', '/vms');
-
-    // Should be on VM list page
-    await waitFor(() => {
-      expect(window.location.pathname).toBe('/vms');
-    });
+    expect(await screen.findByRole('heading', { level: 1, name: /dashboard/i })).toBeInTheDocument();
   });
 
   test('should show 404 page for unknown routes', async () => {
-    // Mock no user is authenticated
     mockApiClient.getCurrentUser.mockRejectedValue(new Error('Not authenticated'));
     (window.localStorage.getItem as jest.Mock).mockReturnValue(null);
 
+    window.history.pushState({}, 'Unknown', '/unknown-route');
     renderApp();
 
-    // Navigate to unknown route
-    window.history.pushState({}, 'Unknown', '/unknown-route');
-
-    // Should show 404 page
-    await waitFor(() => {
-      expect(screen.getByText(/page not found/i)).toBeInTheDocument();
-      expect(screen.getByText(/404/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /return to home/i })).toBeInTheDocument();
-    });
+    expect(await screen.findByRole('heading', { level: 2, name: /page not found/i })).toBeInTheDocument();
+    expect(screen.getByText('404')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /return to home/i })).toBeInTheDocument();
   });
 
   test('should navigate back from 404 page to home', async () => {
-    // Mock no user is authenticated
+    const user = userEvent.setup();
+
     mockApiClient.getCurrentUser.mockRejectedValue(new Error('Not authenticated'));
     (window.localStorage.getItem as jest.Mock).mockReturnValue(null);
 
+    window.history.pushState({}, 'Unknown', '/unknown-route');
     renderApp();
 
-    // Navigate to unknown route
-    window.history.pushState({}, 'Unknown', '/unknown-route');
+    expect(await screen.findByRole('heading', { level: 2, name: /page not found/i })).toBeInTheDocument();
 
-    // Should show 404 page
-    await waitFor(() => {
-      expect(screen.getByText(/page not found/i)).toBeInTheDocument();
-    });
+    await user.click(screen.getByRole('button', { name: /return to home/i }));
 
-    // Click "Return to Home" button
-    const homeButton = screen.getByRole('button', { name: /return to home/i });
-    fireEvent.click(homeButton);
-
-    // Should navigate to home page
-    await waitFor(() => {
-      expect(window.location.pathname).toBe('/');
-    });
+    expect(await screen.findByRole('heading', { level: 1, name: /saki/i })).toBeInTheDocument();
   });
 });

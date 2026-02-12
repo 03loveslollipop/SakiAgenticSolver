@@ -114,7 +114,8 @@ describe('Accessibility - ARIA Labels Properties', () => {
       const container = screen.getByTestId(testId);
       const labelElement = container.querySelector('label');
       expect(labelElement).toBeInTheDocument();
-      expect(labelElement?.textContent).toContain(label.trim());
+      const normalizeText = (value: string) => value.replace(/\s+/g, ' ').trim();
+      expect(normalizeText(labelElement?.textContent || '')).toContain(normalizeText(label));
       
       // Get input by its id from the label's "for" attribute
       const labelFor = labelElement?.getAttribute('for');
@@ -136,8 +137,8 @@ describe('Accessibility - ARIA Labels Properties', () => {
         // Check that error text is present (allowing for whitespace differences)
         expect(errorElement?.textContent).toContain(error.trim());
       } else {
-        // When there's no error, input should have aria-invalid="false"
-        expect(input).toHaveAttribute('aria-invalid', 'false');
+        // When valid, aria-invalid should be omitted (not "false").
+        expect(input).not.toHaveAttribute('aria-invalid');
       }
       
       // If there's helper text, it should be associated via aria-describedby

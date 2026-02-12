@@ -1,6 +1,6 @@
 // AuthPage.property.test.tsx - Property-based tests for AuthPage component
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen } from '../../test-utils/render-with-providers';
 import * as fc from 'fast-check';
 import { AuthPage } from './AuthPage';
 
@@ -43,18 +43,16 @@ describe('AuthPage Property Tests', () => {
           const { unmount } = render(<AuthPage />);
 
           // Check for common elements (should always be present)
-          const loginTitle = screen.getByText(/login/i);
           const emailInput = screen.queryByPlaceholderText(/your.email@example.com/i);
           const passwordInput = screen.queryByPlaceholderText(/enter your password/i);
           
           const hasCommonElements = 
-            loginTitle !== null && 
             emailInput !== null && 
             passwordInput !== null;
 
           // Check for welcome section (should only be present on desktop)
-          const welcomeSection = screen.queryByText(/welcome to ctf platform/i);
-          const hasWelcomeSection = welcomeSection !== null;
+          const loginHeadings = screen.queryAllByRole('heading', { name: /login/i });
+          const hasWelcomeSection = loginHeadings.length === 2;
 
           // Check for admin note (should always be present)
           const adminNote = screen.queryByText(/user accounts are created by administrators/i);
@@ -223,11 +221,11 @@ describe('AuthPage Property Tests', () => {
             confirmPasswordInput === null;
 
           // Check for presence of login elements
-          const loginTitle = screen.queryByText(/login/i);
+          const loginTitles = screen.queryAllByRole('heading', { name: /login/i });
           const loginButton = screen.queryByRole('button', { name: /sign in/i });
 
           const hasLoginElements = 
-            loginTitle !== null &&
+            loginTitles.length > 0 &&
             loginButton !== null;
 
           unmount();

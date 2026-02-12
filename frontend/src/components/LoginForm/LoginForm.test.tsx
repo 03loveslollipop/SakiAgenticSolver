@@ -37,15 +37,15 @@ describe('LoginForm', () => {
     const submitButton = screen.getByRole('button', { name: /sign in/i });
     
     // Try to submit with empty email
-    fireEvent.click(submitButton);
+    await user.click(submitButton);
     expect(await screen.findByText(/email is required/i)).toBeInTheDocument();
     expect(mockOnSubmit).not.toHaveBeenCalled();
 
     // Try to submit with invalid email
     const emailInput = screen.getByLabelText(/email/i);
     await user.type(emailInput, 'invalid-email');
-    fireEvent.click(submitButton);
-    expect(await screen.findByText(/please enter a valid email address/i)).toBeInTheDocument();
+    await user.click(submitButton);
+    expect(await screen.findByText(/invalid email address/i)).toBeInTheDocument();
     expect(mockOnSubmit).not.toHaveBeenCalled();
   });
 
@@ -60,14 +60,14 @@ describe('LoginForm', () => {
     await user.type(emailInput, 'test@example.com');
     
     // Try to submit with empty password
-    fireEvent.click(submitButton);
+    await user.click(submitButton);
     expect(await screen.findByText(/password is required/i)).toBeInTheDocument();
     expect(mockOnSubmit).not.toHaveBeenCalled();
 
     // Try to submit with short password
     const passwordInput = screen.getByPlaceholderText(/enter your password/i);
     await user.type(passwordInput, '12345');
-    fireEvent.click(submitButton);
+    await user.click(submitButton);
     expect(await screen.findByText(/password must be at least 6 characters/i)).toBeInTheDocument();
     expect(mockOnSubmit).not.toHaveBeenCalled();
   });
@@ -105,7 +105,7 @@ describe('LoginForm', () => {
     const submitButton = screen.getByRole('button', { name: /sign in/i });
     
     // Trigger email validation error
-    fireEvent.click(submitButton);
+    await user.click(submitButton);
     expect(await screen.findByText(/email is required/i)).toBeInTheDocument();
 
     // Start typing in email field
@@ -125,7 +125,7 @@ describe('LoginForm', () => {
     const forgotPasswordButton = screen.getByRole('button', { name: /forgot password/i });
     await user.click(forgotPasswordButton);
 
-    expect(alertMock).toHaveBeenCalledWith('Password reset functionality would be implemented here');
+    expect(alertMock).toHaveBeenCalledWith('Password reset functionality would be implemented here.');
     
     alertMock.mockRestore();
   });

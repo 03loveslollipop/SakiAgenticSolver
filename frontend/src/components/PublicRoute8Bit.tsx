@@ -1,5 +1,6 @@
 // PublicRoute8Bit.tsx - 8-bit styled public route component
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Loading } from './Loading/Loading';
@@ -9,12 +10,13 @@ interface PublicRoute8BitProps {
 }
 
 const PublicRoute8Bit: React.FC<PublicRoute8BitProps> = ({ children }) => {
+  const { t } = useTranslation();
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-neutral-darkPurple">
-        <Loading text="Checking authentication..." />
+        <Loading text={t('auth.checkingAuthentication')} />
       </div>
     );
   }

@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../services/api';
 import './FileViewer.css';
 
@@ -17,6 +18,7 @@ const FileViewer = ({
   description,
   autoRefresh = false,
 }: FileViewerProps) => {
+  const { t } = useTranslation();
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,11 +28,10 @@ const FileViewer = ({
   useEffect(() => {
     loadContent();
 
-    // Set up auto-refresh if enabled
     if (autoRefreshEnabled) {
       refreshIntervalRef.current = setInterval(() => {
-        loadContent(true); // Silent refresh
-      }, 5000); // Refresh every 5 seconds
+        loadContent(true);
+      }, 5000);
     }
 
     return () => {
@@ -62,12 +63,12 @@ const FileViewer = ({
           data = await apiClient.getDiscoveries(sessionId);
           break;
         default:
-          throw new Error('Unknown file type');
+          throw new Error(t('errors.unknownFileType'));
       }
 
       setContent(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : `Failed to load ${fileType}`);
+      setError(err instanceof Error ? err.message : t('errors.failedToLoadFileType', { fileType }));
     } finally {
       if (!silent) {
         setLoading(false);
@@ -87,8 +88,8 @@ const FileViewer = ({
     return (
       <div className="file-viewer">
         <div className="loading">
-          <div className="spinner"></div>
-          <p>Loading {title}...</p>
+          <div className="spinner" />
+          <p>{t('fileViewer.loading', { title })}</p>
         </div>
       </div>
     );
@@ -100,7 +101,7 @@ const FileViewer = ({
         <div className="error-container">
           <p className="error-message">{error}</p>
           <button onClick={handleRefresh} className="btn btn-primary">
-            Retry
+            {t('common.retry')}
           </button>
         </div>
       </div>
@@ -122,17 +123,17 @@ const FileViewer = ({
                 checked={autoRefreshEnabled}
                 onChange={toggleAutoRefresh}
               />
-              <span>Auto-refresh</span>
+              <span>{t('fileViewer.autoRefresh')}</span>
             </label>
           )}
           <button onClick={handleRefresh} className="btn btn-secondary btn-small">
-            Refresh
+            {t('common.refresh')}
           </button>
         </div>
       </div>
 
       <div className="viewer-content">
-        <pre className="viewer-text">{content || 'No content yet.'}</pre>
+        <pre className="viewer-text">{content || t('fileViewer.noContent')}</pre>
       </div>
     </div>
   );

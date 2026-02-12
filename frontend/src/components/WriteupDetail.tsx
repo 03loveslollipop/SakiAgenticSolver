@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Writeup } from '../types';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router-dom';
 import apiClient from '../services/api';
+import { Writeup } from '../types';
 import './WriteupDetail.css';
 
 const WriteupDetail = () => {
+  const { t } = useTranslation();
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const [writeup, setWriteup] = useState<Writeup | null>(null);
@@ -26,7 +28,7 @@ const WriteupDetail = () => {
       const data = await apiClient.getWriteup(sessionId);
       setWriteup(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load writeup');
+      setError(err instanceof Error ? err.message : t('errors.failedToLoadWriteup'));
     } finally {
       setLoading(false);
     }
@@ -51,8 +53,8 @@ const WriteupDetail = () => {
     return (
       <div className="writeup-detail">
         <div className="loading">
-          <div className="spinner"></div>
-          <p>Loading writeup...</p>
+          <div className="spinner" />
+          <p>{t('writeupDetail.loading')}</p>
         </div>
       </div>
     );
@@ -62,10 +64,10 @@ const WriteupDetail = () => {
     return (
       <div className="writeup-detail">
         <div className="error-container">
-          <h2>Error Loading Writeup</h2>
-          <p className="error-message">{error || 'Writeup not found'}</p>
+          <h2>{t('writeupDetail.errorTitle')}</h2>
+          <p className="error-message">{error || t('writeupDetail.notFound')}</p>
           <button onClick={handleBack} className="btn btn-primary">
-            Back to Writeups
+            {t('writeupDetail.backToWriteups')}
           </button>
         </div>
       </div>
@@ -74,52 +76,50 @@ const WriteupDetail = () => {
 
   return (
     <div className="writeup-detail">
-      {/* Header */}
       <div className="detail-header">
         <div className="header-left">
           <button onClick={handleBack} className="btn btn-secondary btn-small">
-            ← Back to Writeups
+            {t('writeupDetail.backToWriteups')}
           </button>
-          <h2>Writeup - Session {writeup.sessionId.substring(0, 8)}</h2>
+          <h2>{t('writeupDetail.title', { id: writeup.sessionId.substring(0, 8) })}</h2>
         </div>
         <button onClick={handleViewSession} className="btn btn-primary">
-          View Session
+          {t('writeupDetail.viewSession')}
         </button>
       </div>
 
-      {/* Metadata */}
       <div className="metadata-section">
         <div className="metadata-grid">
           {writeup.category && (
             <div className="metadata-item">
-              <span className="metadata-label">Category:</span>
+              <span className="metadata-label">{t('writeupDetail.metadata.category')}</span>
               <span className={`category-badge category-${writeup.category}`}>
-                {writeup.category}
+                {t(`writeups.categories.${writeup.category}`)}
               </span>
             </div>
           )}
           <div className="metadata-item">
-            <span className="metadata-label">Agent:</span>
+            <span className="metadata-label">{t('writeupDetail.metadata.agent')}</span>
             <span className="metadata-value">
               {writeup.agentType} ({writeup.agentModel})
             </span>
           </div>
           <div className="metadata-item">
-            <span className="metadata-label">Completed:</span>
+            <span className="metadata-label">{t('writeupDetail.metadata.completed')}</span>
             <span className="metadata-value">{formatDate(writeup.completionTimestamp)}</span>
           </div>
           <div className="metadata-item">
-            <span className="metadata-label">Session ID:</span>
+            <span className="metadata-label">{t('writeupDetail.metadata.sessionId')}</span>
             <span className="metadata-value">{writeup.sessionId}</span>
           </div>
         </div>
 
         {writeup.technologies.length > 0 && (
           <div className="technologies-section">
-            <span className="metadata-label">Technologies & Techniques:</span>
+            <span className="metadata-label">{t('writeupDetail.metadata.technologies')}</span>
             <div className="tech-tags">
-              {writeup.technologies.map((tech, idx) => (
-                <span key={idx} className="tech-tag">
+              {writeup.technologies.map((tech, index) => (
+                <span key={index} className="tech-tag">
                   {tech}
                 </span>
               ))}
@@ -129,10 +129,10 @@ const WriteupDetail = () => {
 
         {writeup.challengeUrls.length > 0 && (
           <div className="challenges-section">
-            <span className="metadata-label">Challenge Files:</span>
+            <span className="metadata-label">{t('writeupDetail.metadata.challengeFiles')}</span>
             <ul className="challenge-urls">
-              {writeup.challengeUrls.map((url, idx) => (
-                <li key={idx}>
+              {writeup.challengeUrls.map((url, index) => (
+                <li key={index}>
                   <a href={url} target="_blank" rel="noopener noreferrer">
                     {url}
                   </a>
@@ -143,9 +143,8 @@ const WriteupDetail = () => {
         )}
       </div>
 
-      {/* Content */}
       <div className="content-section">
-        <h3>Writeup Content</h3>
+        <h3>{t('writeupDetail.contentTitle')}</h3>
         <div className="content-container">
           <pre className="writeup-content">{writeup.content}</pre>
         </div>

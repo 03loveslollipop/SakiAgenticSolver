@@ -3,13 +3,13 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Container } from '../../components/Container';
-import { LoginForm, LoginFormData } from '../../components/LoginForm';
 import { Button } from '../../components/Button';
+import { Container } from '../../components/Container';
 import { Input } from '../../components/Input';
 import { Loading } from '../../components/Loading';
-import { useResponsive } from '../../hooks/useResponsive';
+import { LoginForm, LoginFormData } from '../../components/LoginForm';
 import { useAuth } from '../../contexts/AuthContext';
+import { useResponsive } from '../../hooks/useResponsive';
 
 type AuthStep = 'credentials' | '2fa' | '2fa-setup';
 
@@ -115,16 +115,16 @@ export const AuthPage: React.FC = () => {
       return (
         <form onSubmit={handle2FASubmit} className="space-y-md">
           <p className="font-pixel text-xs text-neutral-darkPurple">
-            Enter the 6-digit code from your authenticator app.
+            {t('auth.twoFactor.enterCode')}
           </p>
           <Input
-            label="Authentication Code"
+            label={t('auth.twoFactor.codeLabel')}
             name="totpCode"
             type="text"
             inputMode="numeric"
             pattern="\d{6}"
             maxLength={6}
-            placeholder="000000"
+            placeholder={t('auth.twoFactor.codePlaceholder')}
             value={totpCode}
             onChange={(event) => setTotpCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
             required
@@ -136,7 +136,9 @@ export const AuthPage: React.FC = () => {
               {t('common.back')}
             </Button>
             <Button type="submit" variant="primary" fullWidth disabled={isLoading || totpCode.length !== 6}>
-              {isLoading ? <Loading size="sm" text="Verifying..." /> : 'Verify'}
+              {isLoading
+                ? <Loading size="sm" text={t('auth.twoFactor.verifying')} />
+                : t('auth.twoFactor.verify')}
             </Button>
           </div>
         </form>
@@ -147,27 +149,32 @@ export const AuthPage: React.FC = () => {
       <form onSubmit={handle2FASetupSubmit} className="space-y-md">
         <div className="space-y-sm">
           <p className="font-pixel text-xs text-neutral-darkPurple">
-            Scan this QR code in your authenticator app, then enter the generated code.
+            {t('auth.twoFactor.setupInstructions')}
           </p>
           {qrCodeUrl && (
             <div className="p-sm border-4 border-neutral-olive bg-white flex justify-center">
-              <img src={qrCodeUrl} alt="2FA QR code" className="max-w-full h-auto" loading="lazy" />
+              <img
+                src={qrCodeUrl}
+                alt={t('auth.twoFactor.qrAlt')}
+                className="max-w-full h-auto"
+                loading="lazy"
+              />
             </div>
           )}
           {secret && (
             <p className="font-pixel text-xs text-neutral-darkPurple break-all">
-              Manual code: <code>{secret}</code>
+              {t('auth.twoFactor.manualCode')}: <code>{secret}</code>
             </p>
           )}
         </div>
         <Input
-          label="Authentication Code"
+          label={t('auth.twoFactor.codeLabel')}
           name="totpCodeSetup"
           type="text"
           inputMode="numeric"
           pattern="\d{6}"
           maxLength={6}
-          placeholder="000000"
+          placeholder={t('auth.twoFactor.codePlaceholder')}
           value={totpCode}
           onChange={(event) => setTotpCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
           required
@@ -179,7 +186,9 @@ export const AuthPage: React.FC = () => {
             {t('common.back')}
           </Button>
           <Button type="submit" variant="primary" fullWidth disabled={isLoading || totpCode.length !== 6}>
-            {isLoading ? <Loading size="sm" text="Verifying..." /> : 'Complete setup'}
+            {isLoading
+              ? <Loading size="sm" text={t('auth.twoFactor.verifying')} />
+              : t('auth.twoFactor.completeSetup')}
           </Button>
         </div>
       </form>
@@ -187,14 +196,13 @@ export const AuthPage: React.FC = () => {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center px-md py-xl tablet:px-xl"
       style={{
         background: 'linear-gradient(135deg, #5C3947 0%, #DB6495 100%)',
       }}
     >
       <div className={`w-full max-w-6xl flex ${isMobile ? 'flex-col' : 'flex-row'} gap-lg`}>
-        {/* Welcome Section */}
         {!isMobile && (
           <div className="w-1/2 flex items-center justify-center">
             <Container variant="dark" padding="lg">
@@ -202,19 +210,17 @@ export const AuthPage: React.FC = () => {
                 {t('auth.login.title')}
               </h1>
               <p className="font-pixel text-sm text-white leading-relaxed">
-                Sign in to access your virtual machines and continue your cybersecurity journey
+                {t('auth.login.welcomeDescription')}
               </p>
               <div className="mt-lg p-sm border-4 border-accent-cyan bg-white">
                 <p className="font-pixel text-xs text-neutral-darkPurple">
-                  <strong>Note:</strong> User accounts are created by administrators. 
-                  If you need access, please contact your administrator.
+                  <strong>{t('auth.note.title')}</strong> {t('auth.note.body')}
                 </p>
               </div>
             </Container>
           </div>
         )}
 
-        {/* Form Section */}
         <div className={`${isMobile ? 'w-full' : 'w-1/2'}`}>
           <Container variant="light" padding="lg">
             <h2 className="font-pixel text-lg text-neutral-darkPurple mb-lg text-center">
@@ -232,8 +238,7 @@ export const AuthPage: React.FC = () => {
             {isMobile && (
               <div className="mt-lg p-sm border-4 border-accent-cyan bg-white">
                 <p className="font-pixel text-xs text-neutral-darkPurple">
-                  <strong>Note:</strong> User accounts are created by administrators. 
-                  If you need access, please contact your administrator.
+                  <strong>{t('auth.note.title')}</strong> {t('auth.note.body')}
                 </p>
               </div>
             )}

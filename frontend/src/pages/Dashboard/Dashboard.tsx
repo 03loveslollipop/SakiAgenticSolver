@@ -1,155 +1,182 @@
-// Dashboard.tsx - Main dashboard with sidebar navigation
-import React, { useState } from 'react';
-import { Sidebar, SidebarItem } from '../../components/Sidebar';
-import { Container } from '../../components/Container';
-import { Button } from '../../components/Button';
-import { useResponsive } from '../../hooks/useResponsive';
-
-const sidebarItems: SidebarItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: <span>📊</span>, path: '/dashboard' },
-  { id: 'vms', label: 'Virtual Machines', icon: <span>💻</span>, path: '/vms' },
-  { id: 'create-vm', label: 'Create VM', icon: <span>➕</span>, path: '/vms/create' },
-  { id: 'writeups', label: 'Writeups', icon: <span>📝</span>, path: '/writeups' },
-  { id: 'settings', label: 'Settings', icon: <span>⚙️</span>, path: '/settings' },
-];
-
-const logoPlaceholder = (
-  <div className="flex items-center gap-xs">
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="32" height="32" fill="#DBC70F"/>
-      <rect x="8" y="8" width="16" height="16" fill="#1ABBDB"/>
-    </svg>
-    <span className="font-pixel text-xs text-white">CTF</span>
-  </div>
-);
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { AppShell, Button, Container, Loading } from '../../components';
+import { useAuth } from '../../contexts/AuthContext';
+import apiClient from '../../services/api';
+import { Session } from '../../types';
+import AgentSessionList from '../../components/AgentSessionList/AgentSessionList';
 
 export const Dashboard: React.FC = () => {
-  const { isMobile } = useResponsive();
-  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { user, logout } = useAuth();
+
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadSessions = useCallback(async (showSpinner: boolean = true) => {
+    if (showSpinner) {
+      setLoading(true);
+    } else {
+      setRefreshing(true);
+    }
+
+    try {
+      setError(null);
+      const data = await apiClient.getSessions();
+      setSessions(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('errors.failedToLoadSessions'));
+    } finally {
+      if (showSpinner) {
+        setLoading(false);
+      } else {
+        setRefreshing(false);
+      }
+    }
+  }, [t]);
+
+  useEffect(() => {
+    loadSessions(true);
+  }, [loadSessions]);
+
+  const stats = useMemo(() => {
+    const total = sessions.length;
+    const running = sessions.filter((session) => session.status === 'running').length;
+    const failed = sessions.filter((session) => session.status === 'error').length;
+    return { total, running, failed };
+  }, [sessions]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate('/login');
+    }
+  };
+
+  const handleDelete = async (sessionId: string) => {
+    await apiClient.deleteSession(sessionId);
+    await loadSessions(false);
+  };
+
+  const formatDate = useCallback((value?: string) => {
+    if (!value) {
+      return t('common.unknownTime');
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return t('common.unknownTime');
+    }
+
+    return parsed.toLocaleString();
+  }, [t]);
+
+  const getStatusLabel = useCallback((status: Session['status']) => {
+    return t(`common.status.${status}`);
+  }, [t]);
+
+  const headerActions = (
+    <>
+      <Button type="button" variant="normal" onClick={() => navigate('/vms/create')}>
+        {t('nav.createVm')}
+      </Button>
+      <Button type="button" variant="success" onClick={() => loadSessions(false)} disabled={refreshing}>
+        {refreshing ? t('common.refreshing') : t('common.refresh')}
+      </Button>
+      <Button type="button" variant="error" onClick={handleLogout}>
+        {t('common.logout')}
+      </Button>
+    </>
+  );
 
   return (
-    <div className="flex min-h-screen overflow-hidden">
-      {/* Sidebar - Desktop */}
-      {!isMobile && (
-        <Sidebar items={sidebarItems} logo={logoPlaceholder} collapsible={true} />
-      )}
-
-      {/* Mobile Sidebar Overlay */}
-      {isMobile && showMobileSidebar && (
-        <>
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
-            onClick={() => setShowMobileSidebar(false)}
-          />
-          <div className="fixed left-0 top-0 h-full z-50">
-            <Sidebar items={sidebarItems} logo={logoPlaceholder} collapsible={false} />
+    <AppShell
+      title={t('nav.dashboard')}
+      subtitle={t('dashboard.subtitle', { email: user?.email || t('common.unknownUser') })}
+      headerActions={headerActions}
+    >
+      {loading ? (
+        <Container variant="light" padding="lg">
+          <div className="flex justify-center py-md">
+            <Loading size="lg" text={t('dashboard.loadingSessions')} />
           </div>
+        </Container>
+      ) : (
+        <>
+          {error && (
+            <Container variant="light" padding="lg" className="mb-lg border-accent-pink">
+              <p className="font-pixel text-sm text-accent-pink mb-sm">{error}</p>
+              <Button type="button" variant="primary" onClick={() => loadSessions(true)}>
+                {t('common.retry')}
+              </Button>
+            </Container>
+          )}
+
+          <div className="grid grid-cols-1 tablet:grid-cols-3 gap-lg mb-lg">
+            <Container variant="light" padding="md">
+              <p className="font-pixel text-xs text-neutral-teal mb-xs">{t('dashboard.stats.totalSessions')}</p>
+              <p className="font-pixel text-2xl text-neutral-darkPurple">{stats.total}</p>
+            </Container>
+            <Container variant="light" padding="md">
+              <p className="font-pixel text-xs text-neutral-teal mb-xs">{t('dashboard.stats.running')}</p>
+              <p className="font-pixel text-2xl text-neutral-darkPurple">{stats.running}</p>
+            </Container>
+            <Container variant="light" padding="md">
+              <p className="font-pixel text-xs text-neutral-teal mb-xs">{t('dashboard.stats.errors')}</p>
+              <p className="font-pixel text-2xl text-neutral-darkPurple">{stats.failed}</p>
+            </Container>
+          </div>
+
+          <Container variant="light" padding="lg" className="mb-lg">
+            <h2 className="font-pixel text-lg text-neutral-darkPurple mb-md">{t('dashboard.sections.recentSessions')}</h2>
+            {sessions.length === 0 ? (
+              <p className="font-pixel text-sm text-neutral-teal">{t('dashboard.empty.noSessions')}</p>
+            ) : (
+              <div className="space-y-sm">
+                {sessions.slice(0, 3).map((session) => (
+                  <div key={session.id} className="border-b-2 border-neutral-olive pb-sm">
+                    <p className="font-pixel text-sm text-neutral-darkPurple">
+                      {session.name || session.id} ({getStatusLabel(session.status)})
+                    </p>
+                    <p className="font-pixel text-xs text-neutral-teal mt-xs">
+                      {formatDate(session.createdAt)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Container>
+
+          <Container variant="light" padding="lg" className="mb-lg">
+            <h2 className="font-pixel text-lg text-neutral-darkPurple mb-md">{t('dashboard.sections.sessions')}</h2>
+            <AgentSessionList
+              sessions={sessions}
+              onConnect={(sessionId) => navigate(`/sessions/${sessionId}`)}
+              onDelete={handleDelete}
+            />
+          </Container>
+
+          <Container variant="light" padding="lg">
+            <h2 className="font-pixel text-lg text-neutral-darkPurple mb-md">{t('dashboard.sections.quickActions')}</h2>
+            <div className="flex flex-col tablet:flex-row gap-md">
+              <Button type="button" variant="primary" onClick={() => navigate('/vms/create')} fullWidth>
+                {t('dashboard.actions.createNewVm')}
+              </Button>
+              <Button type="button" variant="normal" onClick={() => navigate('/writeups')} fullWidth>
+                {t('dashboard.actions.browseWriteups')}
+              </Button>
+              <Button type="button" variant="success" onClick={() => navigate('/settings')} fullWidth>
+                {t('dashboard.actions.openSettings')}
+              </Button>
+            </div>
+          </Container>
         </>
       )}
-
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto bg-gray-100">
-        {/* Mobile Header with Hamburger */}
-        {isMobile && (
-          <div className="bg-neutral-darkPurple border-b-4 border-neutral-teal p-md flex items-center justify-between">
-            <button
-              onClick={() => setShowMobileSidebar(true)}
-              className="font-pixel text-white text-lg"
-              aria-label="Open menu"
-            >
-              ☰
-            </button>
-            {logoPlaceholder}
-          </div>
-        )}
-
-        {/* Dashboard Content */}
-        <div className="mx-auto w-full max-w-screen-wide p-lg">
-          <Container variant="light" padding="lg" className="mb-lg">
-            <h1 className="font-pixel text-xl text-neutral-darkPurple mb-md">
-              Dashboard
-            </h1>
-            <p className="font-pixel text-sm text-neutral-darkPurple leading-relaxed">
-              Welcome to your CTF automation platform dashboard
-            </p>
-          </Container>
-
-          {/* Stats Grid */}
-          <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-lg mb-lg`}>
-            <Container variant="light" padding="md">
-              <div className="text-center">
-                <p className="font-pixel text-xs text-neutral-teal mb-xs">Active VMs</p>
-                <p className="font-pixel text-2xl text-neutral-darkPurple">3</p>
-              </div>
-            </Container>
-
-            <Container variant="light" padding="md">
-              <div className="text-center">
-                <p className="font-pixel text-xs text-neutral-teal mb-xs">Completed</p>
-                <p className="font-pixel text-2xl text-neutral-darkPurple">12</p>
-              </div>
-            </Container>
-
-            <Container variant="light" padding="md">
-              <div className="text-center">
-                <p className="font-pixel text-xs text-neutral-teal mb-xs">Writeups</p>
-                <p className="font-pixel text-2xl text-neutral-darkPurple">8</p>
-              </div>
-            </Container>
-          </div>
-
-          {/* Recent Activity */}
-          <Container variant="light" padding="lg" className="mb-lg">
-            <h2 className="font-pixel text-lg text-neutral-darkPurple mb-md">
-              Recent Activity
-            </h2>
-            <div className="space-y-md">
-              <div className="border-b-2 border-neutral-olive pb-sm">
-                <p className="font-pixel text-sm text-neutral-darkPurple">
-                  VM "HackTheBox-Easy" started
-                </p>
-                <p className="font-pixel text-xs text-neutral-teal mt-xs">
-                  2 hours ago
-                </p>
-              </div>
-              <div className="border-b-2 border-neutral-olive pb-sm">
-                <p className="font-pixel text-sm text-neutral-darkPurple">
-                  Writeup submitted for "TryHackMe-Medium"
-                </p>
-                <p className="font-pixel text-xs text-neutral-teal mt-xs">
-                  5 hours ago
-                </p>
-              </div>
-              <div className="pb-sm">
-                <p className="font-pixel text-sm text-neutral-darkPurple">
-                  VM "PicoCTF-Beginner" completed
-                </p>
-                <p className="font-pixel text-xs text-neutral-teal mt-xs">
-                  1 day ago
-                </p>
-              </div>
-            </div>
-          </Container>
-
-          {/* Quick Actions */}
-          <Container variant="light" padding="lg">
-            <h2 className="font-pixel text-lg text-neutral-darkPurple mb-md">
-              Quick Actions
-            </h2>
-            <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-md`}>
-              <Button variant="primary" fullWidth={isMobile}>
-                Create New VM
-              </Button>
-              <Button variant="normal" fullWidth={isMobile}>
-                Browse Writeups
-              </Button>
-              <Button variant="success" fullWidth={isMobile}>
-                View Sessions
-              </Button>
-            </div>
-          </Container>
-        </div>
-      </main>
-    </div>
+    </AppShell>
   );
 };
