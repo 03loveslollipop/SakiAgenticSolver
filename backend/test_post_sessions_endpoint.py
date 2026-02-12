@@ -117,6 +117,7 @@ async def test_create_session_success(client, sample_vm_creation_request, mock_s
         mock_vm_setup_service = MockVMSetupService.return_value
         mock_vm_setup_service.execute_setup_script = AsyncMock(return_value=True)
         mock_vm_setup_service.install_agent = AsyncMock(return_value=True)
+        mock_vm_setup_service.write_agent_bootstrap_script = AsyncMock(return_value=True)
         mock_vm_setup_service.download_challenge_files = AsyncMock(return_value=True)
         mock_vm_setup_service.create_config_files = AsyncMock(return_value=True)
         mock_vm_setup_service.configure_mcp_servers = AsyncMock(return_value=True)
@@ -145,6 +146,7 @@ async def test_create_session_success(client, sample_vm_creation_request, mock_s
         mock_azure_vm_manager.create_vm.assert_called_once()
         mock_vm_setup_service.execute_setup_script.assert_called_once()
         mock_vm_setup_service.install_agent.assert_called_once()
+        mock_vm_setup_service.write_agent_bootstrap_script.assert_called_once()
         mock_vm_setup_service.download_challenge_files.assert_called_once()
         mock_vm_setup_service.create_config_files.assert_called_once()
         mock_vm_setup_service.configure_mcp_servers.assert_called_once()

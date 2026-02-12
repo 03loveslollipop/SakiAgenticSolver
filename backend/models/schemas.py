@@ -81,6 +81,7 @@ class Session(BaseModel):
     agent_type: Literal['codex', 'copilot']
     agent_model: str
     setup_mode: Optional[Literal['gemini', 'manual']] = 'manual'
+    deploy_agent: bool = True
     challenge_urls: List[str]
     instructions: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -133,6 +134,7 @@ class VMCreationRequest(BaseModel):
     agent_model: str = Field(..., min_length=1, description="AI model name")
     vm_size: Literal['small', 'medium', 'large'] = Field(..., description="VM size configuration")
     setup_mode: Optional[Literal['gemini', 'manual']] = Field('manual', description='Setup mode for the VM (gemini | manual)')
+    deploy_agent: Optional[bool] = Field(True, description='Whether to install and start the AI agent on the VM')
     
     @validator('challenge_urls')
     def validate_challenge_urls(cls, v):
@@ -160,6 +162,7 @@ class SessionResponse(BaseModel):
     agent_type: str
     agent_model: str
     setup_mode: Optional[str]
+    deploy_agent: Optional[bool] = None
     challenge_urls: List[str]
     instructions: str
     created_at: datetime

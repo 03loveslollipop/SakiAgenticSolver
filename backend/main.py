@@ -322,12 +322,14 @@ async def create_session(request: VMCreationRequest):
             raise
         
         # Step 3: Create session document in MongoDB with 'creating' status
+        deploy_agent = True if getattr(request, "deploy_agent", None) is None else bool(request.deploy_agent)
         session_data = {
             "_id": session_id,
             "vm_size": request.vm_size,
             "agent_type": request.agent_type,
             "agent_model": request.agent_model,
             "setup_mode": getattr(request, 'setup_mode', 'manual'),
+            "deploy_agent": deploy_agent,
             "challenge_urls": request.challenge_urls,
             "instructions": request.instructions,
             "status": "creating",
@@ -388,17 +390,18 @@ async def create_session(request: VMCreationRequest):
             if not setup_success:
                 raise Exception("Setup script execution failed")
             
-            # Install agent
-            logger.info("Installing agent...")
-            agent_success = await vm_setup_service.install_agent(
-                vm_ip=vm_info.public_ip,
-                agent_type=request.agent_type,
-                agent_model=request.agent_model,
-                ssh_private_key=private_key
-            )
-            
-            if not agent_success:
-                raise Exception("Agent installation failed")
+            if deploy_agent:
+                # Install agent
+                logger.info("Installing agent...")
+                agent_success = await vm_setup_service.install_agent(
+                    vm_ip=vm_info.public_ip,
+                    agent_type=request.agent_type,
+                    agent_model=request.agent_model,
+                    ssh_private_key=private_key
+                )
+                
+                if not agent_success:
+                    raise Exception("Agent installation failed")
             
             # Download challenge files
             logger.info("Downloading challenge files...")
@@ -422,27 +425,39 @@ async def create_session(request: VMCreationRequest):
             if not config_success:
                 raise Exception("Configuration file creation failed")
             
-            # Configure MCP servers
-            logger.info("Configuring MCP servers...")
-            mongo_url = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-            mcp_success = await vm_setup_service.configure_mcp_servers(
-                vm_ip=vm_info.public_ip,
-                mongo_connection_string=mongo_url,
-                ssh_private_key=private_key
-            )
-            
-            if not mcp_success:
-                logger.warning("MCP server configuration failed, but continuing...")
-            
-            # Start agent
-            logger.info("Starting agent...")
-            agent_start_success = await vm_setup_service.start_agent(
-                vm_ip=vm_info.public_ip,
-                ssh_private_key=private_key
-            )
-            
-            if not agent_start_success:
-                raise Exception("Agent start failed")
+            if deploy_agent:
+                # Write agent bootstrap script (for manual re-runs / interactive auth)
+                logger.info("Writing agent bootstrap script...")
+                bootstrap_success = await vm_setup_service.write_agent_bootstrap_script(
+                    vm_ip=vm_info.public_ip,
+                    agent_type=request.agent_type,
+                    agent_model=request.agent_model,
+                    ssh_private_key=private_key
+                )
+                if not bootstrap_success:
+                    logger.warning("Agent bootstrap script creation failed, but continuing...")
+
+                # Configure MCP servers
+                logger.info("Configuring MCP servers...")
+                mongo_url = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+                mcp_success = await vm_setup_service.configure_mcp_servers(
+                    vm_ip=vm_info.public_ip,
+                    mongo_connection_string=mongo_url,
+                    ssh_private_key=private_key
+                )
+                
+                if not mcp_success:
+                    logger.warning("MCP server configuration failed, but continuing...")
+                
+                # Start agent
+                logger.info("Starting agent...")
+                agent_start_success = await vm_setup_service.start_agent(
+                    vm_ip=vm_info.public_ip,
+                    ssh_private_key=private_key
+                )
+                
+                if not agent_start_success:
+                    raise Exception("Agent start failed")
             
             logger.info(f"VM setup completed successfully for session {session_id}")
             
@@ -474,6 +489,7 @@ async def create_session(request: VMCreationRequest):
             agent_type=session.agent_type,
             agent_model=session.agent_model,
             setup_mode=getattr(session, 'setup_mode', 'manual'),
+            deploy_agent=bool(getattr(session, 'deploy_agent', deploy_agent)),
             challenge_urls=session.challenge_urls,
             instructions=session.instructions,
             created_at=session.created_at,
@@ -539,6 +555,12 @@ async def list_sessions():
                 agent_type=session.agent_type,
                 agent_model=session.agent_model,
                 setup_mode=getattr(session, 'setup_mode', 'manual'),
+                deploy_agent=bool(getattr(session, 'deploy_agent', True)),
+                challenge_urls=session.challenge_urls,
+                instructions=session.instructions,
+                created_at=session.created_at,
+                status=session.status,
+                vm_ip=session.vm_ip,
                 ssh_username=session.ssh_username,
                 ssh_port=session.ssh_port,
                 resource_group=session.resource_group,
@@ -595,6 +617,8 @@ async def get_session_details(session_id: str):
             vm_size=session.vm_size,
             agent_type=session.agent_type,
             agent_model=session.agent_model,
+            setup_mode=getattr(session, 'setup_mode', 'manual'),
+            deploy_agent=bool(getattr(session, 'deploy_agent', True)),
             challenge_urls=session.challenge_urls,
             instructions=session.instructions,
             created_at=session.created_at,

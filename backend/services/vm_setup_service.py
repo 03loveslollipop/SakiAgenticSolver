@@ -282,6 +282,192 @@ echo "CTF tools installation complete!"
         finally:
             if ssh_client:
                 ssh_client.close()
+
+    async def write_agent_bootstrap_script(
+        self,
+        vm_ip: str,
+        agent_type: str,
+        agent_model: str,
+        ssh_private_key: str,
+        ssh_username: str = "ctfuser",
+        ssh_port: int = 22
+    ) -> bool:
+        """
+        Write a bootstrap script onto the VM to (re)install and start the agent.
+
+        This is intentionally designed for interactive use, since authenticating
+        to commercial LLM providers typically requires user-provided credentials.
+
+        The script:
+        - Installs prerequisites and the `kiro` CLI (idempotent-ish)
+        - Prompts for common API keys if missing (stores them in ~/.config/saki/agent.env)
+        - Builds a session prompt by concatenating BASE_PROMPT.md + instructions.md
+        - Starts the agent and writes logs to ~/agent.log
+        """
+        import shlex
+
+        ssh_client = None
+        try:
+            ssh_client = self._create_ssh_client(vm_ip, ssh_private_key, ssh_username, ssh_port)
+
+            agent_type_q = shlex.quote(agent_type)
+            agent_model_q = shlex.quote(agent_model)
+
+            script = f"""#!/usr/bin/env bash
+set -euo pipefail
+
+AGENT_TYPE={agent_type_q}
+AGENT_MODEL={agent_model_q}
+
+ENV_DIR="$HOME/.config/saki"
+ENV_FILE="$ENV_DIR/agent.env"
+
+ensure_cmd() {{
+  command -v "$1" >/dev/null 2>&1
+}}
+
+source_env() {{
+  if [ -f "$ENV_FILE" ]; then
+    # shellcheck disable=SC1090
+    source "$ENV_FILE"
+  fi
+}}
+
+persist_env() {{
+  local var="$1"
+  local val="$2"
+  mkdir -p "$ENV_DIR"
+  touch "$ENV_FILE"
+  chmod 600 "$ENV_FILE"
+  # Append (do not overwrite) so users can keep multiple exports.
+  printf 'export %s=%q\\n' "$var" "$val" >> "$ENV_FILE"
+  export "$var=$val"
+}}
+
+ensure_any_env() {{
+  # Usage: ensure_any_env VAR1 VAR2 ...
+  for v in "$@"; do
+    if [ -n "${{!v:-}}" ]; then
+      return 0
+    fi
+  done
+
+  if [ ! -t 0 ]; then
+    echo "Missing required credentials and no interactive TTY. Export the required env var(s) and rerun:" >&2
+    echo "  $*" >&2
+    return 1
+  fi
+
+  local first="$1"
+  read -r -s -p "Enter $first: " val
+  echo
+  persist_env "$first" "$val"
+}}
+
+install_node() {{
+  if ensure_cmd node && ensure_cmd npm; then
+    return 0
+  fi
+  echo "Installing Node.js (required for kiro)..."
+  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+  sudo apt-get install -y nodejs
+}}
+
+install_kiro() {{
+  if ensure_cmd kiro; then
+    return 0
+  fi
+  echo "Installing kiro..."
+  sudo npm install -g @kiro-ai/kiro
+}}
+
+build_session_prompt() {{
+  local base="/home/ctfuser/BASE_PROMPT.md"
+  local instr="/home/ctfuser/instructions.md"
+  local out="/home/ctfuser/SESSION_PROMPT.md"
+
+  if [ ! -f "$base" ] || [ ! -f "$instr" ]; then
+    echo "Missing $base or $instr; cannot build session prompt." >&2
+    return 1
+  fi
+
+  cat "$base" > "$out"
+  printf '\\n\\n# Session Instructions\\n\\n' >> "$out"
+  cat "$instr" >> "$out"
+}}
+
+ensure_auth() {{
+  # Heuristic mapping: adjust env vars to your provider of choice.
+  if [[ "$AGENT_MODEL" == *\"gemini\"* ]]; then
+    ensure_any_env GOOGLE_API_KEY GEMINI_API_KEY
+    return
+  fi
+  if [[ "$AGENT_MODEL" == *\"mixtral\"* ]] || [[ "$AGENT_MODEL" == *\"mistral\"* ]]; then
+    ensure_any_env MISTRAL_API_KEY
+    return
+  fi
+  if [[ "$AGENT_TYPE" == \"copilot\" ]]; then
+    ensure_any_env GH_TOKEN GITHUB_TOKEN
+    return
+  fi
+  ensure_any_env OPENAI_API_KEY
+}}
+
+start_agent() {{
+  if pgrep -f \"kiro start\" >/dev/null 2>&1; then
+    echo \"Agent already running (kiro start).\"
+    return 0
+  fi
+
+  build_session_prompt
+
+  echo \"Configuring model: $AGENT_MODEL\"
+  kiro config set model \"$AGENT_MODEL\" || true
+
+  echo \"Starting agent... (logs: $HOME/agent.log)\"
+  nohup sudo -E kiro start --prompt /home/ctfuser/SESSION_PROMPT.md --config /home/ctfuser/AGENT.md --workspace \"$HOME/challenges\" > \"$HOME/agent.log\" 2>&1 &
+  sleep 1
+  echo \"Agent started (or attempted). Tail logs with: tail -f ~/agent.log\"
+}}
+
+main() {{
+  echo \"SAKI agent bootstrap\"
+  echo \"Agent type: $AGENT_TYPE\"
+  echo \"Agent model: $AGENT_MODEL\"
+
+  sudo apt-get update
+  sudo apt-get install -y curl ca-certificates git
+
+  install_node
+  install_kiro
+
+  source_env
+  ensure_auth
+  start_agent
+}}
+
+main \"$@\"
+"""
+
+            sftp = ssh_client.open_sftp()
+            try:
+                with sftp.file("/home/ctfuser/bootstrap_agent.sh", "w") as f:
+                    f.write(script)
+            finally:
+                sftp.close()
+
+            stdin, stdout, stderr = ssh_client.exec_command("chmod +x /home/ctfuser/bootstrap_agent.sh")
+            stdout.channel.recv_exit_status()
+
+            logger.info("Wrote /home/ctfuser/bootstrap_agent.sh")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error writing agent bootstrap script: {e}")
+            return False
+        finally:
+            if ssh_client:
+                ssh_client.close()
     
     async def download_challenge_files(
         self,
@@ -725,11 +911,17 @@ The following MCP servers are configured and available:
             
             # Create a startup script that runs the agent
             startup_script = """#!/bin/bash
+set -e
 cd /home/ctfuser
+
+# Build a per-session prompt by combining the system prompt + user instructions.
+cat BASE_PROMPT.md > SESSION_PROMPT.md
+echo -e "\\n\\n# Session Instructions\\n" >> SESSION_PROMPT.md
+cat instructions.md >> SESSION_PROMPT.md
 
 # Start the agent with access to all configuration files
 # The agent will run in the background and maintain documentation
-sudo -E kiro start --prompt BASE_PROMPT.md --config AGENT.md --workspace ~/challenges &
+sudo -E kiro start --prompt SESSION_PROMPT.md --config AGENT.md --workspace ~/challenges &
 
 echo "Agent started successfully"
 """
