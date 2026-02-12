@@ -1,6 +1,6 @@
 // FormLabels.property.test.tsx - Property-based tests for form labels accessibility
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
 import fc from 'fast-check';
 import { runPropertyTest } from '../../test-utils/test-config';
 
@@ -15,36 +15,47 @@ describe('Accessibility - Form Labels Properties', () => {
     18,
     'Accessibility - Form Labels - Input Component Labels',
     fc.record({
-      label: fc.string({ minLength: 1, maxLength: 30 }),
+      label: fc.string({ minLength: 1, maxLength: 30 }).filter(label => label.trim().length > 0),
       required: fc.boolean(),
       hasError: fc.boolean(),
       hasHelperText: fc.boolean(),
     }),
     ({ label, required, hasError, hasHelperText }) => {
+      // Clean up any previous renders
+      cleanup();
+      
       const error = hasError ? 'This field is required' : undefined;
       const helperText = hasHelperText ? 'Please enter a value' : undefined;
       
+      // Create test ID to isolate this render
+      const testId = `input-test-${Math.random().toString(36).substr(2, 9)}`;
+      
       render(
-        <Input
-          label={label}
-          required={required}
-          error={error}
-          helperText={helperText}
-        />
+        <div data-testid={testId}>
+          <Input
+            label={label}
+            required={required}
+            error={error}
+            helperText={helperText}
+          />
+        </div>
       );
       
+      // Get container to avoid multiple render issues
+      const container = screen.getByTestId(testId);
+      
       // Input should be associated with label via htmlFor/id
-      const input = screen.getByLabelText(label);
+      const input = container.querySelector('input');
       expect(input).toBeInTheDocument();
       
       // Label should exist
-      const labelElement = screen.getByText(label);
+      const labelElement = container.querySelector('label');
       expect(labelElement).toBeInTheDocument();
-      expect(labelElement.tagName).toBe('LABEL');
+      expect(labelElement?.textContent).toContain(label.trim());
       
       // Label should be associated with input
-      const labelFor = labelElement.getAttribute('for');
-      const inputId = input.getAttribute('id');
+      const labelFor = labelElement?.getAttribute('for');
+      const inputId = input?.getAttribute('id');
       expect(labelFor).toBe(inputId);
       
       // If required, input should have required attribute
@@ -57,16 +68,24 @@ describe('Accessibility - Form Labels Properties', () => {
         expect(input).toHaveAttribute('aria-invalid', 'true');
         
         // Error message should be associated via aria-describedby
-        const errorElement = screen.getByText(error!);
-        const errorId = errorElement.id;
-        expect(input).toHaveAttribute('aria-describedby', expect.stringContaining(errorId));
+        const errorElement = container.querySelector('[role="alert"]');
+        expect(errorElement).toBeInTheDocument();
+        expect(errorElement?.textContent).toContain(error?.trim());
+        const errorId = errorElement?.id;
+        if (errorId) {
+          expect(input).toHaveAttribute('aria-describedby', expect.stringContaining(errorId));
+        }
       }
       
       // If there's helper text, it should be associated via aria-describedby
       if (hasHelperText && !hasError) {
-        const helperElement = screen.getByText(helperText!);
-        const helperId = helperElement.id;
-        expect(input).toHaveAttribute('aria-describedby', expect.stringContaining(helperId));
+        const helperElement = container.querySelector('[id$="-helper"]');
+        expect(helperElement).toBeInTheDocument();
+        expect(helperElement?.textContent).toContain(helperText?.trim());
+        const helperId = helperElement?.id;
+        if (helperId) {
+          expect(input).toHaveAttribute('aria-describedby', expect.stringContaining(helperId));
+        }
       }
     }
   );

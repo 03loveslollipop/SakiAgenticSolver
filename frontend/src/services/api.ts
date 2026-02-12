@@ -227,7 +227,7 @@ class APIClient {
   }
 
   // User management endpoints (admin only)
-  async createUser(request: { email: string; role: UserRole }): Promise<{ user: any; message: string }> {
+  async createUser(request: { email: string; role: UserRole; locale?: 'en' | 'ja' | 'es' }): Promise<{ user: any; message: string }> {
     const response = await this.client.post<{ user: any; message: string }>('/api/users', request);
     return response.data;
   }
@@ -242,7 +242,7 @@ class APIClient {
     return response.data;
   }
 
-  async updateUser(userId: string, updates: { role?: UserRole; is_active?: boolean }): Promise<any> {
+  async updateUser(userId: string, updates: { role?: UserRole; is_active?: boolean; locale?: 'en' | 'ja' | 'es' }): Promise<any> {
     const response = await this.client.put<any>(`/api/users/${userId}`, updates);
     return response.data;
   }

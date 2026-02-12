@@ -34,3 +34,8 @@ export { SetupModeSelector } from './SetupModeSelector';
 export type { SetupModeSelectorProps, SetupMode } from './SetupModeSelector';
 
 export { LanguageSelector } from './LanguageSelector';
+
+export { LazyImage } from './LazyImage';
+export type { LazyImageProps } from './LazyImage';
+export { default as PerformanceDashboard } from './PerformanceDashboard';
+export type { PerformanceDashboardProps } from './PerformanceDashboard';

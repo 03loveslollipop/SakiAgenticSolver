@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../services/api';
 import { UserRole } from '../types';
 import './UserManagement.css';
@@ -20,6 +21,7 @@ interface UserData {
 const UserManagement: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +62,14 @@ const UserManagement: React.FC = () => {
     setCreateLoading(true);
 
     try {
-      const response = await apiClient.createUser({ email: createEmail, role: createRole });
+      // Get current locale from i18n
+      const currentLocale = i18n.language as 'en' | 'ja' | 'es';
+      
+      const response = await apiClient.createUser({ 
+        email: createEmail, 
+        role: createRole,
+        locale: currentLocale
+      });
       setSuccessMessage(response.message);
       setShowCreateModal(false);
       setCreateEmail('');

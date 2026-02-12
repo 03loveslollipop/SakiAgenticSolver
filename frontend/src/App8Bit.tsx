@@ -1,5 +1,5 @@
 // App8Bit.tsx - 8-bit redesigned application
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './theme';
 import { AuthProvider } from './contexts/AuthContext';
@@ -7,19 +7,31 @@ import { LoadingProvider } from './contexts/LoadingContext';
 import { ErrorProvider } from './contexts/ErrorContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Loading } from './components/Loading/Loading';
+import { PerformanceDashboard } from './components';
 import PrivateRoute8Bit from './components/PrivateRoute8Bit';
 import PublicRoute8Bit from './components/PublicRoute8Bit';
 import GlobalLoadingIndicator from './components/GlobalLoadingIndicator';
 import './App.css';
 
 // Lazy load pages for code splitting
-const LandingPage = lazy(() => import('./pages/LandingPage').then(module => ({ default: module.LandingPage })));
-const AuthPage = lazy(() => import('./pages/AuthPage').then(module => ({ default: module.AuthPage })));
-const Dashboard = lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
-const VMCreatePage = lazy(() => import('./pages/VMCreatePage').then(module => ({ default: module.VMCreatePage })));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const AuthPage = lazy(() => import('./pages/AuthPage'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const VMCreatePage = lazy(() => import('./pages/VMCreatePage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 function App8Bit() {
+  const [showPerformanceDashboard, setShowPerformanceDashboard] = useState(false);
+  const [performanceMonitoringEnabled, setPerformanceMonitoringEnabled] = useState(true);
+
+  const togglePerformanceDashboard = () => {
+    setShowPerformanceDashboard(!showPerformanceDashboard);
+  };
+
+  const togglePerformanceMonitoring = () => {
+    setPerformanceMonitoringEnabled(!performanceMonitoringEnabled);
+  };
+
   return (
     <AuthProvider>
       <LoadingProvider>
@@ -96,6 +108,21 @@ function App8Bit() {
                       <Route path="*" element={<NotFoundPage />} />
                     </Routes>
                     <GlobalLoadingIndicator />
+                    
+                    {/* Performance monitoring controls */}
+                    <button 
+                      className="performance-toggle"
+                      onClick={togglePerformanceDashboard}
+                      title="Toggle Performance Dashboard"
+                    >
+                      {showPerformanceDashboard ? 'HIDE PERF' : 'SHOW PERF'}
+                    </button>
+                    
+                    {showPerformanceDashboard && (
+                      <PerformanceDashboard 
+                        showDetails={false}
+                      />
+                    )}
                   </Suspense>
                 </div>
               </ErrorBoundary>

@@ -28,7 +28,7 @@ export default defineConfig({
       },
     },
     // Enable code splitting
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 500,
     // Minify for production
     minify: 'terser',
     terserOptions: {
@@ -36,6 +36,13 @@ export default defineConfig({
         drop_console: true,
         drop_debugger: true,
       },
+    },
+    // Enable tree shaking
+    sourcemap: false,
+    // Optimize chunk splitting
+    target: 'esnext',
+    modulePreload: {
+      polyfill: false,
     },
   },
 })
