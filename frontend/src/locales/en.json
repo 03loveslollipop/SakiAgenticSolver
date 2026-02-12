@@ -15,6 +15,29 @@
       "subtitle": "Launch and manage your CTF environments with ease",
       "ctaExplore": "Explore",
       "ctaJoin": "Join Community"
+    },
+    "newHero": {
+      "message": "Automate AI Agents pipelines and environments for security usecases",
+      "ctaLogin": "Login",
+      "ctaFeatures": "Features",
+      "features": {
+        "title": "Features",
+        "vm": {
+          "title": "VM Management",
+          "description": "Launch and manage virtual machines with ease."
+        },
+        "security": {
+          "title": "Security",
+          "description": "Practice cybersecurity in a safe environment."
+        },
+        "progress": {
+          "title": "Progress Tracking",
+          "description": "Monitor your learning journey and achievements."
+        }
+      },
+      "footer": {
+        "copyright": "(c) {{year}} CTF Automation Platform"
+      }
     }
   },
   "auth": {

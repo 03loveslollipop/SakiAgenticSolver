@@ -2,6 +2,7 @@
 import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { gsap } from 'gsap';
 import { Navigation } from '../../components/Navigation';
 import { Button } from '../../components/Button';
 import { Container } from '../../components/Container';
@@ -9,32 +10,103 @@ import { useResponsive } from '../../hooks/useResponsive';
 
 const HeroPixelAnimation = lazy(() => import('../../components/PixelArt').then((module) => ({ default: module.HeroPixelAnimation })));
 
-const HERO_TYPED_TEXT = 'Automate AI Agents pipelines and environments for security usecases';
+const BRAND_TEXT = 'SAKI';
+const HERO_TYPED_FALLBACK = 'Automate AI Agents pipelines and environments for security usecases';
+
+type ActiveLine = 'brand' | 'message';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const { isMobile } = useResponsive();
   const { t } = useTranslation();
+  const heroTypedText = t('landing.newHero.message', { defaultValue: HERO_TYPED_FALLBACK });
+  const ctaLogin = t('landing.newHero.ctaLogin', { defaultValue: 'Login' });
+  const ctaFeatures = t('landing.newHero.ctaFeatures', { defaultValue: 'Features' });
+  const featuresTitle = t('landing.newHero.features.title', { defaultValue: 'Features' });
+  const currentYear = new Date().getFullYear();
+  const footerText = t('landing.newHero.footer.copyright', {
+    year: currentYear,
+    defaultValue: `(c) ${currentYear} CTF Automation Platform`,
+  });
+  const featureCards = [
+    {
+      title: t('landing.newHero.features.vm.title', { defaultValue: 'VM Management' }),
+      description: t('landing.newHero.features.vm.description', { defaultValue: 'Launch and manage virtual machines with ease.' }),
+    },
+    {
+      title: t('landing.newHero.features.security.title', { defaultValue: 'Security' }),
+      description: t('landing.newHero.features.security.description', { defaultValue: 'Practice cybersecurity in a safe environment.' }),
+    },
+    {
+      title: t('landing.newHero.features.progress.title', { defaultValue: 'Progress Tracking' }),
+      description: t('landing.newHero.features.progress.description', { defaultValue: 'Monitor your learning journey and achievements.' }),
+    },
+  ];
+
   const featuresSectionRef = useRef<HTMLElement | null>(null);
+  const cursorRef = useRef<HTMLSpanElement | null>(null);
+
+  const [brandText, setBrandText] = useState('');
   const [typedText, setTypedText] = useState('');
+  const [activeLine, setActiveLine] = useState<ActiveLine>('brand');
 
   useEffect(() => {
-    let charIndex = 0;
+    setBrandText('');
     setTypedText('');
+    setActiveLine('brand');
 
-    const intervalId = window.setInterval(() => {
-      charIndex += 1;
-      setTypedText(HERO_TYPED_TEXT.slice(0, charIndex));
+    const typeState = {
+      brandIndex: 0,
+      messageIndex: 0,
+    };
 
-      if (charIndex >= HERO_TYPED_TEXT.length) {
-        window.clearInterval(intervalId);
-      }
-    }, 38);
+    const timeline = gsap.timeline();
+
+    timeline
+      .to(typeState, {
+        brandIndex: BRAND_TEXT.length,
+        duration: BRAND_TEXT.length * 0.3,
+        ease: '"rough({template:none.out,strength: 1, points:20, taper:none, randomize:true, clamp:false })"',
+        snap: { brandIndex: 1 },
+        onUpdate: () => {
+          setBrandText(BRAND_TEXT.slice(0, Math.round(typeState.brandIndex)));
+        },
+      })
+      .add(() => {
+        setActiveLine('message');
+      })
+      .to(typeState, {
+        messageIndex: heroTypedText.length,
+        duration: heroTypedText.length * 0.065,
+        ease: 'none',
+        snap: { messageIndex: 1 },
+        onUpdate: () => {
+          setTypedText(heroTypedText.slice(0, Math.round(typeState.messageIndex)));
+        },
+      }, '+=0.35');
 
     return () => {
-      window.clearInterval(intervalId);
+      timeline.kill();
     };
-  }, []);
+  }, [heroTypedText]);
+
+  useEffect(() => {
+    if (!cursorRef.current) {
+      return;
+    }
+
+    const cursorBlinkTween = gsap.to(cursorRef.current, {
+      opacity: 0,
+      duration: 0.58,
+      ease: 'none',
+      repeat: -1,
+      yoyo: true,
+    });
+
+    return () => {
+      cursorBlinkTween.kill();
+    };
+  }, [activeLine]);
 
   const navigationItems = [
     { id: 'login', label: t('nav.login') || 'Login', path: '/login', variant: 'primary' as const },
@@ -57,9 +129,9 @@ export const LandingPage: React.FC = () => {
             <HeroPixelAnimation
               className="opacity-80"
               particleCount={isMobile ? 120 : 260}
-              repulsionRadius={isMobile ? 95 : 140}
-              repulsionForce={0.7}
-              returnSpeed={0.035}
+              repulsionRadius={isMobile ? 150 : 220}
+              repulsionForce={0.75}
+              returnSpeed={0.05}
               trackPointerOnWindow={true}
             />
           </Suspense>
@@ -70,14 +142,19 @@ export const LandingPage: React.FC = () => {
 
           <div className="container mx-auto flex flex-1 items-center justify-center px-md py-2xl">
             <div className="w-full max-w-5xl text-center">
-              <div className="mb-lg inline-block border-4 border-accent-cyan bg-neutral-darkPurple px-lg py-sm shadow-pixel">
-                <span className="font-pixel text-base text-primary-yellow">SAKI</span>
-              </div>
-
-              <h1 className="mx-auto max-w-4xl font-pixel text-xl leading-relaxed text-white tablet:text-2xl">
-                {typedText}
-                <span className="inline-block animate-pulse text-accent-cyan">_</span>
+              <h1 className="mb-lg font-pixel leading-none tracking-[0.08em] text-primary-yellow text-2xl tablet:text-[56px]">
+                {brandText}
+                {activeLine === 'brand' && (
+                  <span ref={cursorRef} className="ml-xs inline-block text-accent-cyan">|</span>
+                )}
               </h1>
+
+              <h2 className="mx-auto max-w-4xl font-pixel text-lg leading-relaxed text-white tablet:text-xl">
+                {typedText}
+                {activeLine === 'message' && (
+                  <span ref={cursorRef} className="ml-xs inline-block text-accent-cyan">|</span>
+                )}
+              </h2>
 
               <div className={`mt-xl flex ${isMobile ? 'flex-col' : 'flex-row'} items-center justify-center gap-md`}>
                 <Button
@@ -85,14 +162,14 @@ export const LandingPage: React.FC = () => {
                   onClick={() => navigate('/login')}
                   fullWidth={isMobile}
                 >
-                  Login
+                  {ctaLogin}
                 </Button>
                 <Button
                   variant="normal"
                   onClick={handleScrollToFeatures}
                   fullWidth={isMobile}
                 >
-                  Features
+                  {ctaFeatures}
                 </Button>
               </div>
             </div>
@@ -103,34 +180,22 @@ export const LandingPage: React.FC = () => {
       <main className="relative z-20 min-h-screen bg-white">
         <section ref={featuresSectionRef} id="features" className="border-t-4 border-neutral-teal py-2xl">
           <div className="container mx-auto px-md">
-            <h2 className="mb-xl text-center font-pixel text-xl text-neutral-darkPurple">Features</h2>
+            <h2 className="mb-xl text-center font-pixel text-xl text-neutral-darkPurple">{featuresTitle}</h2>
 
             <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-lg`}>
-              <Container variant="light" padding="lg" className="h-full">
-                <h3 className="mb-md font-pixel text-lg text-neutral-darkPurple">VM Management</h3>
-                <p className="font-pixel text-sm leading-relaxed text-neutral-darkPurple">
-                  Launch and manage virtual machines with ease.
-                </p>
-              </Container>
-
-              <Container variant="light" padding="lg" className="h-full">
-                <h3 className="mb-md font-pixel text-lg text-neutral-darkPurple">Security</h3>
-                <p className="font-pixel text-sm leading-relaxed text-neutral-darkPurple">
-                  Practice cybersecurity in a safe environment.
-                </p>
-              </Container>
-
-              <Container variant="light" padding="lg" className="h-full">
-                <h3 className="mb-md font-pixel text-lg text-neutral-darkPurple">Progress Tracking</h3>
-                <p className="font-pixel text-sm leading-relaxed text-neutral-darkPurple">
-                  Monitor your learning journey and achievements.
-                </p>
-              </Container>
+              {featureCards.map((feature) => (
+                <Container key={feature.title} variant="light" padding="lg" className="h-full">
+                  <h3 className="mb-md font-pixel text-lg text-neutral-darkPurple">{feature.title}</h3>
+                  <p className="font-pixel text-sm leading-relaxed text-neutral-darkPurple">
+                    {feature.description}
+                  </p>
+                </Container>
+              ))}
             </div>
 
             <footer className="mt-2xl border-t-4 border-neutral-teal py-lg">
               <div className="text-center">
-                <p className="font-pixel text-sm text-neutral-darkPurple">(c) © All rights reserved. 2026 - 02Labs - This is just a demo project for educational purposes, not intended for production use. Provided "as is" without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and non-infringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.</p>
+                <p className="font-pixel text-sm text-neutral-darkPurple">{footerText}</p>
               </div>
             </footer>
           </div>

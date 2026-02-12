@@ -15,6 +15,29 @@
       "subtitle": "CTF環境を簡単に起動・管理",
       "ctaExplore": "探索",
       "ctaJoin": "コミュニティに参加"
+    },
+    "newHero": {
+      "message": "\u30bb\u30ad\u30e5\u30ea\u30c6\u30a3\u30e6\u30fc\u30b9\u30b1\u30fc\u30b9\u5411\u3051\u306bAI\u30a8\u30fc\u30b8\u30a7\u30f3\u30c8\u306e\u30d1\u30a4\u30d7\u30e9\u30a4\u30f3\u3068\u74b0\u5883\u3092\u81ea\u52d5\u5316",
+      "ctaLogin": "\u30ed\u30b0\u30a4\u30f3",
+      "ctaFeatures": "\u6a5f\u80fd",
+      "features": {
+        "title": "\u6a5f\u80fd",
+        "vm": {
+          "title": "VM\u7ba1\u7406",
+          "description": "\u4eee\u60f3\u30de\u30b7\u30f3\u3092\u7c21\u5358\u306b\u8d77\u52d5\u3057\u3066\u7ba1\u7406\u3067\u304d\u307e\u3059\u3002"
+        },
+        "security": {
+          "title": "\u30bb\u30ad\u30e5\u30ea\u30c6\u30a3",
+          "description": "\u5b89\u5168\u306a\u74b0\u5883\u3067\u30b5\u30a4\u30d0\u30fc\u30bb\u30ad\u30e5\u30ea\u30c6\u30a3\u3092\u5b9f\u8df5\u3067\u304d\u307e\u3059\u3002"
+        },
+        "progress": {
+          "title": "\u9032\u6357\u7ba1\u7406",
+          "description": "\u5b66\u7fd2\u306e\u9032\u6357\u3068\u9054\u6210\u72b6\u6cc1\u3092\u8ffd\u8de1\u3067\u304d\u307e\u3059\u3002"
+        }
+      },
+      "footer": {
+        "copyright": "(c) {{year}} CTF\u81ea\u52d5\u5316\u30d7\u30e9\u30c3\u30c8\u30d5\u30a9\u30fc\u30e0"
+      }
     }
   },
   "auth": {

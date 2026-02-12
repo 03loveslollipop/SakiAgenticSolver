@@ -15,6 +15,29 @@
       "subtitle": "Lanza y gestiona tus entornos CTF con facilidad",
       "ctaExplore": "Explorar",
       "ctaJoin": "Unirse a la Comunidad"
+    },
+    "newHero": {
+      "message": "Automatiza pipelines y entornos de agentes de IA para casos de uso de seguridad",
+      "ctaLogin": "Iniciar sesi\u00f3n",
+      "ctaFeatures": "Funciones",
+      "features": {
+        "title": "Funciones",
+        "vm": {
+          "title": "Gesti\u00f3n de VM",
+          "description": "Inicia y administra m\u00e1quinas virtuales f\u00e1cilmente."
+        },
+        "security": {
+          "title": "Seguridad",
+          "description": "Practica ciberseguridad en un entorno seguro."
+        },
+        "progress": {
+          "title": "Seguimiento de progreso",
+          "description": "Supervisa tu aprendizaje y tus logros."
+        }
+      },
+      "footer": {
+        "copyright": "(c) {{year}} Plataforma de Automatizaci\u00f3n CTF"
+      }
     }
   },
   "auth": {
