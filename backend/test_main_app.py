@@ -69,6 +69,20 @@ def test_cors_allowed_origins(client):
     assert response.headers.get("access-control-allow-origin") == "http://localhost:5173"
 
 
+def test_list_sessions_route_defined_once():
+    """Test that GET /api/sessions route is registered exactly once"""
+    session_routes = [
+        route for route in app.routes
+        if (
+            getattr(route, "path", None) == "/api/sessions"
+            and "GET" in getattr(route, "methods", set())
+        )
+    ]
+
+    assert len(session_routes) == 1
+    assert session_routes[0].name == "list_sessions"
+
+
 def test_app_metadata():
     """Test that FastAPI app has correct metadata"""
     assert app.title == "CTF Challenge Automation Platform"
