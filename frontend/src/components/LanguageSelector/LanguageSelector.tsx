@@ -4,7 +4,10 @@ import { Locale, localeNames, supportedLocales } from '../../config/i18n';
 
 export const LanguageSelector: React.FC = () => {
   const { i18n } = useTranslation();
-  const currentLocale = i18n.language as Locale;
+  const currentLocale = supportedLocales.find((locale) =>
+    i18n.resolvedLanguage?.toLowerCase().startsWith(locale)
+    || i18n.language?.toLowerCase().startsWith(locale)
+  ) || 'en';
 
   const handleLanguageChange = (locale: Locale) => {
     i18n.changeLanguage(locale);

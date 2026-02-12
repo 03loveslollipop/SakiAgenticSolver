@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../Button';
+import { LanguageSelector } from '../LanguageSelector';
 
 export interface NavigationItem {
   id: string;
@@ -14,6 +15,7 @@ export interface NavigationProps {
   items?: NavigationItem[];
   logo?: React.ReactNode;
   showBackButton?: boolean;
+  showLanguageSelector?: boolean;
 }
 
 const PlaceholderLogo: React.FC<{ 'aria-label'?: string }> = ({ 'aria-label': ariaLabel }) => (
@@ -37,6 +39,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   items = [],
   logo,
   showBackButton = false,
+  showLanguageSelector = true,
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -73,30 +76,33 @@ export const Navigation: React.FC<NavigationProps> = ({
           </Link>
         </div>
         
-        {/* Right section: Navigation Items */}
-        {items.length > 0 && (
-          <nav aria-label="Main navigation">
-            <ul className="flex items-center gap-md" role="menubar">
-              {items.map((item) => {
-                const isActive = location.pathname === item.path;
-                return (
-                  <li key={item.id} role="none">
-                    <Link to={item.path}>
-                      <Button 
-                        variant={item.variant || 'normal'}
-                        className={isActive ? 'border-primary-yellow' : ''}
-                        role="menuitem"
-                        aria-current={isActive ? 'page' : undefined}
-                      >
-                        {item.label}
-                      </Button>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        )}
+        {/* Right section: Navigation Items + Language Selector */}
+        <div className="flex flex-wrap items-center justify-end gap-sm">
+          {items.length > 0 && (
+            <nav aria-label="Main navigation">
+              <ul className="flex items-center gap-sm" role="menubar">
+                {items.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <li key={item.id} role="none">
+                      <Link to={item.path}>
+                        <Button
+                          variant={item.variant || 'normal'}
+                          className={isActive ? 'border-primary-yellow' : ''}
+                          role="menuitem"
+                          aria-current={isActive ? 'page' : undefined}
+                        >
+                          {item.label}
+                        </Button>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          )}
+          {showLanguageSelector && <LanguageSelector />}
+        </div>
       </div>
     </header>
   );

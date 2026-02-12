@@ -19,6 +19,7 @@ export interface HeroPixelAnimationProps {
   returnSpeed?: number;
   colors?: string[];
   className?: string;
+  trackPointerOnWindow?: boolean;
 }
 
 export const HeroPixelAnimation: React.FC<HeroPixelAnimationProps> = ({
@@ -28,6 +29,7 @@ export const HeroPixelAnimation: React.FC<HeroPixelAnimationProps> = ({
   returnSpeed = 0.05,
   colors = ['#DBC70F', '#DB6495', '#1ABBDB', '#3D7A86', '#5C593E', '#5C3947'],
   className = '',
+  trackPointerOnWindow = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
@@ -83,33 +85,82 @@ export const HeroPixelAnimation: React.FC<HeroPixelAnimationProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const updatePointerPosition = (clientX: number, clientY: number) => {
       const rect = canvas.getBoundingClientRect();
       mouseRef.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: clientX - rect.left,
+        y: clientY - rect.top,
       };
     };
 
-    const handleMouseLeave = () => {
+    const handleMouseMove = (event: MouseEvent) => {
+      updatePointerPosition(event.clientX, event.clientY);
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (event.touches.length === 0) {
+        return;
+      }
+      const touch = event.touches[0];
+      updatePointerPosition(touch.clientX, touch.clientY);
+    };
+
+    const resetPointer = () => {
       mouseRef.current = { x: -1000, y: -1000 };
     };
 
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseleave', handleMouseLeave);
+    const handleWindowMouseOut = (event: Event) => {
+      if (event instanceof MouseEvent && !event.relatedTarget) {
+        resetPointer();
+      }
+    };
+
+    const pointerTarget: Window | HTMLCanvasElement = trackPointerOnWindow ? window : canvas;
+    pointerTarget.addEventListener('mousemove', handleMouseMove as EventListener);
+    pointerTarget.addEventListener('touchmove', handleTouchMove as EventListener, { passive: true });
+
+    if (trackPointerOnWindow) {
+      window.addEventListener('mouseout', handleWindowMouseOut);
+      window.addEventListener('blur', resetPointer);
+      window.addEventListener('touchend', resetPointer);
+      window.addEventListener('touchcancel', resetPointer);
+    } else {
+      canvas.addEventListener('mouseleave', resetPointer);
+      canvas.addEventListener('touchend', resetPointer);
+      canvas.addEventListener('touchcancel', resetPointer);
+    }
 
     return () => {
-      canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('mouseleave', handleMouseLeave);
+      pointerTarget.removeEventListener('mousemove', handleMouseMove as EventListener);
+      pointerTarget.removeEventListener('touchmove', handleTouchMove as EventListener);
+
+      if (trackPointerOnWindow) {
+        window.removeEventListener('mouseout', handleWindowMouseOut);
+        window.removeEventListener('blur', resetPointer);
+        window.removeEventListener('touchend', resetPointer);
+        window.removeEventListener('touchcancel', resetPointer);
+      } else {
+        canvas.removeEventListener('mouseleave', resetPointer);
+        canvas.removeEventListener('touchend', resetPointer);
+        canvas.removeEventListener('touchcancel', resetPointer);
+      }
     };
-  }, []);
+  }, [trackPointerOnWindow]);
 
   // Animation loop
   useEffect(() => {
     if (!isInitialized) return;
 
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
+    if (!canvas) return;
+
+    let ctx: CanvasRenderingContext2D | null = null;
+    try {
+      ctx = canvas.getContext('2d');
+    } catch {
+      return;
+    }
+
     if (!canvas || !ctx) return;
 
     const animate = () => {
@@ -169,7 +220,7 @@ export const HeroPixelAnimation: React.FC<HeroPixelAnimationProps> = ({
   return (
     <canvas
       ref={canvasRef}
-      className={`absolute inset-0 w-full h-full pointer-events-auto ${className}`}
+      className={`absolute inset-0 h-full w-full ${trackPointerOnWindow ? 'pointer-events-none' : 'pointer-events-auto'} ${className}`}
       style={{ imageRendering: 'pixelated' }}
       role="presentation"
       aria-hidden="true"

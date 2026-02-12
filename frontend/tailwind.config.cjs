@@ -24,12 +24,12 @@ module.exports = {
         pixel: ['"Press Start 2P"', '"Courier New"', 'monospace'],
       },
       fontSize: {
-        xs: '8px',
-        sm: '10px',
-        base: '12px',
-        lg: '16px',
-        xl: '20px',
-        '2xl': '24px',
+        xs: '10px',
+        sm: '12px',
+        base: '14px',
+        lg: '18px',
+        xl: '24px',
+        '2xl': '30px',
       },
       spacing: {
         xs: '4px',

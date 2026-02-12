@@ -1,5 +1,5 @@
 // App8Bit.tsx - 8-bit redesigned application
-import { Suspense, lazy, useState } from 'react';
+import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './theme';
 import { AuthProvider } from './contexts/AuthContext';
@@ -7,7 +7,6 @@ import { LoadingProvider } from './contexts/LoadingContext';
 import { ErrorProvider } from './contexts/ErrorContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Loading } from './components/Loading/Loading';
-import { PerformanceDashboard } from './components';
 import PrivateRoute8Bit from './components/PrivateRoute8Bit';
 import PublicRoute8Bit from './components/PublicRoute8Bit';
 import GlobalLoadingIndicator from './components/GlobalLoadingIndicator';
@@ -20,13 +19,15 @@ const Dashboard = lazy(() => import('./pages/Dashboard').then((module) => ({ def
 const VMCreatePage = lazy(() => import('./pages/VMCreatePage').then((module) => ({ default: module.VMCreatePage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
+const FullscreenRouteLoader = () => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-darkPurple/70 backdrop-blur-sm">
+    <div className="border-4 border-accent-cyan bg-neutral-darkPurple p-lg shadow-pixel-lg">
+      <Loading size="lg" text="Loading page..." />
+    </div>
+  </div>
+);
+
 function App8Bit() {
-  const [showPerformanceDashboard, setShowPerformanceDashboard] = useState(false);
-
-  const togglePerformanceDashboard = () => {
-    setShowPerformanceDashboard(!showPerformanceDashboard);
-  };
-
   return (
     <AuthProvider>
       <LoadingProvider>
@@ -35,7 +36,7 @@ function App8Bit() {
             <Router>
               <ErrorBoundary>
                 <div className="app">
-                  <Suspense fallback={<Loading text="Loading page..." />}>
+                  <Suspense fallback={<FullscreenRouteLoader />}>
                     <Routes>
                       {/* Public routes */}
                       <Route path="/" element={<LandingPage />} />
@@ -103,21 +104,6 @@ function App8Bit() {
                       <Route path="*" element={<NotFoundPage />} />
                     </Routes>
                     <GlobalLoadingIndicator />
-                    
-                    {/* Performance monitoring controls */}
-                    <button 
-                      className="performance-toggle"
-                      onClick={togglePerformanceDashboard}
-                      title="Toggle Performance Dashboard"
-                    >
-                      {showPerformanceDashboard ? 'HIDE PERF' : 'SHOW PERF'}
-                    </button>
-                    
-                    {showPerformanceDashboard && (
-                      <PerformanceDashboard 
-                        showDetails={false}
-                      />
-                    )}
                   </Suspense>
                 </div>
               </ErrorBoundary>

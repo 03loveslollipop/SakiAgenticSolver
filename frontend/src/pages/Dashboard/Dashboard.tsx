@@ -28,7 +28,7 @@ export const Dashboard: React.FC = () => {
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex min-h-screen overflow-hidden">
       {/* Sidebar - Desktop */}
       {!isMobile && (
         <Sidebar items={sidebarItems} logo={logoPlaceholder} collapsible={true} />
@@ -64,7 +64,7 @@ export const Dashboard: React.FC = () => {
         )}
 
         {/* Dashboard Content */}
-        <div className="p-lg">
+        <div className="mx-auto w-full max-w-screen-wide p-lg">
           <Container variant="light" padding="lg" className="mb-lg">
             <h1 className="font-pixel text-xl text-neutral-darkPurple mb-md">
               Dashboard

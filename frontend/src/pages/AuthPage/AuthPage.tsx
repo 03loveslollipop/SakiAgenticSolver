@@ -32,7 +32,7 @@ export const AuthPage: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center p-md"
+      className="min-h-screen flex items-center justify-center px-md py-xl tablet:px-xl"
       style={{
         background: 'linear-gradient(135deg, #5C3947 0%, #DB6495 100%)',
       }}

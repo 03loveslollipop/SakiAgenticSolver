@@ -9,10 +9,8 @@ import { Loading } from '../../components/Loading';
 import { useResponsive } from '../../hooks/useResponsive';
 
 // Lazy load PixelArt and HeroPixelAnimation components
-const PixelArt = lazy(() => import('../../components/PixelArt').then(module => ({ default: module.PixelArt })));
-const HeroPixelAnimation = lazy(() => import('../../components/PixelArt').then(module => ({ default: module.HeroPixelAnimation })));
-
-
+const PixelArt = lazy(() => import('../../components/PixelArt').then((module) => ({ default: module.PixelArt })));
+const HeroPixelAnimation = lazy(() => import('../../components/PixelArt').then((module) => ({ default: module.HeroPixelAnimation })));
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,112 +23,111 @@ export const LandingPage: React.FC = () => {
   ];
 
   return (
-    <div 
-      className="min-h-screen"
+    <div
+      className="relative flex min-h-screen flex-col overflow-hidden"
       style={{
         background: 'linear-gradient(135deg, #5C3947 0%, #DB6495 50%, #DBC70F 100%)',
       }}
     >
-      <Navigation items={navigationItems} />
-      
-      {/* Hero Section */}
-      <main className="container mx-auto px-md py-xl">
-        <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} items-center justify-between gap-xl`}>
-          {/* Hero Content */}
-          <div className={`${isMobile ? 'w-full text-center' : 'w-1/2'} space-y-lg`}>
-            <h1 className="font-pixel text-2xl text-white leading-relaxed">
-              {t('landing.hero.title')}
-            </h1>
-            <p className="font-pixel text-base text-white leading-relaxed">
-              {t('landing.hero.subtitle')}
-            </p>
-            
-            <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-md ${isMobile ? 'items-stretch' : 'items-center'}`}>
-              <Button 
-                variant="primary" 
-                onClick={() => navigate('/dashboard')}
-                fullWidth={isMobile}
-              >
-                {t('landing.hero.ctaJoin')}
-              </Button>
-              <Button 
-                variant="normal" 
-                onClick={() => navigate('/explore')}
-                fullWidth={isMobile}
-              >
-                {t('landing.hero.ctaExplore')}
-              </Button>
+      <div className="absolute inset-0 z-0" aria-hidden="true">
+        <Suspense fallback={null}>
+          <HeroPixelAnimation
+            className="opacity-75"
+            particleCount={isMobile ? 120 : 260}
+            repulsionRadius={isMobile ? 95 : 140}
+            repulsionForce={0.7}
+            returnSpeed={0.035}
+            trackPointerOnWindow={true}
+          />
+        </Suspense>
+      </div>
+
+      <div className="relative z-10 flex min-h-screen flex-col">
+        <Navigation items={navigationItems} />
+
+        <main className="container mx-auto flex w-full flex-1 flex-col px-md py-xl">
+          <section className={`flex ${isMobile ? 'flex-col' : 'flex-row'} items-center justify-between gap-xl`}>
+            <div className={`${isMobile ? 'w-full text-center' : 'w-1/2'} max-w-2xl space-y-lg`}>
+              <h1 className="font-pixel text-2xl text-white leading-relaxed">
+                {t('landing.hero.title')}
+              </h1>
+              <p className="font-pixel text-base text-white leading-relaxed">
+                {t('landing.hero.subtitle')}
+              </p>
+
+              <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-md ${isMobile ? 'items-stretch' : 'items-center'}`}>
+                <Button
+                  variant="primary"
+                  onClick={() => navigate('/dashboard')}
+                  fullWidth={isMobile}
+                >
+                  {t('landing.hero.ctaJoin')}
+                </Button>
+                <Button
+                  variant="normal"
+                  onClick={() => navigate('/explore')}
+                  fullWidth={isMobile}
+                >
+                  {t('landing.hero.ctaExplore')}
+                </Button>
+              </div>
             </div>
-          </div>
-          
-          {/* Hero Image/Graphic with Interactive Animation */}
-          <div className={`${isMobile ? 'w-full' : 'w-1/2'} flex justify-center relative`}>
-            <Container variant="dark" padding="lg" className="relative overflow-hidden">
-              <div className="w-64 h-64 relative">
-                <Suspense fallback={<Loading size="lg" text="Loading animation..." />}>
-                  <HeroPixelAnimation 
-                    particleCount={200}
-                    repulsionRadius={80}
-                    repulsionForce={0.6}
-                    returnSpeed={0.04}
-                  />
-                </Suspense>
-                {/* Fallback static pixel art for mobile or if animation fails */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Suspense fallback={<Loading size="md" />}>
-                    <PixelArt width={200} height={200} variant="hero" />
+
+            <div className={`${isMobile ? 'w-full' : 'w-1/2'} flex justify-center`}>
+              <Container variant="dark" padding="lg" className="w-full max-w-[420px]">
+                <div className="flex aspect-square w-full items-center justify-center">
+                  <Suspense fallback={<Loading size="lg" text="Loading artwork..." />}>
+                    <PixelArt width={isMobile ? 180 : 260} height={isMobile ? 180 : 260} variant="hero" />
                   </Suspense>
                 </div>
-              </div>
-            </Container>
+              </Container>
+            </div>
+          </section>
+
+          <section className="mt-2xl">
+            <h2 className="mb-xl text-center font-pixel text-xl text-white">
+              Features
+            </h2>
+
+            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-lg`}>
+              <Container variant="light" padding="lg" className="h-full">
+                <h3 className="mb-md font-pixel text-lg text-neutral-darkPurple">
+                  🖥️ VM Management
+                </h3>
+                <p className="font-pixel text-sm leading-relaxed text-neutral-darkPurple">
+                  Launch and manage virtual machines with ease.
+                </p>
+              </Container>
+
+              <Container variant="light" padding="lg" className="h-full">
+                <h3 className="mb-md font-pixel text-lg text-neutral-darkPurple">
+                  🔒 Security
+                </h3>
+                <p className="font-pixel text-sm leading-relaxed text-neutral-darkPurple">
+                  Practice cybersecurity in a safe environment.
+                </p>
+              </Container>
+
+              <Container variant="light" padding="lg" className="h-full">
+                <h3 className="mb-md font-pixel text-lg text-neutral-darkPurple">
+                  📊 Progress Tracking
+                </h3>
+                <p className="font-pixel text-sm leading-relaxed text-neutral-darkPurple">
+                  Monitor your learning journey and achievements.
+                </p>
+              </Container>
+            </div>
+          </section>
+        </main>
+
+        <footer className="border-t-4 border-neutral-teal bg-neutral-darkPurple py-lg">
+          <div className="container mx-auto px-md text-center">
+            <p className="font-pixel text-sm text-white">
+              © 2024 CTF Automation Platform
+            </p>
           </div>
-        </div>
-        
-        {/* Features Section */}
-        <div className="mt-2xl">
-          <h2 className="font-pixel text-xl text-white text-center mb-xl">
-            Features
-          </h2>
-          
-          <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-lg`}>
-            <Container variant="light" padding="lg">
-              <h3 className="font-pixel text-lg text-neutral-darkPurple mb-md">
-                🖥️ VM Management
-              </h3>
-              <p className="font-pixel text-sm text-neutral-darkPurple leading-relaxed">
-                Launch and manage virtual machines with ease
-              </p>
-            </Container>
-            
-            <Container variant="light" padding="lg">
-              <h3 className="font-pixel text-lg text-neutral-darkPurple mb-md">
-                🔒 Security
-              </h3>
-              <p className="font-pixel text-sm text-neutral-darkPurple leading-relaxed">
-                Practice cybersecurity in a safe environment
-              </p>
-            </Container>
-            
-            <Container variant="light" padding="lg">
-              <h3 className="font-pixel text-lg text-neutral-darkPurple mb-md">
-                📊 Progress Tracking
-              </h3>
-              <p className="font-pixel text-sm text-neutral-darkPurple leading-relaxed">
-                Monitor your learning journey and achievements
-              </p>
-            </Container>
-          </div>
-        </div>
-      </main>
-      
-      {/* Footer */}
-      <footer className="border-t-4 border-neutral-teal bg-neutral-darkPurple py-lg mt-2xl">
-        <div className="container mx-auto px-md text-center">
-          <p className="font-pixel text-sm text-white">
-            © 2024 CTF Automation Platform
-          </p>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
 };

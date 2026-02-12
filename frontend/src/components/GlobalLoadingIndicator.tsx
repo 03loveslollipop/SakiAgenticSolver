@@ -5,21 +5,27 @@ import { Loading } from './Loading/Loading';
 
 const GlobalLoadingIndicator: React.FC = () => {
   const { getLoadingCount } = useLoading();
-  const isLoading = getLoadingCount() > 0;
+  const loadingCount = getLoadingCount();
+  const isLoading = loadingCount > 0;
 
   if (!isLoading) {
     return null;
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
-      <div className="relative">
-        <div className="absolute -inset-2 bg-accent-pink opacity-20 rounded-full animate-ping"></div>
-        <div className="relative bg-neutral-darkPurple border-4 border-accent-cyan rounded-full p-2">
-          <Loading size="sm" text="" />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-darkPurple/65 backdrop-blur-sm"
+      role="alert"
+      aria-live="assertive"
+      aria-label="Application is loading"
+    >
+      <div className="relative border-4 border-accent-cyan bg-neutral-darkPurple p-lg shadow-pixel-lg">
+        <div className="absolute -inset-2 bg-accent-pink/20 animate-pulse" />
+        <div className="relative">
+          <Loading size="lg" text="Loading..." />
         </div>
-        <div className="absolute -top-2 -right-2 bg-accent-cyan text-white font-pixel text-xs rounded-full w-6 h-6 flex items-center justify-center border-2 border-white">
-          {getLoadingCount()}
+        <div className="absolute -top-3 -right-3 flex h-7 w-7 items-center justify-center border-2 border-white bg-accent-cyan font-pixel text-xs text-white">
+          {loadingCount}
         </div>
       </div>
     </div>

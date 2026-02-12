@@ -98,8 +98,8 @@ export const VMCreatePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-darkPurple to-accent-pink p-lg">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-darkPurple to-accent-pink px-md py-lg tablet:px-xl">
+      <div className="mx-auto max-w-5xl">
         {/* Header */}
         <div className="mb-lg flex items-center gap-md">
           <Button variant="normal" onClick={() => navigate(-1)}>
