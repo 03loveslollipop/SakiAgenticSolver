@@ -32,7 +32,7 @@ export const theme = {
   
   typography: {
     fontFamily: {
-      pixel: '"Press Start 2P", "Courier New", monospace',
+      pixel: '"Press Start 2P", "DotGothic16", "Courier New", monospace',
     },
     fontSize: {
       xs: '8px',

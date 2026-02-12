@@ -11,7 +11,7 @@
   background: #fff;
   padding: 16px;
   cursor: pointer;
-  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-family: 'Press Start 2P', 'DotGothic16', 'Courier New', monospace;
   transition: all 0.2s ease;
   text-align: left;
 }
@@ -49,14 +49,14 @@
   font-weight: 700;
   font-size: 14px;
   color: #5C3947; /* neutral-darkPurple */
-  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-family: 'Press Start 2P', 'DotGothic16', 'Courier New', monospace;
 }
 
 .mode-desc {
   font-size: 12px;
   color: #5C593E; /* neutral-olive */
   line-height: 1.4;
-  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-family: 'Press Start 2P', 'DotGothic16', 'Courier New', monospace;
 }
 
 @media (max-width: 768px) {

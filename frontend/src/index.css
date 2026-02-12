@@ -1,5 +1,5 @@
-/* Import Google Fonts - Press Start 2P for 8-bit aesthetic */
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+/* Import Google Fonts - Press Start 2P + DotGothic16 for retro Latin + Japanese */
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap');
 
 /* Tailwind CSS directives */
 @tailwind base;
