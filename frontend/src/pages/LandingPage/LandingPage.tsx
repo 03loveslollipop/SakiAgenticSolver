@@ -45,15 +45,20 @@ export const LandingPage: React.FC = () => {
 
   const featuresSectionRef = useRef<HTMLElement | null>(null);
   const cursorRef = useRef<HTMLSpanElement | null>(null);
+  const actionsRef = useRef<HTMLDivElement | null>(null);
 
   const [brandText, setBrandText] = useState('');
   const [typedText, setTypedText] = useState('');
-  const [activeLine, setActiveLine] = useState<ActiveLine>('brand');
+  const [activeLine, setActiveLine] = useState<ActiveLine>('message');
 
   useEffect(() => {
     setBrandText('');
     setTypedText('');
-    setActiveLine('brand');
+    setActiveLine('message');
+
+    if (actionsRef.current) {
+      gsap.set(actionsRef.current, { autoAlpha: 0, y: 12 });
+    }
 
     const typeState = {
       brandIndex: 0,
@@ -64,18 +69,6 @@ export const LandingPage: React.FC = () => {
 
     timeline
       .to(typeState, {
-        brandIndex: BRAND_TEXT.length,
-        duration: BRAND_TEXT.length * 0.3,
-        ease: '"rough({template:none.out,strength: 1, points:20, taper:none, randomize:true, clamp:false })"',
-        snap: { brandIndex: 1 },
-        onUpdate: () => {
-          setBrandText(BRAND_TEXT.slice(0, Math.round(typeState.brandIndex)));
-        },
-      })
-      .add(() => {
-        setActiveLine('message');
-      })
-      .to(typeState, {
         messageIndex: heroTypedText.length,
         duration: heroTypedText.length * 0.065,
         ease: 'none',
@@ -83,7 +76,28 @@ export const LandingPage: React.FC = () => {
         onUpdate: () => {
           setTypedText(heroTypedText.slice(0, Math.round(typeState.messageIndex)));
         },
-      }, '+=0.35');
+      })
+      .add(() => {
+        setActiveLine('brand');
+      }, '+=0.35')
+      .to(typeState, {
+        brandIndex: BRAND_TEXT.length,
+        duration: BRAND_TEXT.length * 0.3,
+        ease: '"rough({template:none.out,strength: 1, points:20, taper:none, randomize:true, clamp:false })"',
+        snap: { brandIndex: 1 },
+        onUpdate: () => {
+          setBrandText(BRAND_TEXT.slice(0, Math.round(typeState.brandIndex)));
+        },
+      });
+
+    if (actionsRef.current) {
+      timeline.to(actionsRef.current, {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.45,
+        ease: 'power2.out',
+      }, '+=0.1');
+    }
 
     return () => {
       timeline.kill();
@@ -128,11 +142,12 @@ export const LandingPage: React.FC = () => {
           <Suspense fallback={null}>
             <HeroPixelAnimation
               className="opacity-80"
-              particleCount={isMobile ? 120 : 260}
-              repulsionRadius={isMobile ? 150 : 220}
-              repulsionForce={0.75}
-              returnSpeed={0.05}
-              trackPointerOnWindow={true}
+              particleCount={isMobile ? 100 : 300}
+              repulsionRadius={isMobile ? 150 : 250}
+              repulsionForce={0.6}
+              returnSpeed={0.001}
+              enablePointerInteraction={!isMobile}
+              trackPointerOnWindow={!isMobile}
             />
           </Suspense>
         </div>
@@ -141,22 +156,25 @@ export const LandingPage: React.FC = () => {
           <Navigation items={navigationItems} />
 
           <div className="container mx-auto flex flex-1 items-center justify-center px-md py-2xl">
-            <div className="w-full max-w-5xl text-center">
-              <h1 className="mb-lg font-pixel leading-none tracking-[0.08em] text-primary-yellow text-2xl tablet:text-[56px]">
+            <div className="w-full max-w-10xl text-center">
+              <h1 className="mb-lg font-pixel leading-none tracking-[0.08em] text-primary-yellow text-2xl tablet:text-[96px]">
                 {brandText}
                 {activeLine === 'brand' && (
                   <span ref={cursorRef} className="ml-xs inline-block text-accent-cyan">|</span>
                 )}
               </h1>
 
-              <h2 className="mx-auto max-w-4xl font-pixel text-lg leading-relaxed text-white tablet:text-xl">
+              <h2 className="mx-auto max-w-8xl font-pixel text-lg leading-relaxed text-white tablet:text-[32px]">
                 {typedText}
                 {activeLine === 'message' && (
                   <span ref={cursorRef} className="ml-xs inline-block text-accent-cyan">|</span>
                 )}
               </h2>
 
-              <div className={`mt-xl flex ${isMobile ? 'flex-col' : 'flex-row'} items-center justify-center gap-md`}>
+              <div
+                ref={actionsRef}
+                className={`mt-xl flex ${isMobile ? 'flex-col' : 'flex-row'} items-center justify-center gap-md`}
+              >
                 <Button
                   variant="primary"
                   onClick={() => navigate('/login')}

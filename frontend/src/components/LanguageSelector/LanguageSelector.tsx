@@ -19,10 +19,12 @@ export const LanguageSelector: React.FC = () => {
         value={currentLocale}
         onChange={(e) => handleLanguageChange(e.target.value as Locale)}
         className="
-          font-pixel text-sm px-sm py-xs
+          font-pixel text-sm px-md py-sm
           border-4 border-solid border-neutral-teal
           bg-white text-neutral-darkPurple
+          transition-all hover:translate-y-[-2px] active:translate-y-[2px]
           focus:outline-none focus:border-accent-cyan
+          focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2
           cursor-pointer
         "
         aria-label="Select language"

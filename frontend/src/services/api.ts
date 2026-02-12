@@ -16,14 +16,10 @@ import {
   UserRole,
 } from '../types';
 
-// Configure base URL based on environment
-// If VITE_DEV is true, use localhost, otherwise use production URL
-const isDev = import.meta.env.VITE_DEV === 'true';
-const BASE_URL = isDev 
-  ? 'https://api.saki.02labs.me' 
-  : (import.meta.env.VITE_API_BASE_URL || 'https://api.saki.02labs.me');
+// Always use production API for all frontend environments.
+const BASE_URL = 'https://api.saki.02labs.me';
 
-console.log(`API Client initialized in ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'} mode`);
+console.log('API Client initialized in PRODUCTION mode');
 console.log(`API Base URL: ${BASE_URL}`);
 
 class APIClient {
