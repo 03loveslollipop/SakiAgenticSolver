@@ -35,6 +35,11 @@ export interface PerformanceReport {
   };
 }
 
+interface LayoutShiftEntry extends PerformanceEntry {
+  hadRecentInput: boolean;
+  value: number;
+}
+
 class PerformanceMonitor {
   private metrics: Partial<PerformanceMetrics> = {};
   private animationFrameRates: number[] = [];
@@ -137,8 +142,9 @@ class PerformanceMonitor {
         
         const observer = new PerformanceObserver((list) => {
           list.getEntries().forEach((entry) => {
-            if (!entry.hadRecentInput) {
-              clsValue += entry.value;
+            const layoutShiftEntry = entry as LayoutShiftEntry;
+            if (!layoutShiftEntry.hadRecentInput) {
+              clsValue += layoutShiftEntry.value;
             }
           });
           
@@ -250,7 +256,7 @@ class PerformanceMonitor {
   /**
    * Send performance report to analytics endpoint
    */
-  public async sendReport(endpoint: string = '/api/performance-metrics'): Promise<boolean> {
+  public async sendReport(_endpoint: string = '/api/performance-metrics'): Promise<boolean> {
     try {
       const report = this.generateReport();
       

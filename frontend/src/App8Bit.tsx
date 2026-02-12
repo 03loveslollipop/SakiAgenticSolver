@@ -14,22 +14,17 @@ import GlobalLoadingIndicator from './components/GlobalLoadingIndicator';
 import './App.css';
 
 // Lazy load pages for code splitting
-const LandingPage = lazy(() => import('./pages/LandingPage'));
-const AuthPage = lazy(() => import('./pages/AuthPage'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const VMCreatePage = lazy(() => import('./pages/VMCreatePage'));
+const LandingPage = lazy(() => import('./pages/LandingPage').then((module) => ({ default: module.LandingPage })));
+const AuthPage = lazy(() => import('./pages/AuthPage').then((module) => ({ default: module.AuthPage })));
+const Dashboard = lazy(() => import('./pages/Dashboard').then((module) => ({ default: module.Dashboard })));
+const VMCreatePage = lazy(() => import('./pages/VMCreatePage').then((module) => ({ default: module.VMCreatePage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 function App8Bit() {
   const [showPerformanceDashboard, setShowPerformanceDashboard] = useState(false);
-  const [performanceMonitoringEnabled, setPerformanceMonitoringEnabled] = useState(true);
 
   const togglePerformanceDashboard = () => {
     setShowPerformanceDashboard(!showPerformanceDashboard);
-  };
-
-  const togglePerformanceMonitoring = () => {
-    setPerformanceMonitoringEnabled(!performanceMonitoringEnabled);
   };
 
   return (

@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { 
   getPerformanceMonitor, 
-  cleanupPerformanceMonitor,
   type PerformanceMetrics 
 } from '../utils/performanceMonitoring';
 

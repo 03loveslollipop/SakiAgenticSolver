@@ -2,7 +2,7 @@
 import React from 'react';
 import { usePerformanceMonitoring, useFrameRateMonitoring, usePageLoadPerformance } from '../../hooks';
 
-interface PerformanceDashboardProps {
+export interface PerformanceDashboardProps {
   showDetails?: boolean;
   className?: string;
 }
@@ -11,8 +11,8 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
   showDetails = false, 
   className = '' 
 }) => {
-  const { metrics, averageFrameRate, frameRateStability, timeToInteractive, isMonitoring } = usePerformanceMonitoring();
-  const { averageFrameRate: frameRate, droppedFrames, isStable } = useFrameRateMonitoring();
+  const { metrics, averageFrameRate, isMonitoring } = usePerformanceMonitoring();
+  const { droppedFrames, isStable } = useFrameRateMonitoring();
   const { 
     firstContentfulPaint, 
     largestContentfulPaint, 
