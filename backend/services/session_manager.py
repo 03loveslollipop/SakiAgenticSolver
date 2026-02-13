@@ -36,6 +36,11 @@ class SessionManager:
         """
         await self.sessions_collection.create_index([("created_at", -1)], name="idx_created_at_desc")
         await self.sessions_collection.create_index("status", name="idx_status")
+        await self.sessions_collection.create_index("owner_user_id", name="idx_owner_user_id")
+        await self.sessions_collection.create_index(
+            [("owner_user_id", 1), ("created_at", -1)],
+            name="idx_owner_created_at_desc",
+        )
         logger.info("Created indexes for sessions collection")
     
     async def create_session(self, session_data: dict) -> Session:
@@ -94,7 +99,7 @@ class SessionManager:
             logger.error(f"MongoDB error creating session: {e}")
             raise
     
-    async def get_session(self, session_id: str) -> Optional[Session]:
+    async def get_session(self, session_id: str, owner_user_id: Optional[str] = None) -> Optional[Session]:
         """
         Retrieve session document by ID from MongoDB.
         
@@ -108,7 +113,11 @@ class SessionManager:
             PyMongoError: For MongoDB errors
         """
         try:
-            session_doc = await self.sessions_collection.find_one({"_id": session_id})
+            query = {"_id": session_id}
+            if owner_user_id is not None:
+                query["owner_user_id"] = owner_user_id
+
+            session_doc = await self.sessions_collection.find_one(query)
             
             if not session_doc:
                 logger.warning(f"Session {session_id} not found")
@@ -120,7 +129,7 @@ class SessionManager:
             logger.error(f"MongoDB error retrieving session {session_id}: {e}")
             raise
     
-    async def list_sessions(self) -> List[Session]:
+    async def list_sessions(self, owner_user_id: Optional[str] = None) -> List[Session]:
         """
         List all session documents sorted by created_at descending.
         
@@ -131,7 +140,8 @@ class SessionManager:
             PyMongoError: For MongoDB errors
         """
         try:
-            cursor = self.sessions_collection.find().sort("created_at", -1)
+            query = {"owner_user_id": owner_user_id} if owner_user_id is not None else {}
+            cursor = self.sessions_collection.find(query).sort("created_at", -1)
             sessions = []
             
             async for session_doc in cursor:
@@ -144,7 +154,13 @@ class SessionManager:
             logger.error(f"MongoDB error listing sessions: {e}")
             raise
     
-    async def update_session_status(self, session_id: str, status: str, error_message: Optional[str] = None) -> Optional[Session]:
+    async def update_session_status(
+        self,
+        session_id: str,
+        status: str,
+        error_message: Optional[str] = None,
+        updated_by: Optional[str] = None,
+    ) -> Optional[Session]:
         """
         Update session status field in MongoDB.
         
@@ -169,6 +185,8 @@ class SessionManager:
             update_data = {"status": status}
             if error_message is not None:
                 update_data["error_message"] = error_message
+            if updated_by is not None:
+                update_data["last_updated_by"] = updated_by
             
             result = await self.sessions_collection.find_one_and_update(
                 {"_id": session_id},
@@ -187,7 +205,12 @@ class SessionManager:
             logger.error(f"MongoDB error updating session {session_id} status: {e}")
             raise
     
-    async def update_session(self, session_id: str, update_data: dict) -> Optional[Session]:
+    async def update_session(
+        self,
+        session_id: str,
+        update_data: dict,
+        updated_by: Optional[str] = None,
+    ) -> Optional[Session]:
         """
         Update session fields in MongoDB.
         
@@ -202,9 +225,13 @@ class SessionManager:
             PyMongoError: For MongoDB errors
         """
         try:
+            update_payload = dict(update_data)
+            if updated_by is not None and "last_updated_by" not in update_payload:
+                update_payload["last_updated_by"] = updated_by
+
             result = await self.sessions_collection.find_one_and_update(
                 {"_id": session_id},
-                {"$set": update_data},
+                {"$set": update_payload},
                 return_document=True  # Return the updated document
             )
             
@@ -219,7 +246,7 @@ class SessionManager:
             logger.error(f"MongoDB error updating session {session_id}: {e}")
             raise
     
-    async def delete_session(self, session_id: str) -> bool:
+    async def delete_session(self, session_id: str, owner_user_id: Optional[str] = None) -> bool:
         """
         Delete session document from MongoDB.
         
@@ -233,7 +260,11 @@ class SessionManager:
             PyMongoError: For MongoDB errors
         """
         try:
-            result = await self.sessions_collection.delete_one({"_id": session_id})
+            query = {"_id": session_id}
+            if owner_user_id is not None:
+                query["owner_user_id"] = owner_user_id
+
+            result = await self.sessions_collection.delete_one(query)
             
             if result.deleted_count > 0:
                 logger.info(f"Deleted session {session_id}")

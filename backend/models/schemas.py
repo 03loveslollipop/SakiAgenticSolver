@@ -1,7 +1,7 @@
 # Pydantic models for API request/response schemas and data validation
 
 from datetime import datetime
-from typing import List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field, validator
 import uuid
 
@@ -49,23 +49,23 @@ class VMConfig(BaseModel):
         configs = {
             'small': VMConfig(
                 vm_size='small',
-                azure_vm_size='Standard_B2as_v2',  # Available v2 series (2 vCPU, 4GB RAM)
+                azure_vm_size='Standard_B2s',
                 cpu_cores=2,
-                ram_gb=4,
+                ram_gb=2,
                 disk_gb=30
             ),
             'medium': VMConfig(
                 vm_size='medium',
-                azure_vm_size='Standard_B4as_v2',  # Available v2 series (4 vCPU, 8GB RAM)
-                cpu_cores=4,
-                ram_gb=8,
+                azure_vm_size='Standard_B2ms',
+                cpu_cores=2,
+                ram_gb=4,
                 disk_gb=30
             ),
             'large': VMConfig(
                 vm_size='large',
-                azure_vm_size='Standard_B8as_v2',  # Available v2 series (8 vCPU, 16GB RAM)
-                cpu_cores=8,
-                ram_gb=16,
+                azure_vm_size='Standard_B2ls',
+                cpu_cores=2,
+                ram_gb=8,
                 disk_gb=30
             )
         }
@@ -90,7 +90,15 @@ class Session(BaseModel):
     ssh_username: str = "ctfuser"
     ssh_port: int = 22
     resource_group: str
+    owner_user_id: Optional[str] = None
+    created_by_email: Optional[str] = None
+    last_updated_by: Optional[str] = None
     error_message: Optional[str] = None
+    task_id: Optional[str] = None
+    deployment_progress: Optional[int] = 0
+    current_step: Optional[str] = None
+    estimated_completion: Optional[datetime] = None
+    last_status_update: Optional[datetime] = None
     
     model_config = {
         "populate_by_name": True,
@@ -171,7 +179,15 @@ class SessionResponse(BaseModel):
     ssh_username: str
     ssh_port: int
     resource_group: str
+    owner_user_id: Optional[str] = None
+    created_by_email: Optional[str] = None
+    last_updated_by: Optional[str] = None
     error_message: Optional[str]
+    task_id: Optional[str] = None
+    deployment_progress: Optional[int] = 0
+    current_step: Optional[str] = None
+    estimated_completion: Optional[datetime] = None
+    last_status_update: Optional[datetime] = None
     
     model_config = {
         "json_encoders": {
@@ -183,6 +199,64 @@ class SessionResponse(BaseModel):
 class SessionListResponse(BaseModel):
     """Response model for listing sessions"""
     sessions: List[SessionResponse]
+
+
+class AsyncSessionCreateResponse(BaseModel):
+    """Response model for async session creation requests."""
+    task_id: str
+    session_id: str
+    status: Literal["queued", "running", "failed"] = "queued"
+    estimated_completion_time: Optional[datetime] = None
+    status_url: str
+
+    model_config = {
+        "json_encoders": {
+            datetime: lambda v: v.isoformat()
+        }
+    }
+
+
+class TaskStatusResponse(BaseModel):
+    """Response model for background task status polling."""
+    task_id: str
+    session_id: str
+    status: str
+    progress: int = 0
+    current_step: Optional[str] = None
+    error_message: Optional[str] = None
+    result: Optional[Dict[str, Any]] = None
+    retry_count: int = 0
+    max_retries: int = 0
+    started_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    estimated_remaining_time: Optional[str] = None
+
+    model_config = {
+        "json_encoders": {
+            datetime: lambda v: v.isoformat()
+        }
+    }
+
+
+class DeploymentStatusResponse(BaseModel):
+    """Response model for per-session deployment status polling."""
+    session_id: str
+    task_id: Optional[str] = None
+    status: str
+    progress: int = 0
+    current_step: Optional[str] = None
+    vm_ip: Optional[str] = None
+    estimated_completion: Optional[datetime] = None
+    estimated_remaining_time: Optional[str] = None
+    error_details: Optional[Dict[str, Any]] = None
+    last_updated: Optional[datetime] = None
+
+    model_config = {
+        "json_encoders": {
+            datetime: lambda v: v.isoformat()
+        }
+    }
 
 
 class SSHConnectionInfo(BaseModel):

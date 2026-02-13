@@ -141,12 +141,66 @@ async def create_indexes():
     sessions_collection = db["sessions"]
     await sessions_collection.create_index("created_at", name="idx_created_at")
     await sessions_collection.create_index("status", name="idx_status")
+    await sessions_collection.create_index("owner_user_id", name="idx_owner_user_id")
+    await sessions_collection.create_index(
+        [("owner_user_id", 1), ("created_at", -1)],
+        name="idx_owner_created_at_desc",
+    )
     logger.info("Created indexes for sessions collection")
     
     # SSH keys collection indexes
     keys_collection = db["ssh_keys"]
     await keys_collection.create_index("session_id", unique=True, name="idx_session_id_unique")
     logger.info("Created indexes for ssh_keys collection")
+
+    # Writeups collection indexes
+    writeups_collection = db["writeups"]
+    await writeups_collection.create_index("session_id", unique=True, name="idx_writeup_session_id_unique")
+    await writeups_collection.create_index(
+        [("completion_timestamp", -1)],
+        name="idx_writeup_completion_timestamp_desc",
+    )
+    await writeups_collection.create_index([("content", "text")], name="idx_writeup_content_text")
+    logger.info("Created indexes for writeups collection")
+
+    # Background task queue indexes
+    background_tasks_collection = db["background_tasks"]
+    await background_tasks_collection.create_index("task_id", unique=True, name="idx_task_id_unique")
+    await background_tasks_collection.create_index(
+        [("status", 1), ("priority", 1), ("created_at", 1)],
+        name="idx_status_priority_created",
+    )
+    await background_tasks_collection.create_index("session_id", name="idx_background_session_id")
+    await background_tasks_collection.create_index("next_retry_at", name="idx_next_retry_at")
+    logger.info("Created indexes for background_tasks collection")
+
+    # Deployment status indexes
+    deployment_status_collection = db["deployment_status"]
+    await deployment_status_collection.create_index("session_id", unique=True, name="idx_deployment_session_id_unique")
+    await deployment_status_collection.create_index("task_id", name="idx_deployment_task_id")
+    await deployment_status_collection.create_index("status", name="idx_deployment_status")
+    await deployment_status_collection.create_index("last_updated", name="idx_deployment_last_updated")
+    logger.info("Created indexes for deployment_status collection")
+
+    # Core projection indexes
+    event_audit_collection = db["session_event_audit"]
+    await event_audit_collection.create_index("event_id", unique=True, name="idx_event_id_unique")
+    await event_audit_collection.create_index(
+        [("source_collection", 1), ("timestamp", -1)],
+        name="idx_source_collection_timestamp_desc",
+    )
+    await event_audit_collection.create_index("session_id", name="idx_event_audit_session_id")
+    await event_audit_collection.create_index("task_id", name="idx_event_audit_task_id")
+    logger.info("Created indexes for session_event_audit collection")
+
+    metrics_collection = db["dashboard_metrics_projection"]
+    await metrics_collection.create_index("updated_at", name="idx_metrics_updated_at")
+    logger.info("Created indexes for dashboard_metrics_projection collection")
+
+    stream_offsets_collection = db["service_stream_offsets"]
+    await stream_offsets_collection.create_index("stream_name", unique=True, name="idx_stream_name_unique")
+    await stream_offsets_collection.create_index("updated_at", name="idx_stream_offset_updated_at")
+    logger.info("Created indexes for service_stream_offsets collection")
 
 
 async def check_connection() -> bool:

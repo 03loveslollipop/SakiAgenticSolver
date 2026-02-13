@@ -20,8 +20,15 @@ pip install -r requirements.txt
 
 ## Running the Server
 
+Monolith compatibility entrypoint:
 ```bash
 uvicorn main:app --reload
+```
+
+Split service entrypoints:
+```bash
+uvicorn core_service.main:app --reload --port 8000
+uvicorn control_service.main:app --reload --port 8001
 ```
 
 The API will be available at http://localhost:8000

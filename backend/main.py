@@ -1,14 +1,17 @@
 # CTF Challenge Automation Platform - Backend
 # FastAPI application entry point
 
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
-from database import connect_to_mongo, close_mongo_connection, create_indexes, check_connection
+from datetime import datetime, timedelta
+from database import connect_to_mongo, close_mongo_connection, create_indexes, check_connection, get_database
+from database.mongodb import mongo_client
 from models.schemas import VMCreationRequest
 import logging
+import uuid
 
 # Configure logging
 logging.basicConfig(
@@ -16,6 +19,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+background_worker = None
 
 
 # Helper functions to get service instances with correct database name
@@ -40,14 +44,61 @@ def get_writeup_manager():
     return WriteupManager(mongo_client, DATABASE_NAME)
 
 
+def get_task_queue_service():
+    """Get TaskQueueService instance with correct database name"""
+    from database.mongodb import mongo_client, DATABASE_NAME
+    from services.task_queue_service import TaskQueueService
+    return TaskQueueService(mongo_client, DATABASE_NAME)
+
+
+def get_status_tracking_service():
+    """Get StatusTrackingService instance with correct database name"""
+    from database.mongodb import mongo_client, DATABASE_NAME
+    from services.status_tracking_service import StatusTrackingService
+    return StatusTrackingService(mongo_client, DATABASE_NAME)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager - runs on startup and shutdown"""
+    global background_worker
+
     # Startup: Initialize MongoDB connection
     logger.info("Starting up application...")
     try:
         await connect_to_mongo()
         await create_indexes()
+
+        # Initialize and start async deployment worker.
+        try:
+            from database.mongodb import mongo_client
+            from services.background_worker import BackgroundWorker
+            from services.deployment_orchestrator import DeploymentOrchestrator
+
+            if mongo_client is not None:
+                session_manager = get_session_manager()
+                ssh_key_manager = get_ssh_key_manager()
+                task_queue_service = get_task_queue_service()
+                status_tracking_service = get_status_tracking_service()
+
+                orchestrator = DeploymentOrchestrator(
+                    session_manager=session_manager,
+                    ssh_key_manager=ssh_key_manager,
+                    task_queue_service=task_queue_service,
+                    status_tracking_service=status_tracking_service,
+                )
+                background_worker = BackgroundWorker(
+                    task_queue_service=task_queue_service,
+                    deployment_orchestrator=orchestrator,
+                )
+                await background_worker.start()
+                app.state.background_worker = background_worker
+            else:
+                logger.warning("Skipping background worker startup because MongoDB client is not initialized")
+        except Exception as worker_exc:
+            background_worker = None
+            logger.error("Failed to initialize background worker: %s", worker_exc)
+
         logger.info("MongoDB initialized successfully!")
     except Exception as e:
         logger.error(f"Failed to initialize MongoDB: {e}")
@@ -57,6 +108,8 @@ async def lifespan(app: FastAPI):
     
     # Shutdown: Close MongoDB connection
     logger.info("Shutting down application...")
+    if background_worker is not None:
+        await background_worker.stop()
     await close_mongo_connection()
 
 
@@ -126,6 +179,45 @@ async def general_exception_handler(request: Request, exc: Exception):
 @app.get("/")
 async def root():
     return {"message": "CTF Challenge Automation Platform API"}
+
+
+def _format_remaining_time(estimated_completion: datetime | None) -> str | None:
+    """Format remaining duration as ISO-8601-ish PTxxMxxS for API responses."""
+    if not estimated_completion:
+        return None
+
+    delta = estimated_completion - datetime.utcnow()
+    total_seconds = int(max(0, delta.total_seconds()))
+    minutes, seconds = divmod(total_seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+
+    if hours > 0:
+        return f"PT{hours}H{minutes}M{seconds}S"
+    if minutes > 0:
+        return f"PT{minutes}M{seconds}S"
+    return f"PT{seconds}S"
+
+
+def _as_setup_mode(value: object) -> str:
+    if value in {"manual", "gemini"}:
+        return str(value)
+    return "manual"
+
+
+def _as_optional_str(value: object) -> str | None:
+    return value if isinstance(value, str) else None
+
+
+def _as_optional_int(value: object, default: int = 0) -> int:
+    if isinstance(value, bool):
+        return default
+    if isinstance(value, int):
+        return value
+    return default
+
+
+def _as_optional_datetime(value: object) -> datetime | None:
+    return value if isinstance(value, datetime) else None
 
 
 @app.get("/health")
@@ -263,6 +355,178 @@ async def send_test_email(email: str = "quizgamer234@gmail.com"):
         }
 
 
+@app.post("/api/sessions/async", status_code=status.HTTP_202_ACCEPTED)
+async def create_session_async(request: VMCreationRequest):
+    """
+    Create a VM session asynchronously and return immediately with task/session IDs.
+    """
+    from models.schemas import AsyncSessionCreateResponse
+    import os
+    import uuid
+
+    session_manager = get_session_manager()
+    ssh_key_manager = get_ssh_key_manager()
+    task_queue_service = get_task_queue_service()
+    status_tracking_service = get_status_tracking_service()
+
+    session_id = str(uuid.uuid4())
+    resource_group = os.getenv("AZURE_RESOURCE_GROUP", "ctf-platform-rg")
+    deploy_agent = True if getattr(request, "deploy_agent", None) is None else bool(request.deploy_agent)
+    estimated_completion = datetime.utcnow() + timedelta(minutes=12)
+
+    key_pair_created = False
+
+    try:
+        # Generate and persist SSH keys before queueing deployment work.
+        key_pair = await ssh_key_manager.generate_key_pair(session_id)
+        key_pair_created = True
+        public_key = key_pair["public_key"]
+
+        session_data = {
+            "_id": session_id,
+            "vm_size": request.vm_size,
+            "agent_type": request.agent_type,
+            "agent_model": request.agent_model,
+            "setup_mode": getattr(request, "setup_mode", "manual"),
+            "deploy_agent": deploy_agent,
+            "challenge_urls": request.challenge_urls,
+            "instructions": request.instructions,
+            "status": "creating",
+            "resource_group": resource_group,
+            "ssh_username": "ctfuser",
+            "ssh_port": 22,
+            "deployment_progress": 0,
+            "current_step": "queued",
+            "estimated_completion": estimated_completion,
+            "last_status_update": datetime.utcnow(),
+        }
+
+        await session_manager.create_session(session_data)
+
+        task_payload = {
+            "session_id": session_id,
+            "vm_size": request.vm_size,
+            "agent_type": request.agent_type,
+            "agent_model": request.agent_model,
+            "challenge_urls": request.challenge_urls,
+            "instructions": request.instructions,
+            "resource_group": resource_group,
+            "setup_mode": getattr(request, "setup_mode", "manual"),
+            "deploy_agent": deploy_agent,
+            "ssh_public_key": public_key,
+            "mongo_connection_string": os.getenv("MONGODB_URL", "mongodb://localhost:27017"),
+        }
+
+        task = await task_queue_service.enqueue_task(
+            task_type="vm_deployment",
+            session_id=session_id,
+            task_data=task_payload,
+            max_retries=2,
+            priority=100,
+            estimated_completion=estimated_completion,
+        )
+        task_id = task["task_id"]
+
+        await session_manager.update_session(session_id, {"task_id": task_id})
+        await status_tracking_service.initialize_status(
+            session_id=session_id,
+            task_id=task_id,
+            status="queued",
+            progress=0,
+            current_step="queued",
+            estimated_completion=estimated_completion,
+        )
+
+        return AsyncSessionCreateResponse(
+            task_id=task_id,
+            session_id=session_id,
+            status="queued",
+            estimated_completion_time=estimated_completion,
+            status_url=f"/api/tasks/{task_id}/status",
+        )
+    except Exception as exc:
+        logger.error("Failed to create async session %s: %s", session_id, exc, exc_info=True)
+        if key_pair_created:
+            try:
+                await ssh_key_manager.delete_key_pair(session_id)
+            except Exception as cleanup_exc:
+                logger.warning("Failed to cleanup SSH keys for %s: %s", session_id, cleanup_exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to queue session deployment: {str(exc)}",
+        )
+
+
+@app.get("/api/tasks/{task_id}/status")
+async def get_task_status(task_id: str):
+    """Get current background task status and progress."""
+    from models.schemas import TaskStatusResponse
+
+    task_queue_service = get_task_queue_service()
+    task = await task_queue_service.get_task_status(task_id)
+
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task {task_id} not found")
+
+    return TaskStatusResponse(
+        task_id=task["task_id"],
+        session_id=task["session_id"],
+        status=task["status"],
+        progress=int(task.get("progress", 0)),
+        current_step=task.get("current_step"),
+        error_message=task.get("error_message"),
+        result=task.get("result"),
+        retry_count=int(task.get("retry_count", 0)),
+        max_retries=int(task.get("max_retries", 0)),
+        started_at=task.get("started_at"),
+        updated_at=task.get("updated_at"),
+        completed_at=task.get("completed_at"),
+        estimated_remaining_time=_format_remaining_time(task.get("estimated_completion")),
+    )
+
+
+@app.get("/api/sessions/{session_id}/status")
+async def get_session_status(session_id: str):
+    """Polling endpoint for deployment status updates during async VM creation."""
+    from models.schemas import DeploymentStatusResponse
+
+    session_manager = get_session_manager()
+    status_tracking_service = get_status_tracking_service()
+
+    session = await session_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Session {session_id} not found")
+
+    status_doc = await status_tracking_service.get_status(session_id)
+    if status_doc:
+        return DeploymentStatusResponse(
+            session_id=session_id,
+            task_id=status_doc.get("task_id"),
+            status=status_doc.get("status", session.status),
+            progress=int(status_doc.get("progress", 0)),
+            current_step=status_doc.get("current_step"),
+            vm_ip=status_doc.get("vm_ip") or session.vm_ip,
+            estimated_completion=status_doc.get("estimated_completion"),
+            estimated_remaining_time=_format_remaining_time(status_doc.get("estimated_completion")),
+            error_details=status_doc.get("error_details"),
+            last_updated=status_doc.get("last_updated"),
+        )
+
+    # Fallback for sessions created before deployment_status tracking was introduced.
+    return DeploymentStatusResponse(
+        session_id=session_id,
+        task_id=getattr(session, "task_id", None),
+        status=session.status,
+        progress=int(getattr(session, "deployment_progress", 0) or 0),
+        current_step=getattr(session, "current_step", None),
+        vm_ip=session.vm_ip,
+        estimated_completion=getattr(session, "estimated_completion", None),
+        estimated_remaining_time=_format_remaining_time(getattr(session, "estimated_completion", None)),
+        error_details={"message": session.error_message} if session.error_message else None,
+        last_updated=getattr(session, "last_status_update", None),
+    )
+
+
 @app.post("/api/sessions", status_code=status.HTTP_201_CREATED)
 async def create_session(request: VMCreationRequest):
     """
@@ -278,13 +542,9 @@ async def create_session(request: VMCreationRequest):
     
     Requirements: 1.1, 1.5, 1.6, 1.7, 1.8, 5.1, 5.12
     """
-    from database import get_database
-    from services.session_manager import SessionManager
-    from services.ssh_key_manager import SSHKeyManager
     from services.azure_vm_manager import AzureVMManager
     from services.vm_setup_service import VMSetupService
-    from models.schemas import Session, VMConfig, SessionResponse
-    import uuid
+    from models.schemas import VMConfig, SessionResponse
     import os
     
     session_id = None
@@ -335,7 +595,10 @@ async def create_session(request: VMCreationRequest):
             "status": "creating",
             "resource_group": resource_group,
             "ssh_username": "ctfuser",
-            "ssh_port": 22
+            "ssh_port": 22,
+            "deployment_progress": 0,
+            "current_step": "creating_vm",
+            "last_status_update": datetime.utcnow(),
         }
         
         try:
@@ -488,7 +751,7 @@ async def create_session(request: VMCreationRequest):
             vm_size=session.vm_size,
             agent_type=session.agent_type,
             agent_model=session.agent_model,
-            setup_mode=getattr(session, 'setup_mode', 'manual'),
+            setup_mode=_as_setup_mode(getattr(session, 'setup_mode', 'manual')),
             deploy_agent=bool(getattr(session, 'deploy_agent', deploy_agent)),
             challenge_urls=session.challenge_urls,
             instructions=session.instructions,
@@ -498,7 +761,12 @@ async def create_session(request: VMCreationRequest):
             ssh_username=session.ssh_username,
             ssh_port=session.ssh_port,
             resource_group=session.resource_group,
-            error_message=session.error_message
+            error_message=session.error_message,
+            task_id=_as_optional_str(getattr(session, "task_id", None)),
+            deployment_progress=_as_optional_int(getattr(session, "deployment_progress", 0), 0),
+            current_step=_as_optional_str(getattr(session, "current_step", None)),
+            estimated_completion=_as_optional_datetime(getattr(session, "estimated_completion", None)),
+            last_status_update=_as_optional_datetime(getattr(session, "last_status_update", None)),
         )
         
     except ValueError as e:
@@ -554,7 +822,7 @@ async def list_sessions():
                 vm_size=session.vm_size,
                 agent_type=session.agent_type,
                 agent_model=session.agent_model,
-                setup_mode=getattr(session, 'setup_mode', 'manual'),
+                setup_mode=_as_setup_mode(getattr(session, 'setup_mode', 'manual')),
                 deploy_agent=bool(getattr(session, 'deploy_agent', True)),
                 challenge_urls=session.challenge_urls,
                 instructions=session.instructions,
@@ -564,7 +832,12 @@ async def list_sessions():
                 ssh_username=session.ssh_username,
                 ssh_port=session.ssh_port,
                 resource_group=session.resource_group,
-                error_message=session.error_message
+                error_message=session.error_message,
+                task_id=_as_optional_str(getattr(session, "task_id", None)),
+                deployment_progress=_as_optional_int(getattr(session, "deployment_progress", 0), 0),
+                current_step=_as_optional_str(getattr(session, "current_step", None)),
+                estimated_completion=_as_optional_datetime(getattr(session, "estimated_completion", None)),
+                last_status_update=_as_optional_datetime(getattr(session, "last_status_update", None)),
             )
             for session in sessions
         ]
@@ -617,7 +890,7 @@ async def get_session_details(session_id: str):
             vm_size=session.vm_size,
             agent_type=session.agent_type,
             agent_model=session.agent_model,
-            setup_mode=getattr(session, 'setup_mode', 'manual'),
+            setup_mode=_as_setup_mode(getattr(session, 'setup_mode', 'manual')),
             deploy_agent=bool(getattr(session, 'deploy_agent', True)),
             challenge_urls=session.challenge_urls,
             instructions=session.instructions,
@@ -627,7 +900,12 @@ async def get_session_details(session_id: str):
             ssh_username=session.ssh_username,
             ssh_port=session.ssh_port,
             resource_group=session.resource_group,
-            error_message=session.error_message
+            error_message=session.error_message,
+            task_id=_as_optional_str(getattr(session, "task_id", None)),
+            deployment_progress=_as_optional_int(getattr(session, "deployment_progress", 0), 0),
+            current_step=_as_optional_str(getattr(session, "current_step", None)),
+            estimated_completion=_as_optional_datetime(getattr(session, "estimated_completion", None)),
+            last_status_update=_as_optional_datetime(getattr(session, "last_status_update", None)),
         )
         
         logger.info(f"Retrieved session {session_id} successfully")

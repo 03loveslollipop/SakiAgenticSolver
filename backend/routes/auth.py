@@ -1,7 +1,7 @@
 # Authentication API endpoints
 
 from fastapi import APIRouter, HTTPException, Depends, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from typing import Optional, Literal
 import logging
@@ -12,15 +12,13 @@ from services.user_manager import UserManager
 from services.auth_service import AuthService
 from services.email_service import EmailService
 from database.mongodb import get_database
+from shared.auth import get_current_user as shared_get_current_user
+from shared.auth import security
 
 logger = logging.getLogger(__name__)
 
 # Create router
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
-
-# Security scheme
-security = HTTPBearer()
-
 
 # Request/Response Models
 class LoginRequest(BaseModel):
@@ -102,26 +100,15 @@ async def get_email_service() -> EmailService:
     return EmailService()
 
 
-# Dependency to get current user from token
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    auth_service: AuthService = Depends(get_auth_service)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     """
-    Validate JWT token and return current user info.
-    Raises HTTPException if token is invalid.
+    Local wrapper over shared JWT validation so existing route/tests can
+    keep importing from routes.auth.
     """
-    token = credentials.credentials
-    user_info = auth_service.get_current_user(token)
-    
-    if not user_info:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-    
-    return user_info
+    return await shared_get_current_user(credentials=credentials, auth_service=auth_service)
 
 
 @router.post("/login", response_model=LoginResponse)
