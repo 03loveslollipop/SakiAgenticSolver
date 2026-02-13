@@ -495,25 +495,25 @@ The implementation uses React with TypeScript and Tailwind CSS for styling. Test
     - Ensure locale is sent with all email-related requests
     - _Requirements: 17.1, 17.2_
   
-  - [ ] 18.5 Update backend API endpoints for locale support
+  - [x] 18.5 Update backend API endpoints for locale support
     - Update user registration endpoint to accept and store locale
     - Update password reset endpoint to use user's locale
     - Update 2FA notification endpoint to use user's locale
     - Add locale update endpoint for user settings
     - _Requirements: 17.3, 17.4, 17.6, 17.7, 17.8_
   
-  - [ ] 18.6 Write property test for email template localization
+  - [x] 18.6 Write property test for email template localization
     - **Property 30: Email Template Localization**
     - **Validates: Requirements 17.5, 17.6, 17.7, 17.8, 17.9, 17.10, 17.11**
   
-  - [ ] 18.7 Write unit tests for locale fallback behavior
+  - [x] 18.7 Write unit tests for locale fallback behavior
     - Test that missing locale templates fall back to English
     - Test locale-specific subject lines
     - Test locale-specific email content
     - Test date/time formatting by locale
     - _Requirements: 17.11, 17.12_
   
-  - [ ] 18.8 Write integration tests for email i18n flow
+  - [x] 18.8 Write integration tests for email i18n flow
     - Test complete user registration with locale selection
     - Test password reset with locale-specific emails
     - Test locale update and subsequent email behavior
