@@ -10,3 +10,6 @@
 .env
 .env.local
 .env.*.local
+
+# old source code references
+old/
