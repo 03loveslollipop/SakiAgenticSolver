@@ -142,6 +142,14 @@ apt_install() {
   sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -y -o Dpkg::Use-Pty=0 install "$@"
 }
 
+apt_install_optional() {
+  if apt_install "$@"; then
+    return 0
+  fi
+  echo "Optional package install failed: $* (continuing)"
+  return 0
+}
+
 # Ensure needrestart never prompts for interactive confirmation.
 sudo mkdir -p /etc/needrestart/conf.d || true
 echo '$nrconf{restart} = "a";' | sudo tee /etc/needrestart/conf.d/99-auto-restart.conf >/dev/null || true
@@ -159,7 +167,10 @@ apt_install openssl hashcat john
 
 # Install decompilers
 echo "Installing decompilers..."
-apt_install radare2
+if ! apt_install radare2; then
+  echo "radare2 is unavailable in current apt repositories; trying rizin fallback..."
+  apt_install_optional rizin
+fi
 
 # Install Ghidra (requires Java)
 apt_install default-jdk wget unzip
@@ -881,7 +892,8 @@ This document lists all tools installed on this VM for CTF challenge solving.
 
 ## Decompilers
 - **ghidra**: NSA's reverse engineering framework (version 10.4)
-- **radare2**: Unix-like reverse engineering framework
+- **radare2**: Unix-like reverse engineering framework (installed when available in apt repos)
+- **rizin**: Reverse engineering framework fallback when radare2 is unavailable
 
 ## Debuggers
 - **gdb**: GNU Debugger with pwndbg extensions
