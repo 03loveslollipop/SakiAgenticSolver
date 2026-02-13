@@ -111,7 +111,7 @@ async def test_create_vm_success(vm_manager):
     # Call create_vm
     result = await vm_manager.create_vm(
         session_id='test-session-123',
-        vm_size='Standard_B2s',
+        vm_size='Standard_B2as_v2',
         ssh_public_key='ssh-rsa AAAAB3NzaC1yc2E...',
         resource_group='test-rg'
     )
@@ -135,7 +135,7 @@ async def test_create_vm_azure_error(vm_manager):
     with pytest.raises(AzureError):
         await vm_manager.create_vm(
             session_id='test-session-456',
-            vm_size='Standard_B2s',
+            vm_size='Standard_B2as_v2',
             ssh_public_key='ssh-rsa AAAAB3NzaC1yc2E...',
             resource_group='test-rg'
         )

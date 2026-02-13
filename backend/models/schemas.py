@@ -49,23 +49,23 @@ class VMConfig(BaseModel):
         configs = {
             'small': VMConfig(
                 vm_size='small',
-                azure_vm_size='Standard_B2s',
-                cpu_cores=2,
-                ram_gb=2,
-                disk_gb=30
-            ),
-            'medium': VMConfig(
-                vm_size='medium',
-                azure_vm_size='Standard_B2ms',
+                azure_vm_size='Standard_B2as_v2',  # Available v2 series (2 vCPU, 4GB RAM)
                 cpu_cores=2,
                 ram_gb=4,
                 disk_gb=30
             ),
+            'medium': VMConfig(
+                vm_size='medium',
+                azure_vm_size='Standard_B4as_v2',  # Available v2 series (4 vCPU, 8GB RAM)
+                cpu_cores=4,
+                ram_gb=8,
+                disk_gb=30
+            ),
             'large': VMConfig(
                 vm_size='large',
-                azure_vm_size='Standard_B2ls',
-                cpu_cores=2,
-                ram_gb=8,
+                azure_vm_size='Standard_B8as_v2',  # Available v2 series (8 vCPU, 16GB RAM)
+                cpu_cores=8,
+                ram_gb=16,
                 disk_gb=30
             )
         }
