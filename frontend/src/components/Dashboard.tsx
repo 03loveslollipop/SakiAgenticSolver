@@ -17,6 +17,21 @@ const Dashboard = () => {
     loadSessions();
   }, []);
 
+  useEffect(() => {
+    const hasPendingDeployments = sessions.some((session) => session.status === 'creating');
+    if (!hasPendingDeployments) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      loadSessions();
+    }, 10000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [sessions]);
+
   const loadSessions = async () => {
     try {
       setLoading(true);

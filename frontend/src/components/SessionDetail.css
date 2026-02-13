@@ -62,6 +62,42 @@
   margin-bottom: 1.5rem;
 }
 
+.session-progress-banner {
+  padding: 1rem;
+  background: #eef9ff;
+  border: 1px solid #b8e5ff;
+  border-radius: 6px;
+  color: #0e4b6e;
+  margin-bottom: 1.5rem;
+}
+
+.session-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.session-progress-track {
+  width: 100%;
+  height: 10px;
+  background: #d7f0ff;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.session-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1abbdb 0%, #0f8fb0 100%);
+  transition: width 0.3s ease;
+}
+
+.session-progress-step,
+.session-progress-eta {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+}
+
 /* Tabs */
 .tabs {
   display: flex;

@@ -80,8 +80,16 @@ export const AgentSessionList: React.FC<AgentSessionListProps> = ({
                 <strong>{t('vm.list.status')}:</strong>{' '}
                 <span aria-label={t('vm.list.statusAria', { status: getStatusText(session.status) })}>
                   {getStatusText(session.status)}
+                  {session.status === 'creating' && typeof session.deploymentProgress === 'number'
+                    ? ` (${Math.max(0, Math.min(100, session.deploymentProgress))}%)`
+                    : ''}
                 </span>
               </span>
+              {session.status === 'creating' && session.currentStep && (
+                <span>
+                  <strong>Step:</strong> {session.currentStep}
+                </span>
+              )}
               {session.vmIp && (
                 <span>
                   <strong>{t('common.ip')}:</strong>{' '}

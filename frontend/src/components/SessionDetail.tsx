@@ -35,6 +35,53 @@ const SessionDetail = () => {
     }
   }, [sessionId]);
 
+  useEffect(() => {
+    if (!sessionId || !session || session.status !== 'creating') {
+      return undefined;
+    }
+
+    let isCancelled = false;
+
+    const pollStatus = async () => {
+      try {
+        const deploymentStatus = await apiClient.getSessionStatus(sessionId);
+        if (isCancelled) {
+          return;
+        }
+
+        setSession((previous) => {
+          if (!previous) {
+            return previous;
+          }
+
+          return {
+            ...previous,
+            status: deploymentStatus.status,
+            taskId: deploymentStatus.taskId || previous.taskId,
+            vmIp: deploymentStatus.vmIp || previous.vmIp,
+            deploymentProgress: deploymentStatus.progress,
+            currentStep: deploymentStatus.currentStep || previous.currentStep,
+            estimatedCompletion: deploymentStatus.estimatedCompletion || previous.estimatedCompletion,
+            estimatedRemainingTime:
+              deploymentStatus.estimatedRemainingTime || previous.estimatedRemainingTime,
+            errorMessage: deploymentStatus.errorMessage || previous.errorMessage,
+            lastStatusUpdate: deploymentStatus.lastUpdated || previous.lastStatusUpdate,
+          };
+        });
+      } catch (err) {
+        console.error('Failed to poll deployment status:', err);
+      }
+    };
+
+    pollStatus();
+    const intervalId = window.setInterval(pollStatus, 5000);
+
+    return () => {
+      isCancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [sessionId, session?.status]);
+
   const loadSession = async () => {
     if (!sessionId) return;
 
@@ -152,6 +199,25 @@ const SessionDetail = () => {
       {session.errorMessage && (
         <div className="session-error-banner">
           <strong>{t('common.error')}:</strong> {session.errorMessage}
+        </div>
+      )}
+
+      {session.status === 'creating' && (
+        <div className="session-progress-banner">
+          <div className="session-progress-header">
+            <strong>Deployment in progress</strong>
+            <span>{Math.max(0, Math.min(100, session.deploymentProgress ?? 0))}%</span>
+          </div>
+          <div className="session-progress-track">
+            <div
+              className="session-progress-fill"
+              style={{ width: `${Math.max(0, Math.min(100, session.deploymentProgress ?? 0))}%` }}
+            />
+          </div>
+          {session.currentStep && <p className="session-progress-step">Step: {session.currentStep}</p>}
+          {session.estimatedRemainingTime && (
+            <p className="session-progress-eta">Estimated remaining: {session.estimatedRemainingTime}</p>
+          )}
         </div>
       )}
 

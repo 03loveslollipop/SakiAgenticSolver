@@ -5,6 +5,7 @@ import {
   LoginResponse,
   RefreshTokenRequest,
   Session,
+  SessionDeploymentStatus,
   SSHConnectionInfo,
   TokenResponse,
   TwoFASetupVerifyRequest,
@@ -38,6 +39,35 @@ interface RawSession {
   ssh_port?: number;
   resource_group?: string;
   error_message?: string;
+  task_id?: string;
+  deployment_progress?: number;
+  current_step?: string;
+  estimated_completion?: string;
+  estimated_remaining_time?: string;
+  last_status_update?: string;
+}
+
+interface RawAsyncSessionCreateResponse {
+  task_id: string;
+  session_id: string;
+  status: string;
+  estimated_completion_time?: string;
+  status_url?: string;
+}
+
+interface RawSessionStatus {
+  session_id: string;
+  task_id?: string;
+  status?: string;
+  progress?: number;
+  current_step?: string;
+  vm_ip?: string;
+  estimated_completion?: string;
+  estimated_remaining_time?: string;
+  error_details?: {
+    message?: string;
+  } | null;
+  last_updated?: string;
 }
 
 interface RawWriteup {
@@ -106,6 +136,16 @@ class APIClient {
     );
   }
 
+  private normalizeSessionStatus(status?: string): Session['status'] {
+    if (status === 'queued') {
+      return 'creating';
+    }
+    if (status === 'creating' || status === 'running' || status === 'stopped' || status === 'error') {
+      return status;
+    }
+    return 'creating';
+  }
+
   private mapSession(raw: RawSession): Session {
     return {
       id: raw.id,
@@ -117,12 +157,33 @@ class APIClient {
       challengeUrls: raw.challenge_urls || [],
       instructions: raw.instructions || '',
       createdAt: raw.created_at || new Date().toISOString(),
-      status: raw.status || 'creating',
+      status: this.normalizeSessionStatus(raw.status),
       vmIp: raw.vm_ip,
       sshUsername: raw.ssh_username || 'ctfuser',
       sshPort: raw.ssh_port ?? 22,
       resourceGroup: raw.resource_group || '',
       errorMessage: raw.error_message,
+      taskId: raw.task_id,
+      deploymentProgress: raw.deployment_progress,
+      currentStep: raw.current_step,
+      estimatedCompletion: raw.estimated_completion,
+      estimatedRemainingTime: raw.estimated_remaining_time,
+      lastStatusUpdate: raw.last_status_update,
+    };
+  }
+
+  private mapSessionStatus(raw: RawSessionStatus): SessionDeploymentStatus {
+    return {
+      sessionId: raw.session_id,
+      taskId: raw.task_id,
+      status: this.normalizeSessionStatus(raw.status),
+      progress: raw.progress ?? 0,
+      currentStep: raw.current_step,
+      vmIp: raw.vm_ip,
+      estimatedCompletion: raw.estimated_completion,
+      estimatedRemainingTime: raw.estimated_remaining_time,
+      errorMessage: raw.error_details?.message,
+      lastUpdated: raw.last_updated,
     };
   }
 
@@ -166,7 +227,32 @@ class APIClient {
       setup_mode: request.setupMode || 'manual',
       deploy_agent: request.deployAgent ?? true,
     };
-    const response = await this.client.post<RawSession>('/api/sessions', payload);
+    const response = await this.client.post<RawAsyncSessionCreateResponse | RawSession>(
+      '/api/sessions/async',
+      payload
+    );
+
+    if ('session_id' in response.data) {
+      return {
+        id: response.data.session_id,
+        vmSize: request.vmSize,
+        agentType: request.agentType,
+        agentModel: request.agentModel,
+        setupMode: request.setupMode || 'manual',
+        challengeUrls: request.challengeUrls,
+        instructions: request.instructions,
+        createdAt: new Date().toISOString(),
+        status: this.normalizeSessionStatus(response.data.status),
+        sshUsername: 'ctfuser',
+        sshPort: 22,
+        resourceGroup: '',
+        taskId: response.data.task_id,
+        deploymentProgress: 0,
+        currentStep: 'queued',
+        estimatedCompletion: response.data.estimated_completion_time,
+      };
+    }
+
     return this.mapSession(response.data);
   }
 
@@ -179,6 +265,11 @@ class APIClient {
   async getSession(sessionId: string): Promise<Session> {
     const response = await this.client.get<RawSession>(`/api/sessions/${sessionId}`);
     return this.mapSession(response.data);
+  }
+
+  async getSessionStatus(sessionId: string): Promise<SessionDeploymentStatus> {
+    const response = await this.client.get<RawSessionStatus>(`/api/sessions/${sessionId}/status`);
+    return this.mapSessionStatus(response.data);
   }
 
   async deleteSession(sessionId: string): Promise<void> {
@@ -289,7 +380,11 @@ class APIClient {
   getTerminalWebSocketURL(sessionId: string): string {
     const wsProtocol = BASE_URL.startsWith('https') ? 'wss' : 'ws';
     const wsBaseURL = BASE_URL.replace(/^https?/, wsProtocol);
-    return `${wsBaseURL}/api/sessions/${sessionId}/terminal`;
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      return `${wsBaseURL}/api/sessions/${sessionId}/terminal`;
+    }
+    return `${wsBaseURL}/api/sessions/${sessionId}/terminal?token=${encodeURIComponent(token)}`;
   }
 
   // Health check

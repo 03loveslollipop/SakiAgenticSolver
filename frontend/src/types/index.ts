@@ -24,6 +24,25 @@ export interface Session {
   sshPort: number;
   resourceGroup: string;
   errorMessage?: string;
+  taskId?: string;
+  deploymentProgress?: number;
+  currentStep?: string;
+  estimatedCompletion?: string;
+  estimatedRemainingTime?: string;
+  lastStatusUpdate?: string;
+}
+
+export interface SessionDeploymentStatus {
+  sessionId: string;
+  taskId?: string;
+  status: SessionStatus;
+  progress: number;
+  currentStep?: string;
+  vmIp?: string;
+  estimatedCompletion?: string;
+  estimatedRemainingTime?: string;
+  errorMessage?: string;
+  lastUpdated?: string;
 }
 
 export interface VMCreationRequest {
