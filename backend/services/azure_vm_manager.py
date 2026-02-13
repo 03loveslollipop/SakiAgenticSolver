@@ -6,10 +6,31 @@ from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.core.exceptions import AzureError
 from typing import Optional
+import copy
 import logging
 import os
 
 logger = logging.getLogger(__name__)
+
+SMALL_VM_SIZE_CANDIDATES = (
+    "Standard_B2as_v2",
+    "Standard_B2ats_v2",
+    "Standard_B2ps_v2",
+    "Standard_B2pls_v2",
+    "Standard_B2als_v2",
+)
+MEDIUM_VM_SIZE_CANDIDATES = (
+    "Standard_B4as_v2",
+    "Standard_B4ps_v2",
+    "Standard_B4pls_v2",
+    "Standard_B4als_v2",
+)
+LARGE_VM_SIZE_CANDIDATES = (
+    "Standard_B8as_v2",
+    "Standard_B8ps_v2",
+    "Standard_B8pls_v2",
+    "Standard_B8als_v2",
+)
 
 
 class VMInfo:
@@ -50,6 +71,54 @@ class AzureVMManager:
         self.location = os.getenv("AZURE_LOCATION", "eastus")
         
         logger.info(f"Initialized AzureVMManager for subscription {self.subscription_id}")
+
+    @staticmethod
+    def _is_sku_unavailable_error(error: Exception) -> bool:
+        """Detect SKU/capacity unavailability errors that should trigger fallback."""
+        error_text = str(error).lower()
+        error_code = ""
+        azure_error_payload = getattr(error, "error", None)
+        if azure_error_payload is not None:
+            error_code = str(getattr(azure_error_payload, "code", "")).lower()
+
+        if error_code in {"skunotavailable", "operationnotallowed"}:
+            return True
+
+        return any(
+            token in error_text
+            for token in (
+                "skunotavailable",
+                "capacity restrictions",
+                "not available in location",
+                "notavailableforsubscription",
+            )
+        )
+
+    def _resolve_vm_size_candidates(self, preferred_vm_size: str) -> list[str]:
+        """Build a de-duplicated candidate list for VM provisioning retries."""
+        preferred = preferred_vm_size.strip()
+        lower = preferred.lower()
+        if lower.startswith("standard_b2"):
+            family_candidates = SMALL_VM_SIZE_CANDIDATES
+        elif lower.startswith("standard_b4"):
+            family_candidates = MEDIUM_VM_SIZE_CANDIDATES
+        elif lower.startswith("standard_b8"):
+            family_candidates = LARGE_VM_SIZE_CANDIDATES
+        else:
+            family_candidates = ()
+
+        candidates: list[str] = [preferred]
+        for size in family_candidates:
+            if size not in candidates:
+                candidates.append(size)
+
+        env_fallbacks = os.getenv("AZURE_VM_SIZE_FALLBACKS", "")
+        for raw_candidate in env_fallbacks.split(","):
+            candidate = raw_candidate.strip()
+            if candidate and candidate not in candidates:
+                candidates.append(candidate)
+
+        return candidates
     
     async def create_vm(
         self,
@@ -70,7 +139,7 @@ class AzureVMManager:
         
         Args:
             session_id: Unique session identifier (used for VM naming)
-            vm_size: Azure VM size (e.g., 'Standard_B2s')
+            vm_size: Azure VM size (e.g., 'Standard_B2as_v2')
             ssh_public_key: SSH public key for VM access
             resource_group: Name of the resource group
             
@@ -187,7 +256,13 @@ class AzureVMManager:
             nic = nic_poller.result()
             
             # Step 7: Create virtual machine
-            logger.info(f"Creating virtual machine {vm_name}")
+            vm_size_candidates = self._resolve_vm_size_candidates(vm_size)
+            logger.info(
+                "Creating virtual machine %s (size candidates for %s: %s)",
+                vm_name,
+                self.location,
+                vm_size_candidates,
+            )
             vm_params = {
                 "location": self.location,
                 "hardware_profile": {
@@ -234,15 +309,51 @@ class AzureVMManager:
                     ]
                 }
             }
+
+            vm = None
+            selected_vm_size = None
+            last_azure_error: AzureError | None = None
+
+            for index, candidate_vm_size in enumerate(vm_size_candidates):
+                attempt_vm_params = copy.deepcopy(vm_params)
+                attempt_vm_params["hardware_profile"]["vm_size"] = candidate_vm_size
+                try:
+                    vm_poller = self.compute_client.virtual_machines.begin_create_or_update(
+                        resource_group,
+                        vm_name,
+                        attempt_vm_params
+                    )
+                    vm = vm_poller.result()
+                    selected_vm_size = candidate_vm_size
+                    break
+                except AzureError as azure_error:
+                    last_azure_error = azure_error
+                    should_retry = (
+                        index < len(vm_size_candidates) - 1
+                        and self._is_sku_unavailable_error(azure_error)
+                    )
+                    if should_retry:
+                        logger.warning(
+                            "VM size %s unavailable in %s for session %s. Retrying with %s",
+                            candidate_vm_size,
+                            self.location,
+                            session_id,
+                            vm_size_candidates[index + 1],
+                        )
+                        continue
+                    raise
+
+            if vm is None:
+                if last_azure_error is not None:
+                    raise last_azure_error
+                raise RuntimeError(f"Failed to create VM {vm_name} with all candidate sizes")
             
-            vm_poller = self.compute_client.virtual_machines.begin_create_or_update(
-                resource_group,
+            logger.info(
+                "Successfully created VM %s with ID %s using size %s",
                 vm_name,
-                vm_params
+                vm.id,
+                selected_vm_size,
             )
-            vm = vm_poller.result()
-            
-            logger.info(f"Successfully created VM {vm_name} with ID {vm.id}")
             
             # Get the public IP address
             public_ip_address = self.network_client.public_ip_addresses.get(

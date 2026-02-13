@@ -142,6 +142,75 @@ async def test_create_vm_azure_error(vm_manager):
 
 
 @pytest.mark.asyncio
+async def test_create_vm_retries_when_primary_sku_unavailable(vm_manager):
+    """Test VM creation retries with fallback SKU on SkuNotAvailable."""
+    mock_vm = Mock()
+    mock_vm.id = 'vm-id-fallback-123'
+
+    mock_public_ip = Mock()
+    mock_public_ip.ip_address = '20.30.40.51'
+
+    mock_nsg = Mock()
+    mock_nsg.id = 'nsg-id-123'
+
+    mock_vnet = Mock()
+    mock_vnet.id = 'vnet-id-123'
+
+    mock_subnet = Mock()
+    mock_subnet.id = 'subnet-id-123'
+
+    mock_nic = Mock()
+    mock_nic.id = 'nic-id-123'
+
+    mock_nsg_poller = Mock()
+    mock_nsg_poller.result.return_value = mock_nsg
+
+    mock_vnet_poller = Mock()
+    mock_vnet_poller.result.return_value = mock_vnet
+
+    mock_subnet_poller = Mock()
+    mock_subnet_poller.result.return_value = mock_subnet
+
+    mock_ip_poller = Mock()
+    mock_ip_poller.result.return_value = mock_public_ip
+
+    mock_nic_poller = Mock()
+    mock_nic_poller.result.return_value = mock_nic
+
+    mock_vm_poller = Mock()
+    mock_vm_poller.result.return_value = mock_vm
+
+    vm_manager.network_client.network_security_groups.begin_create_or_update.return_value = mock_nsg_poller
+    vm_manager.network_client.virtual_networks.begin_create_or_update.return_value = mock_vnet_poller
+    vm_manager.network_client.subnets.begin_create_or_update.return_value = mock_subnet_poller
+    vm_manager.network_client.public_ip_addresses.begin_create_or_update.return_value = mock_ip_poller
+    vm_manager.network_client.network_interfaces.begin_create_or_update.return_value = mock_nic_poller
+    vm_manager.network_client.public_ip_addresses.get.return_value = mock_public_ip
+
+    vm_manager.compute_client.virtual_machines.begin_create_or_update.side_effect = [
+        AzureError("SkuNotAvailable: Standard_B2s is not available in location northcentralus"),
+        mock_vm_poller,
+    ]
+
+    result = await vm_manager.create_vm(
+        session_id='test-session-fallback',
+        vm_size='Standard_B2s',
+        ssh_public_key='ssh-rsa AAAAB3NzaC1yc2E...',
+        resource_group='test-rg'
+    )
+
+    assert isinstance(result, VMInfo)
+    assert result.public_ip == '20.30.40.51'
+    assert vm_manager.compute_client.virtual_machines.begin_create_or_update.call_count == 2
+
+    create_vm_calls = vm_manager.compute_client.virtual_machines.begin_create_or_update.call_args_list
+    first_attempt_params = create_vm_calls[0].args[2]
+    second_attempt_params = create_vm_calls[1].args[2]
+    assert first_attempt_params["hardware_profile"]["vm_size"] == "Standard_B2s"
+    assert second_attempt_params["hardware_profile"]["vm_size"] == "Standard_B2as_v2"
+
+
+@pytest.mark.asyncio
 async def test_delete_vm_success(vm_manager):
     """Test successful VM deletion"""
     # Mock the deletion pollers

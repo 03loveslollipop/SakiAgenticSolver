@@ -158,22 +158,25 @@ class TestBackendCheckpoint:
         small_config = VMConfig.from_size("small")
         assert small_config.vm_size == "small"
         assert small_config.cpu_cores == 2
-        assert small_config.ram_gb == 2
+        assert small_config.ram_gb == 4
         assert small_config.disk_gb == 30
+        assert small_config.azure_vm_size == "Standard_B2as_v2"
         
         # Test medium size
         medium_config = VMConfig.from_size("medium")
         assert medium_config.vm_size == "medium"
-        assert medium_config.cpu_cores == 2
-        assert medium_config.ram_gb == 4
+        assert medium_config.cpu_cores == 4
+        assert medium_config.ram_gb == 16
         assert medium_config.disk_gb == 30
+        assert medium_config.azure_vm_size == "Standard_B4as_v2"
         
         # Test large size
         large_config = VMConfig.from_size("large")
         assert large_config.vm_size == "large"
-        assert large_config.cpu_cores == 2
-        assert large_config.ram_gb == 8
+        assert large_config.cpu_cores == 8
+        assert large_config.ram_gb == 32
         assert large_config.disk_gb == 30
+        assert large_config.azure_vm_size == "Standard_B8as_v2"
     
     def test_terminal_websocket_handler_initialization(self):
         """Test TerminalWebSocketHandler can be initialized"""
