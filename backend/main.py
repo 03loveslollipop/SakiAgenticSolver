@@ -415,13 +415,14 @@ async def create_session_async(request: VMCreationRequest):
             "deploy_agent": deploy_agent,
             "ssh_public_key": public_key,
             "mongo_connection_string": os.getenv("MONGODB_URL", "mongodb://localhost:27017"),
+            "disable_retry": True,
         }
 
         task = await task_queue_service.enqueue_task(
             task_type="vm_deployment",
             session_id=session_id,
             task_data=task_payload,
-            max_retries=2,
+            max_retries=0,
             priority=100,
             estimated_completion=estimated_completion,
         )

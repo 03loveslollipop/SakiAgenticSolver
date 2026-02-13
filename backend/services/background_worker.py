@@ -106,6 +106,27 @@ class BackgroundWorker:
             if not current_task:
                 return
 
+            task_data = current_task.get("task_data") or {}
+            task_result = current_task.get("result")
+            retry_disabled = bool(task_data.get("disable_retry", False))
+            retry_eligible = True
+            failed_stage = current_task.get("current_step")
+            if isinstance(task_result, dict):
+                retry_eligible = bool(task_result.get("retry_eligible", True))
+                failed_stage = task_result.get("failed_stage", failed_stage)
+            error_message = current_task.get("error_message") or str(exc)
+
+            if retry_disabled or not retry_eligible:
+                logger.warning(
+                    "Task %s will not be retried (stage=%s, retry_disabled=%s, retry_eligible=%s): %s",
+                    task_id,
+                    failed_stage,
+                    retry_disabled,
+                    retry_eligible,
+                    error_message,
+                )
+                return
+
             retry_count = int(current_task.get("retry_count", 0))
             max_retries = int(current_task.get("max_retries", 0))
             if retry_count < max_retries:

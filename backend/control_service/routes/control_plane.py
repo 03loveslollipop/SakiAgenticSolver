@@ -230,13 +230,14 @@ async def create_session_async(
             "ssh_public_key": public_key,
             "mongo_connection_string": os.getenv("MONGODB_URL", "mongodb://localhost:27017"),
             "owner_user_id": current_user["user_id"],
+            "disable_retry": True,
         }
 
         task = await task_queue_service.enqueue_task(
             task_type="vm_deployment",
             session_id=session_id,
             task_data=task_payload,
-            max_retries=2,
+            max_retries=0,
             priority=100,
             estimated_completion=estimated_completion,
         )

@@ -37,6 +37,7 @@ class DeploymentOrchestrator:
         task_id = task["task_id"]
         session_id = task["session_id"]
         task_data = task.get("task_data", {})
+        retry_disabled = bool(task_data.get("disable_retry", False))
         deploy_agent = bool(task_data.get("deploy_agent", True))
         resource_group = task_data["resource_group"]
         vm_size = task_data["vm_size"]
@@ -48,26 +49,29 @@ class DeploymentOrchestrator:
         estimated_completion = datetime.utcnow() + timedelta(minutes=12)
 
         vm_info = None
+        current_stage = "queued"
 
         try:
+            current_stage = "preflight_check"
             await self._update_progress(
                 task_id=task_id,
                 session_id=session_id,
                 status="creating",
                 progress=5,
-                current_step="preflight_check",
+                current_step=current_stage,
                 estimated_completion=estimated_completion,
                 message="Validating VM deployment request",
             )
 
             vm_config = VMConfig.from_size(vm_size)
 
+            current_stage = "creating_vm"
             await self._update_progress(
                 task_id=task_id,
                 session_id=session_id,
                 status="creating",
                 progress=20,
-                current_step="creating_vm",
+                current_step=current_stage,
                 estimated_completion=estimated_completion,
                 message="Creating Azure VM resources",
             )
@@ -94,12 +98,13 @@ class DeploymentOrchestrator:
 
             vm_setup_service = VMSetupService()
 
+            current_stage = "installing_software"
             await self._update_progress(
                 task_id=task_id,
                 session_id=session_id,
                 status="creating",
                 progress=45,
-                current_step="installing_software",
+                current_step=current_stage,
                 estimated_completion=estimated_completion,
                 message="Installing VM base tooling",
             )
@@ -111,12 +116,13 @@ class DeploymentOrchestrator:
                 raise RuntimeError("Setup script execution failed")
 
             if deploy_agent:
+                current_stage = "installing_agent"
                 await self._update_progress(
                     task_id=task_id,
                     session_id=session_id,
                     status="creating",
                     progress=62,
-                    current_step="installing_agent",
+                    current_step=current_stage,
                     estimated_completion=estimated_completion,
                     message="Installing AI agent",
                 )
@@ -127,14 +133,15 @@ class DeploymentOrchestrator:
                     ssh_private_key=private_key,
                 )
                 if not agent_install_success:
-                    raise RuntimeError("Agent installation failed")
+                    raise RuntimeError(vm_setup_service.last_error or "Agent installation failed")
 
+            current_stage = "downloading_challenges"
             await self._update_progress(
                 task_id=task_id,
                 session_id=session_id,
                 status="creating",
                 progress=75,
-                current_step="downloading_challenges",
+                current_step=current_stage,
                 estimated_completion=estimated_completion,
                 message="Downloading challenge files",
             )
@@ -146,12 +153,13 @@ class DeploymentOrchestrator:
             if not challenges_success:
                 raise RuntimeError("Challenge file download failed")
 
+            current_stage = "configuring_environment"
             await self._update_progress(
                 task_id=task_id,
                 session_id=session_id,
                 status="creating",
                 progress=85,
-                current_step="configuring_environment",
+                current_step=current_stage,
                 estimated_completion=estimated_completion,
                 message="Writing VM configuration files",
             )
@@ -173,12 +181,13 @@ class DeploymentOrchestrator:
                 if not bootstrap_success:
                     logger.warning("Agent bootstrap script generation failed for %s", session_id)
 
+                current_stage = "configuring_mcp"
                 await self._update_progress(
                     task_id=task_id,
                     session_id=session_id,
                     status="creating",
                     progress=92,
-                    current_step="configuring_mcp",
+                    current_step=current_stage,
                     estimated_completion=estimated_completion,
                     message="Configuring MCP services",
                 )
@@ -189,12 +198,13 @@ class DeploymentOrchestrator:
                     ssh_private_key=private_key,
                 )
 
+                current_stage = "starting_agent"
                 await self._update_progress(
                     task_id=task_id,
                     session_id=session_id,
                     status="creating",
                     progress=97,
-                    current_step="starting_agent",
+                    current_step=current_stage,
                     estimated_completion=estimated_completion,
                     message="Starting AI agent",
                 )
@@ -205,12 +215,13 @@ class DeploymentOrchestrator:
                 if not started:
                     raise RuntimeError("Agent start failed")
 
+            current_stage = "running"
             await self._update_progress(
                 task_id=task_id,
                 session_id=session_id,
                 status="running",
                 progress=100,
-                current_step="running",
+                current_step=current_stage,
                 estimated_completion=None,
                 vm_ip=vm_info.public_ip,
                 message="VM deployment completed successfully",
@@ -235,7 +246,28 @@ class DeploymentOrchestrator:
 
         except Exception as exc:
             error_message = str(exc)
-            logger.error("Deployment task %s failed: %s", task_id, error_message, exc_info=True)
+            retry_eligible = (not retry_disabled) and vm_info is None
+            failure_context = {
+                "session_id": session_id,
+                "failed_stage": current_stage,
+                "error_type": type(exc).__name__,
+                "error_message": error_message,
+                "vm_created": vm_info is not None,
+                "vm_ip": vm_info.public_ip if vm_info else None,
+                "resource_group": resource_group,
+                "retry_eligible": retry_eligible,
+                "retry_disabled": retry_disabled,
+                "failed_at": datetime.utcnow(),
+            }
+            logger.error(
+                "Deployment task %s failed at stage=%s vm_created=%s retry_eligible=%s: %s",
+                task_id,
+                current_stage,
+                vm_info is not None,
+                retry_eligible,
+                error_message,
+                exc_info=True,
+            )
 
             await self.session_manager.update_session_status(
                 session_id,
@@ -259,6 +291,7 @@ class DeploymentOrchestrator:
                 status="failed",
                 current_step="failed",
                 error_message=error_message,
+                result=failure_context,
             )
 
             # Best-effort cleanup of partial Azure resources.

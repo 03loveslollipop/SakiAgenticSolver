@@ -19,7 +19,7 @@ class VMSetupService:
     
     def __init__(self):
         """Initialize VMSetupService."""
-        pass
+        self.last_error: Optional[str] = None
     
     def _create_ssh_client(
         self,
@@ -305,6 +305,7 @@ echo "CTF tools installation complete!"
             Exception: If SSH connection or installation fails
         """
         ssh_client = None
+        self.last_error = None
         try:
             ssh_client = self._create_ssh_client(vm_ip, ssh_private_key, ssh_username, ssh_port)
             
@@ -326,16 +327,30 @@ echo "CTF tools installation complete!"
             for cmd in install_commands:
                 logger.info(f"Executing: {cmd}")
                 stdin, stdout, stderr = ssh_client.exec_command(cmd, get_pty=True)
+                stdout_tail: List[str] = []
                 
                 # Stream output
                 for line in stdout:
-                    logger.info(f"Agent install: {line.strip()}")
+                    stripped_line = line.strip()
+                    if stripped_line:
+                        stdout_tail.append(stripped_line)
+                        if len(stdout_tail) > 40:
+                            stdout_tail.pop(0)
+                    logger.info(f"Agent install: {stripped_line}")
                 
                 exit_status = stdout.channel.recv_exit_status()
                 if exit_status != 0:
-                    error_output = stderr.read().decode()
-                    logger.error(f"Command failed: {cmd}\nError: {error_output}")
-                    return False
+                    error_output = stderr.read().decode(errors="ignore").strip()
+                    output_fallback = "\n".join(stdout_tail[-20:]).strip()
+                    failure_details = error_output or output_fallback or f"Command exited with status {exit_status}"
+                    if len(failure_details) > 2000:
+                        failure_details = f"...{failure_details[-2000:]}"
+                    self.last_error = (
+                        f"Agent install command failed (exit={exit_status}): {cmd}. "
+                        f"Details: {failure_details}"
+                    )
+                    logger.error(self.last_error)
+                    raise RuntimeError(self.last_error)
             
             # Configure agent with selected model
             config_cmd = f"kiro config set model {agent_model}"
@@ -351,6 +366,8 @@ echo "CTF tools installation complete!"
             return True
             
         except Exception as e:
+            if self.last_error is None:
+                self.last_error = str(e)
             logger.error(f"Error installing agent: {e}")
             raise
         finally:
