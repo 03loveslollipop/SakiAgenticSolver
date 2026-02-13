@@ -20,9 +20,79 @@ const Terminal = ({ sessionId }: TerminalProps) => {
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
+  const onDataDisposableRef = useRef<{ dispose: () => void } | null>(null);
+  const isUnmountedRef = useRef(false);
+
+  const connectWebSocket = async () => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    let wsUrl = '';
+    try {
+      wsUrl = await apiClient.getTerminalWebSocketURLWithFreshToken(sessionId);
+    } catch (tokenError) {
+      console.error('Failed to refresh token for terminal websocket:', tokenError);
+      setError(t('terminal.connectionLost'));
+      setConnected(false);
+      reconnectTimeoutRef.current = setTimeout(() => {
+        if (!isUnmountedRef.current && xtermRef.current) {
+          xtermRef.current.writeln(`${t('terminal.reconnectingMessage')}\r\n`);
+          void connectWebSocket();
+        }
+      }, 3000);
+      return;
+    }
+
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      setConnected(true);
+      setError(null);
+      if (xtermRef.current) {
+        xtermRef.current.writeln(`${t('terminal.connectedMessage')}\r\n`);
+      }
+    };
+
+    ws.onmessage = (event) => {
+      if (xtermRef.current) {
+        xtermRef.current.write(event.data);
+      }
+    };
+
+    ws.onerror = (event) => {
+      console.error('WebSocket error:', event);
+      setError(t('terminal.websocketError'));
+    };
+
+    ws.onclose = (event) => {
+      if (isUnmountedRef.current) {
+        return;
+      }
+
+      setConnected(false);
+      if (xtermRef.current) {
+        xtermRef.current.writeln(`\r\n\r\n${t('terminal.connectionClosed')}`);
+      }
+
+      if (event.code !== 1000) {
+        setError(t('terminal.connectionLost'));
+        reconnectTimeoutRef.current = setTimeout(() => {
+          if (!isUnmountedRef.current && xtermRef.current) {
+            xtermRef.current.writeln(`${t('terminal.reconnectingMessage')}\r\n`);
+            void connectWebSocket();
+          }
+        }, 3000);
+      }
+    };
+
+    wsRef.current = ws;
+  };
 
   useEffect(() => {
     if (!terminalRef.current) return;
+    isUnmountedRef.current = false;
 
     const term = new XTerm({
       cursorBlink: true,
@@ -48,8 +118,14 @@ const Terminal = ({ sessionId }: TerminalProps) => {
 
     xtermRef.current = term;
     fitAddonRef.current = fitAddon;
+    onDataDisposableRef.current = term.onData((data) => {
+      const activeSocket = wsRef.current;
+      if (activeSocket?.readyState === WebSocket.OPEN) {
+        activeSocket.send(data);
+      }
+    });
 
-    connectWebSocket();
+    void connectWebSocket();
 
     const handleResize = () => {
       fitAddon.fit();
@@ -57,6 +133,7 @@ const Terminal = ({ sessionId }: TerminalProps) => {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      isUnmountedRef.current = true;
       window.removeEventListener('resize', handleResize);
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
@@ -64,67 +141,20 @@ const Terminal = ({ sessionId }: TerminalProps) => {
       if (wsRef.current) {
         wsRef.current.close();
       }
+      if (onDataDisposableRef.current) {
+        onDataDisposableRef.current.dispose();
+        onDataDisposableRef.current = null;
+      }
       term.dispose();
     };
   }, [sessionId, t]);
-
-  const connectWebSocket = () => {
-    const wsUrl = apiClient.getTerminalWebSocketURL(sessionId);
-    const ws = new WebSocket(wsUrl);
-
-    ws.onopen = () => {
-      setConnected(true);
-      setError(null);
-      if (xtermRef.current) {
-        xtermRef.current.writeln(`${t('terminal.connectedMessage')}\r\n`);
-      }
-    };
-
-    ws.onmessage = (event) => {
-      if (xtermRef.current) {
-        xtermRef.current.write(event.data);
-      }
-    };
-
-    ws.onerror = (event) => {
-      console.error('WebSocket error:', event);
-      setError(t('terminal.websocketError'));
-    };
-
-    ws.onclose = (event) => {
-      setConnected(false);
-      if (xtermRef.current) {
-        xtermRef.current.writeln(`\r\n\r\n${t('terminal.connectionClosed')}`);
-      }
-
-      if (event.code !== 1000) {
-        setError(t('terminal.connectionLost'));
-        reconnectTimeoutRef.current = setTimeout(() => {
-          if (xtermRef.current) {
-            xtermRef.current.writeln(`${t('terminal.reconnectingMessage')}\r\n`);
-          }
-          connectWebSocket();
-        }, 3000);
-      }
-    };
-
-    wsRef.current = ws;
-
-    if (xtermRef.current) {
-      xtermRef.current.onData((data) => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(data);
-        }
-      });
-    }
-  };
 
   const handleReconnect = () => {
     setError(null);
     if (xtermRef.current) {
       xtermRef.current.clear();
     }
-    connectWebSocket();
+    void connectWebSocket();
   };
 
   return (

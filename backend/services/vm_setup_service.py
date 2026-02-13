@@ -130,16 +130,23 @@ class VMSetupService:
             
             # Setup script to install all required tools
             setup_script = """#!/bin/bash
-set -e
+set -euo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+export NEEDRESTART_SUSPEND=1
+export APT_LISTCHANGES_FRONTEND=none
 
 echo "Starting CTF tools installation..."
 
 apt_update() {
-  sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Acquire::Retries=3 -o Dpkg::Use-Pty=0 update
+  sudo -E env DEBIAN_FRONTEND="$DEBIAN_FRONTEND" NEEDRESTART_MODE="$NEEDRESTART_MODE" NEEDRESTART_SUSPEND="$NEEDRESTART_SUSPEND" APT_LISTCHANGES_FRONTEND="$APT_LISTCHANGES_FRONTEND" \
+    apt-get -o Acquire::Retries=3 -o Dpkg::Use-Pty=0 -o DPkg::Lock::Timeout=120 update
 }
 
 apt_install() {
-  sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -y -o Dpkg::Use-Pty=0 install "$@"
+  sudo -E env DEBIAN_FRONTEND="$DEBIAN_FRONTEND" NEEDRESTART_MODE="$NEEDRESTART_MODE" NEEDRESTART_SUSPEND="$NEEDRESTART_SUSPEND" APT_LISTCHANGES_FRONTEND="$APT_LISTCHANGES_FRONTEND" \
+    apt-get -y -o Dpkg::Use-Pty=0 -o DPkg::Lock::Timeout=120 -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install "$@"
 }
 
 apt_install_optional() {
@@ -152,7 +159,10 @@ apt_install_optional() {
 
 # Ensure needrestart never prompts for interactive confirmation.
 sudo mkdir -p /etc/needrestart/conf.d || true
-echo '$nrconf{restart} = "a";' | sudo tee /etc/needrestart/conf.d/99-auto-restart.conf >/dev/null || true
+cat <<'EOF' | sudo tee /etc/needrestart/conf.d/99-auto-restart.conf >/dev/null || true
+$nrconf{restart} = 'a';
+$nrconf{kernelhints} = -1;
+EOF
 
 # Update package lists
 apt_update
@@ -303,8 +313,8 @@ echo "CTF tools installation complete!"
             # Install Kiro (the agent platform)
             install_commands = [
                 # Install Node.js and npm if not present
-                "curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a bash -",
-                "sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y -o Dpkg::Use-Pty=0 nodejs",
+                "curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a NEEDRESTART_SUSPEND=1 APT_LISTCHANGES_FRONTEND=none bash -",
+                "sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a NEEDRESTART_SUSPEND=1 APT_LISTCHANGES_FRONTEND=none apt-get install -y -o Dpkg::Use-Pty=0 -o DPkg::Lock::Timeout=120 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold nodejs",
                 
                 # Install Kiro globally
                 "sudo npm install -g @kiro-ai/kiro",
@@ -455,8 +465,8 @@ install_node() {{
     return 0
   fi
   echo "Installing Node.js (required for kiro)..."
-  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a bash -
-  sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y -o Dpkg::Use-Pty=0 nodejs
+  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a NEEDRESTART_SUSPEND=1 APT_LISTCHANGES_FRONTEND=none bash -
+  sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a NEEDRESTART_SUSPEND=1 APT_LISTCHANGES_FRONTEND=none apt-get install -y -o Dpkg::Use-Pty=0 -o DPkg::Lock::Timeout=120 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold nodejs
 }}
 
 install_kiro() {{
@@ -521,8 +531,8 @@ main() {{
   echo \"Agent type: $AGENT_TYPE\"
   echo \"Agent model: $AGENT_MODEL\"
 
-  sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Acquire::Retries=3 -o Dpkg::Use-Pty=0 update
-  sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y -o Dpkg::Use-Pty=0 curl ca-certificates git
+  sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a NEEDRESTART_SUSPEND=1 APT_LISTCHANGES_FRONTEND=none apt-get -o Acquire::Retries=3 -o Dpkg::Use-Pty=0 -o DPkg::Lock::Timeout=120 update
+  sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a NEEDRESTART_SUSPEND=1 APT_LISTCHANGES_FRONTEND=none apt-get install -y -o Dpkg::Use-Pty=0 -o DPkg::Lock::Timeout=120 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold curl ca-certificates git
 
   install_node
   install_kiro

@@ -98,6 +98,89 @@ interface RawTokenResponse {
 
 class APIClient {
   private client: AxiosInstance;
+  private refreshTokenPromise: Promise<string | null> | null = null;
+  private readonly tokenRefreshSkewSeconds = 30;
+
+  private decodeJwtPayload(token: string): { exp?: number } | null {
+    try {
+      const tokenParts = token.split('.');
+      if (tokenParts.length < 2) {
+        return null;
+      }
+
+      const normalizedPayload = tokenParts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const paddedPayload = normalizedPayload.padEnd(
+        normalizedPayload.length + ((4 - (normalizedPayload.length % 4)) % 4),
+        '='
+      );
+      const decodeBase64 = globalThis.atob;
+      if (typeof decodeBase64 !== 'function') {
+        return null;
+      }
+
+      const decodedPayload = decodeBase64(paddedPayload);
+      const parsedPayload = JSON.parse(decodedPayload) as { exp?: number };
+      return parsedPayload;
+    } catch {
+      return null;
+    }
+  }
+
+  private isTokenCloseToExpiry(token: string): boolean {
+    const payload = this.decodeJwtPayload(token);
+    if (!payload || typeof payload.exp !== 'number') {
+      return false;
+    }
+
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    return nowInSeconds >= payload.exp - this.tokenRefreshSkewSeconds;
+  }
+
+  private async performTokenRefresh(): Promise<string | null> {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      return null;
+    }
+
+    try {
+      const response = await this.client.post<RawTokenResponse>('/api/auth/refresh', {
+        refresh_token: refreshToken,
+      });
+      const tokenResponse = this.mapTokenResponse(response.data);
+
+      localStorage.setItem('access_token', tokenResponse.access_token);
+      localStorage.setItem('refresh_token', tokenResponse.refresh_token);
+      localStorage.setItem('user', JSON.stringify(tokenResponse.user));
+
+      return tokenResponse.access_token;
+    } catch {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      return null;
+    }
+  }
+
+  private async ensureValidAccessToken(forceRefresh = false): Promise<string | null> {
+    const currentAccessToken = localStorage.getItem('access_token');
+    if (!currentAccessToken) {
+      return null;
+    }
+
+    const shouldRefresh = forceRefresh || this.isTokenCloseToExpiry(currentAccessToken);
+    if (!shouldRefresh) {
+      return currentAccessToken;
+    }
+
+    if (!this.refreshTokenPromise) {
+      this.refreshTokenPromise = this.performTokenRefresh().finally(() => {
+        this.refreshTokenPromise = null;
+      });
+    }
+
+    const refreshedAccessToken = await this.refreshTokenPromise;
+    return refreshedAccessToken || localStorage.getItem('access_token');
+  }
 
   constructor() {
     this.client = axios.create({
@@ -109,8 +192,11 @@ class APIClient {
     });
 
     this.client.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('access_token');
+      async (config) => {
+        const isRefreshRequest = typeof config.url === 'string' && config.url.includes('/api/auth/refresh');
+        const token = isRefreshRequest
+          ? localStorage.getItem('access_token')
+          : await this.ensureValidAccessToken();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -121,7 +207,23 @@ class APIClient {
 
     this.client.interceptors.response.use(
       (response) => response,
-      (error: AxiosError) => {
+      async (error: AxiosError) => {
+        const statusCode = error.response?.status;
+        const originalRequest = error.config as (typeof error.config & { _retry?: boolean }) | undefined;
+        const requestUrl = typeof originalRequest?.url === 'string' ? originalRequest.url : '';
+        const isRefreshRequest = requestUrl.includes('/api/auth/refresh');
+
+        if (statusCode === 401 && originalRequest && !isRefreshRequest && !originalRequest._retry) {
+          originalRequest._retry = true;
+          const refreshedToken = await this.ensureValidAccessToken(true);
+
+          if (refreshedToken) {
+            originalRequest.headers = originalRequest.headers ?? {};
+            originalRequest.headers.Authorization = `Bearer ${refreshedToken}`;
+            return this.client.request(originalRequest);
+          }
+        }
+
         if (error.response) {
           const message = (error.response.data as any)?.detail || error.message;
           throw new Error(message);
@@ -377,14 +479,22 @@ class APIClient {
   }
 
   // WebSocket URL for terminal
-  getTerminalWebSocketURL(sessionId: string): string {
+  private buildTerminalWebSocketURL(sessionId: string, token?: string | null): string {
     const wsProtocol = BASE_URL.startsWith('https') ? 'wss' : 'ws';
     const wsBaseURL = BASE_URL.replace(/^https?/, wsProtocol);
-    const token = localStorage.getItem('access_token');
     if (!token) {
       return `${wsBaseURL}/api/sessions/${sessionId}/terminal`;
     }
     return `${wsBaseURL}/api/sessions/${sessionId}/terminal?token=${encodeURIComponent(token)}`;
+  }
+
+  getTerminalWebSocketURL(sessionId: string): string {
+    return this.buildTerminalWebSocketURL(sessionId, localStorage.getItem('access_token'));
+  }
+
+  async getTerminalWebSocketURLWithFreshToken(sessionId: string): Promise<string> {
+    const token = await this.ensureValidAccessToken();
+    return this.buildTerminalWebSocketURL(sessionId, token);
   }
 
   // Health check
