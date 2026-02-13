@@ -1,5 +1,5 @@
 // LandingPage.tsx - 8-bit styled landing page
-import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { gsap } from 'gsap';
@@ -10,10 +10,11 @@ import { useResponsive } from '../../hooks/useResponsive';
 
 const HeroPixelAnimation = lazy(() => import('../../components/PixelArt').then((module) => ({ default: module.HeroPixelAnimation })));
 
-const BRAND_TEXT = 'SAKI';
 const HERO_TYPED_FALLBACK = 'Automate AI Agents pipelines and environments for security usecases';
+const LATIN_BRAND = 'SAKI';
+const JP_BRAND = '\u54b2\u5e0c';
 
-type ActiveLine = 'brand' | 'message';
+type ActiveLine = 'brand' | 'none';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,6 +24,12 @@ export const LandingPage: React.FC = () => {
     (globalThis as any).process?.env?.NODE_ENV === 'test' ||
     typeof (globalThis as any).jest !== 'undefined' ||
     (typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent));
+  const localizedBrand = t('common.brandName', { defaultValue: 'Saki' }).trim();
+  const heroBrandText = localizedBrand === JP_BRAND ? JP_BRAND : LATIN_BRAND;
+  const brandSequence = useMemo(
+    () => (heroBrandText === JP_BRAND ? [JP_BRAND, LATIN_BRAND] : [LATIN_BRAND, JP_BRAND]),
+    [heroBrandText]
+  );
   const heroTypedText = t('landing.newHero.message', { defaultValue: HERO_TYPED_FALLBACK });
   const ctaLogin = t('landing.newHero.ctaLogin', { defaultValue: 'Login' });
   const ctaFeatures = t('landing.newHero.ctaFeatures', { defaultValue: 'Features' });
@@ -49,16 +56,21 @@ export const LandingPage: React.FC = () => {
 
   const featuresSectionRef = useRef<HTMLElement | null>(null);
   const cursorRef = useRef<HTMLSpanElement | null>(null);
+  const brandTextRef = useRef<HTMLSpanElement | null>(null);
   const actionsRef = useRef<HTMLDivElement | null>(null);
 
   const [brandText, setBrandText] = useState('');
   const [typedText, setTypedText] = useState('');
-  const [activeLine, setActiveLine] = useState<ActiveLine>('message');
+  const [activeLine, setActiveLine] = useState<ActiveLine>('brand');
 
   useEffect(() => {
     setBrandText('');
-    setTypedText('');
-    setActiveLine('message');
+    setTypedText(heroTypedText);
+    setActiveLine('brand');
+
+    if (brandTextRef.current) {
+      gsap.set(brandTextRef.current, { x: 0, autoAlpha: 1 });
+    }
 
     if (actionsRef.current) {
       gsap.set(actionsRef.current, { autoAlpha: 0, y: 12 });
@@ -66,8 +78,8 @@ export const LandingPage: React.FC = () => {
 
     if (isTestEnv) {
       setTypedText(heroTypedText);
-      setBrandText(BRAND_TEXT);
-      setActiveLine('brand');
+      setBrandText(brandSequence[0]);
+      setActiveLine('none');
       if (actionsRef.current) {
         gsap.set(actionsRef.current, { autoAlpha: 1, y: 0 });
       }
@@ -76,33 +88,25 @@ export const LandingPage: React.FC = () => {
 
     const typeState = {
       brandIndex: 0,
-      messageIndex: 0,
     };
 
     const timeline = gsap.timeline();
+    let brandCycleTimeline: gsap.core.Timeline | null = null;
+    let activeBrandIndex = 0;
 
     timeline
       .to(typeState, {
-        messageIndex: heroTypedText.length,
-        duration: heroTypedText.length * 0.065,
+        brandIndex: brandSequence[0].length,
+        duration: brandSequence[0].length * 0.24,
         ease: 'none',
-        snap: { messageIndex: 1 },
+        snap: { brandIndex: 1 },
         onUpdate: () => {
-          setTypedText(heroTypedText.slice(0, Math.round(typeState.messageIndex)));
+          setBrandText(brandSequence[0].slice(0, Math.round(typeState.brandIndex)));
         },
       })
       .add(() => {
-        setActiveLine('brand');
-      }, '+=0.35')
-      .to(typeState, {
-        brandIndex: BRAND_TEXT.length,
-        duration: BRAND_TEXT.length * 0.3,
-        ease: '"rough({template:none.out,strength: 1, points:20, taper:none, randomize:true, clamp:false })"',
-        snap: { brandIndex: 1 },
-        onUpdate: () => {
-          setBrandText(BRAND_TEXT.slice(0, Math.round(typeState.brandIndex)));
-        },
-      });
+        setActiveLine('none');
+      }, '+=0.1');
 
     if (actionsRef.current) {
       timeline.to(actionsRef.current, {
@@ -113,13 +117,48 @@ export const LandingPage: React.FC = () => {
       }, '+=0.1');
     }
 
+    timeline.add(() => {
+      if (!brandTextRef.current || brandSequence.length < 2) {
+        return;
+      }
+
+      brandCycleTimeline = gsap.timeline({
+        repeat: -1,
+        repeatDelay: 1.4,
+      });
+
+      brandCycleTimeline
+        .to(brandTextRef.current, {
+          x: 32,
+          autoAlpha: 0,
+          duration: 0.36,
+          ease: 'power2.in',
+        })
+        .add(() => {
+          activeBrandIndex = (activeBrandIndex + 1) % brandSequence.length;
+          setBrandText(brandSequence[activeBrandIndex]);
+          if (brandTextRef.current) {
+            gsap.set(brandTextRef.current, { x: -32, autoAlpha: 0 });
+          }
+        })
+        .to(brandTextRef.current, {
+          x: 0,
+          autoAlpha: 1,
+          duration: 0.36,
+          ease: 'power2.out',
+        });
+    }, '+=0.2');
+
     return () => {
       timeline.kill();
+      if (brandCycleTimeline) {
+        brandCycleTimeline.kill();
+      }
     };
-  }, [heroTypedText]);
+  }, [heroTypedText, brandSequence, isTestEnv]);
 
   useEffect(() => {
-    if (!cursorRef.current) {
+    if (activeLine !== 'brand' || !cursorRef.current) {
       return;
     }
 
@@ -172,7 +211,7 @@ export const LandingPage: React.FC = () => {
           <div className="container mx-auto flex flex-1 items-center justify-center px-md py-2xl">
             <div className="w-full max-w-10xl text-center">
               <h1 className="mb-lg font-pixel leading-none tracking-[0.08em] text-primary-yellow text-2xl tablet:text-[96px]">
-                {brandText}
+                <span ref={brandTextRef} className="inline-block">{brandText}</span>
                 {activeLine === 'brand' && (
                   <span ref={cursorRef} className="ml-xs inline-block text-accent-cyan">|</span>
                 )}
@@ -180,9 +219,6 @@ export const LandingPage: React.FC = () => {
 
               <h2 className="mx-auto max-w-8xl font-pixel text-lg leading-relaxed text-white tablet:text-[32px]">
                 {typedText}
-                {activeLine === 'message' && (
-                  <span ref={cursorRef} className="ml-xs inline-block text-accent-cyan">|</span>
-                )}
               </h2>
 
               <div

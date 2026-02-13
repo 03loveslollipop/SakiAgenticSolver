@@ -1,6 +1,7 @@
 // Login component with 2FA support
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import './Login.css';
 
@@ -9,6 +10,8 @@ type LoginStep = 'credentials' | '2fa' | '2fa-setup';
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login, loginWith2FA, setup2FA } = useAuth();
+  const { t } = useTranslation();
+  const brandName = t('common.brandName', { defaultValue: 'Saki' });
 
   const [step, setStep] = useState<LoginStep>('credentials');
   const [email, setEmail] = useState('');
@@ -83,7 +86,7 @@ const Login: React.FC = () => {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>Saki</h1>
+          <h1>{brandName}</h1>
           <p className="login-subtitle">Agentic CTF Solver Orchestration</p>
         </div>
 

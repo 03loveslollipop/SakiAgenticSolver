@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Session } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import apiClient from '../services/api';
@@ -12,6 +13,8 @@ const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
+  const brandName = t('common.brandName', { defaultValue: 'Saki' });
 
   useEffect(() => {
     loadSessions();
@@ -120,7 +123,7 @@ const Dashboard = () => {
     <div className="dashboard">
       <div className="dashboard-top-bar">
         <div className="app-header">
-          <h1>Saki - CTF Automation Platform</h1>
+          <h1>{brandName} - CTF Automation Platform</h1>
         </div>
         <div className="user-info">
           <span className="user-email">{user?.email}</span>

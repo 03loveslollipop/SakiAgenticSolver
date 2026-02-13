@@ -18,13 +18,6 @@ interface AppShellProps {
   children: React.ReactNode;
 }
 
-const shellLogo = (
-  <div className="flex items-center gap-xs">
-    <div className="h-6 w-6 border-2 border-primary-yellow bg-accent-cyan" />
-    <span className="font-pixel text-xs text-white">SAKI</span>
-  </div>
-);
-
 export const AppShell: React.FC<AppShellProps> = ({
   title,
   subtitle,
@@ -34,6 +27,14 @@ export const AppShell: React.FC<AppShellProps> = ({
   const { t } = useTranslation();
   const { isMobile } = useResponsive();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const brandName = t('common.brandName', { defaultValue: 'Saki' }).toUpperCase();
+
+  const shellLogo = (
+    <div className="flex items-center gap-xs">
+      <div className="h-6 w-6 border-2 border-primary-yellow bg-accent-cyan" />
+      <span className="font-pixel text-xs text-white">{brandName}</span>
+    </div>
+  );
 
   const sidebarItems: SidebarItem[] = useMemo(
     () => [
