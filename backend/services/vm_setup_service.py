@@ -2,6 +2,7 @@
 
 import logging
 import paramiko
+import asyncio
 from io import StringIO
 from typing import List, Optional
 import time
@@ -86,6 +87,24 @@ class VMSetupService:
     ) -> bool:
         """
         Execute setup script on VM via SSH to install required tools.
+        """
+        return await asyncio.to_thread(
+            self._execute_setup_script_blocking,
+            vm_ip,
+            ssh_private_key,
+            ssh_username,
+            ssh_port,
+        )
+
+    def _execute_setup_script_blocking(
+        self,
+        vm_ip: str,
+        ssh_private_key: str,
+        ssh_username: str = "ctfuser",
+        ssh_port: int = 22
+    ) -> bool:
+        """
+        Execute setup script on VM via SSH to install required tools.
         
         Installs:
         - z3 theorem prover
@@ -115,23 +134,35 @@ set -e
 
 echo "Starting CTF tools installation..."
 
+apt_update() {
+  sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Acquire::Retries=3 -o Dpkg::Use-Pty=0 update
+}
+
+apt_install() {
+  sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -y -o Dpkg::Use-Pty=0 install "$@"
+}
+
+# Ensure needrestart never prompts for interactive confirmation.
+sudo mkdir -p /etc/needrestart/conf.d || true
+echo '$nrconf{restart} = "a";' | sudo tee /etc/needrestart/conf.d/99-auto-restart.conf >/dev/null || true
+
 # Update package lists
-sudo apt-get update
+apt_update
 
 # Install z3 theorem prover
 echo "Installing z3..."
-sudo apt-get install -y z3
+apt_install z3
 
 # Install cryptographic utilities
 echo "Installing cryptographic utilities..."
-sudo apt-get install -y openssl hashcat john
+apt_install openssl hashcat john
 
 # Install decompilers
 echo "Installing decompilers..."
-sudo apt-get install -y radare2
+apt_install radare2
 
 # Install Ghidra (requires Java)
-sudo apt-get install -y default-jdk wget unzip
+apt_install default-jdk wget unzip
 cd /opt
 sudo wget -q https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_10.4_build/ghidra_10.4_PUBLIC_20230928.zip -O ghidra.zip || true
 sudo unzip -q ghidra.zip || true
@@ -140,7 +171,7 @@ sudo ln -sf /opt/ghidra_*/ghidraRun /usr/local/bin/ghidra || true
 
 # Install debuggers
 echo "Installing debuggers..."
-sudo apt-get install -y gdb lldb
+apt_install gdb lldb
 
 # Install pwndbg for GDB
 cd /tmp
@@ -150,10 +181,10 @@ cd pwndbg
 
 # Install additional useful tools
 echo "Installing additional tools..."
-sudo apt-get install -y python3-pip python3-dev build-essential
-sudo apt-get install -y binutils strace ltrace
-sudo apt-get install -y netcat socat nmap
-sudo apt-get install -y vim tmux curl wget
+apt_install python3-pip python3-dev build-essential
+apt_install binutils strace ltrace
+apt_install netcat-openbsd socat nmap
+apt_install vim tmux curl wget
 
 # Install Python packages for CTF
 sudo pip3 install pwntools pycryptodome z3-solver
@@ -179,7 +210,7 @@ echo "CTF tools installation complete!"
             # Execute setup script (this may take several minutes)
             logger.info("Running setup script (this may take several minutes)...")
             stdin, stdout, stderr = ssh_client.exec_command(
-                "/tmp/setup_ctf_tools.sh",
+                "bash -lc 'if command -v timeout >/dev/null 2>&1; then timeout --foreground 45m /tmp/setup_ctf_tools.sh; else /tmp/setup_ctf_tools.sh; fi'",
                 get_pty=True
             )
             
@@ -215,6 +246,28 @@ echo "CTF tools installation complete!"
     ) -> bool:
         """
         Install and configure AI agent (Codex or Copilot) on VM.
+        """
+        return await asyncio.to_thread(
+            self._install_agent_blocking,
+            vm_ip,
+            agent_type,
+            agent_model,
+            ssh_private_key,
+            ssh_username,
+            ssh_port,
+        )
+
+    def _install_agent_blocking(
+        self,
+        vm_ip: str,
+        agent_type: str,
+        agent_model: str,
+        ssh_private_key: str,
+        ssh_username: str = "ctfuser",
+        ssh_port: int = 22
+    ) -> bool:
+        """
+        Install and configure AI agent (Codex or Copilot) on VM.
         
         Args:
             vm_ip: VM IP address
@@ -239,8 +292,8 @@ echo "CTF tools installation complete!"
             # Install Kiro (the agent platform)
             install_commands = [
                 # Install Node.js and npm if not present
-                "curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -",
-                "sudo apt-get install -y nodejs",
+                "curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a bash -",
+                "sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y -o Dpkg::Use-Pty=0 nodejs",
                 
                 # Install Kiro globally
                 "sudo npm install -g @kiro-ai/kiro",
@@ -284,6 +337,28 @@ echo "CTF tools installation complete!"
                 ssh_client.close()
 
     async def write_agent_bootstrap_script(
+        self,
+        vm_ip: str,
+        agent_type: str,
+        agent_model: str,
+        ssh_private_key: str,
+        ssh_username: str = "ctfuser",
+        ssh_port: int = 22
+    ) -> bool:
+        """
+        Write a bootstrap script onto the VM to (re)install and start the agent.
+        """
+        return await asyncio.to_thread(
+            self._write_agent_bootstrap_script_blocking,
+            vm_ip,
+            agent_type,
+            agent_model,
+            ssh_private_key,
+            ssh_username,
+            ssh_port,
+        )
+
+    def _write_agent_bootstrap_script_blocking(
         self,
         vm_ip: str,
         agent_type: str,
@@ -369,8 +444,8 @@ install_node() {{
     return 0
   fi
   echo "Installing Node.js (required for kiro)..."
-  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-  sudo apt-get install -y nodejs
+  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a bash -
+  sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y -o Dpkg::Use-Pty=0 nodejs
 }}
 
 install_kiro() {{
@@ -435,8 +510,8 @@ main() {{
   echo \"Agent type: $AGENT_TYPE\"
   echo \"Agent model: $AGENT_MODEL\"
 
-  sudo apt-get update
-  sudo apt-get install -y curl ca-certificates git
+  sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o Acquire::Retries=3 -o Dpkg::Use-Pty=0 update
+  sudo -E env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y -o Dpkg::Use-Pty=0 curl ca-certificates git
 
   install_node
   install_kiro
@@ -470,6 +545,26 @@ main \"$@\"
                 ssh_client.close()
     
     async def download_challenge_files(
+        self,
+        vm_ip: str,
+        challenge_urls: List[str],
+        ssh_private_key: str,
+        ssh_username: str = "ctfuser",
+        ssh_port: int = 22
+    ) -> bool:
+        """
+        Download challenge files to VM using wget/curl.
+        """
+        return await asyncio.to_thread(
+            self._download_challenge_files_blocking,
+            vm_ip,
+            challenge_urls,
+            ssh_private_key,
+            ssh_username,
+            ssh_port,
+        )
+
+    def _download_challenge_files_blocking(
         self,
         vm_ip: str,
         challenge_urls: List[str],
@@ -534,6 +629,26 @@ main \"$@\"
                 ssh_client.close()
     
     async def create_config_files(
+        self,
+        vm_ip: str,
+        instructions: str,
+        ssh_private_key: str,
+        ssh_username: str = "ctfuser",
+        ssh_port: int = 22
+    ) -> bool:
+        """
+        Create configuration files on VM.
+        """
+        return await asyncio.to_thread(
+            self._create_config_files_blocking,
+            vm_ip,
+            instructions,
+            ssh_private_key,
+            ssh_username,
+            ssh_port,
+        )
+
+    def _create_config_files_blocking(
         self,
         vm_ip: str,
         instructions: str,
@@ -874,6 +989,24 @@ The following MCP servers are configured and available:
             raise
     
     async def start_agent(
+        self,
+        vm_ip: str,
+        ssh_private_key: str,
+        ssh_username: str = "ctfuser",
+        ssh_port: int = 22
+    ) -> bool:
+        """
+        Start AI agent with root privileges on VM.
+        """
+        return await asyncio.to_thread(
+            self._start_agent_blocking,
+            vm_ip,
+            ssh_private_key,
+            ssh_username,
+            ssh_port,
+        )
+
+    def _start_agent_blocking(
         self,
         vm_ip: str,
         ssh_private_key: str,

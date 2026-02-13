@@ -6,6 +6,7 @@ from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient
 from azure.core.exceptions import AzureError
 from typing import Optional
+import asyncio
 import copy
 import logging
 import os
@@ -121,6 +122,24 @@ class AzureVMManager:
         return candidates
     
     async def create_vm(
+        self,
+        session_id: str,
+        vm_size: str,
+        ssh_public_key: str,
+        resource_group: str
+    ) -> VMInfo:
+        """
+        Create a new Azure VM with specified configuration.
+        """
+        return await asyncio.to_thread(
+            self._create_vm_blocking,
+            session_id,
+            vm_size,
+            ssh_public_key,
+            resource_group,
+        )
+
+    def _create_vm_blocking(
         self,
         session_id: str,
         vm_size: str,
@@ -378,6 +397,16 @@ class AzureVMManager:
     async def delete_vm(self, session_id: str, resource_group: str) -> bool:
         """
         Delete an Azure VM and all associated resources.
+        """
+        return await asyncio.to_thread(
+            self._delete_vm_blocking,
+            session_id,
+            resource_group,
+        )
+
+    def _delete_vm_blocking(self, session_id: str, resource_group: str) -> bool:
+        """
+        Delete an Azure VM and all associated resources.
         
         Deletes in order:
         - Virtual machine
@@ -488,6 +517,16 @@ class AzureVMManager:
     async def get_vm_status(self, session_id: str, resource_group: str) -> str:
         """
         Get current VM status.
+        """
+        return await asyncio.to_thread(
+            self._get_vm_status_blocking,
+            session_id,
+            resource_group,
+        )
+
+    def _get_vm_status_blocking(self, session_id: str, resource_group: str) -> str:
+        """
+        Get current VM status.
         
         Args:
             session_id: Unique session identifier
@@ -530,6 +569,16 @@ class AzureVMManager:
             raise
     
     async def get_vm_ip(self, session_id: str, resource_group: str) -> str:
+        """
+        Get public IP address of VM.
+        """
+        return await asyncio.to_thread(
+            self._get_vm_ip_blocking,
+            session_id,
+            resource_group,
+        )
+
+    def _get_vm_ip_blocking(self, session_id: str, resource_group: str) -> str:
         """
         Get public IP address of VM.
         

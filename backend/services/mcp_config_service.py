@@ -4,6 +4,7 @@ import json
 import logging
 from typing import List, Dict, Any
 import paramiko
+import asyncio
 from io import StringIO
 
 logger = logging.getLogger(__name__)
@@ -116,6 +117,26 @@ class MCPConfigService:
         return config
     
     async def write_mcp_config_to_vm(
+        self,
+        vm_ip: str,
+        ssh_private_key: str,
+        mongo_connection_string: str,
+        ssh_username: str = "ctfuser",
+        ssh_port: int = 22
+    ) -> bool:
+        """
+        Write MCP configuration files to VM via SSH.
+        """
+        return await asyncio.to_thread(
+            self._write_mcp_config_to_vm_blocking,
+            vm_ip,
+            ssh_private_key,
+            mongo_connection_string,
+            ssh_username,
+            ssh_port,
+        )
+
+    def _write_mcp_config_to_vm_blocking(
         self,
         vm_ip: str,
         ssh_private_key: str,
