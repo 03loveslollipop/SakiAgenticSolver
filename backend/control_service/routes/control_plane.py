@@ -431,6 +431,7 @@ async def create_session(request: VMCreationRequest, current_user: dict = Depend
         )
 
         vm_setup_service = VMSetupService()
+        agent_install_succeeded = False
         private_key = await ssh_key_manager.get_private_key(session_id)
         setup_success = await vm_setup_service.execute_setup_script(
             vm_ip=vm_info.public_ip,
@@ -440,14 +441,22 @@ async def create_session(request: VMCreationRequest, current_user: dict = Depend
             raise RuntimeError("Setup script execution failed")
 
         if deploy_agent:
-            agent_success = await vm_setup_service.install_agent(
-                vm_ip=vm_info.public_ip,
-                agent_type=request.agent_type,
-                agent_model=request.agent_model,
-                ssh_private_key=private_key,
-            )
-            if not agent_success:
-                raise RuntimeError("Agent installation failed")
+            try:
+                agent_success = await vm_setup_service.install_agent(
+                    vm_ip=vm_info.public_ip,
+                    agent_type=request.agent_type,
+                    agent_model=request.agent_model,
+                    ssh_private_key=private_key,
+                )
+                if not agent_success:
+                    raise RuntimeError("Agent installation failed")
+                agent_install_succeeded = True
+            except Exception as agent_install_exc:
+                logger.warning(
+                    "Agent installation failed for session %s, continuing without auto-start: %s",
+                    session_id,
+                    vm_setup_service.last_error or str(agent_install_exc),
+                )
 
         download_success = await vm_setup_service.download_challenge_files(
             vm_ip=vm_info.public_ip,
@@ -466,28 +475,57 @@ async def create_session(request: VMCreationRequest, current_user: dict = Depend
             raise RuntimeError("Configuration file creation failed")
 
         if deploy_agent:
-            bootstrap_success = await vm_setup_service.write_agent_bootstrap_script(
-                vm_ip=vm_info.public_ip,
-                agent_type=request.agent_type,
-                agent_model=request.agent_model,
-                ssh_private_key=private_key,
-            )
-            if not bootstrap_success:
-                logger.warning("Agent bootstrap script creation failed for %s", session_id)
+            try:
+                bootstrap_success = await vm_setup_service.write_agent_bootstrap_script(
+                    vm_ip=vm_info.public_ip,
+                    agent_type=request.agent_type,
+                    agent_model=request.agent_model,
+                    ssh_private_key=private_key,
+                )
+                if not bootstrap_success:
+                    logger.warning("Agent bootstrap script creation failed for %s", session_id)
+            except Exception as bootstrap_exc:
+                logger.warning(
+                    "Agent bootstrap script creation failed for %s: %s",
+                    session_id,
+                    bootstrap_exc,
+                )
 
-            mongo_url = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-            await vm_setup_service.configure_mcp_servers(
-                vm_ip=vm_info.public_ip,
-                mongo_connection_string=mongo_url,
-                ssh_private_key=private_key,
-            )
+            if agent_install_succeeded:
+                mongo_url = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+                try:
+                    await vm_setup_service.configure_mcp_servers(
+                        vm_ip=vm_info.public_ip,
+                        mongo_connection_string=mongo_url,
+                        ssh_private_key=private_key,
+                    )
+                except Exception as mcp_exc:
+                    logger.warning(
+                        "MCP server configuration failed for %s, continuing: %s",
+                        session_id,
+                        mcp_exc,
+                    )
 
-            started = await vm_setup_service.start_agent(
-                vm_ip=vm_info.public_ip,
-                ssh_private_key=private_key,
-            )
-            if not started:
-                raise RuntimeError("Agent start failed")
+                try:
+                    started = await vm_setup_service.start_agent(
+                        vm_ip=vm_info.public_ip,
+                        agent_type=request.agent_type,
+                        agent_model=request.agent_model,
+                        ssh_private_key=private_key,
+                    )
+                    if not started:
+                        logger.warning("Agent start failed for %s, VM remains available", session_id)
+                except Exception as agent_start_exc:
+                    logger.warning(
+                        "Agent start failed for %s, VM remains available: %s",
+                        session_id,
+                        vm_setup_service.last_error or str(agent_start_exc),
+                    )
+            else:
+                logger.warning(
+                    "Skipping MCP configuration and agent start for %s because agent install failed",
+                    session_id,
+                )
 
         updated_session = await session_manager.update_session_status(
             session_id,

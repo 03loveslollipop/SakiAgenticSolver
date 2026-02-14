@@ -12,9 +12,12 @@ The `VMSetupService` class manages the complete setup and configuration of Azure
 - Handles installation errors and provides detailed logging
 
 ### 2. Agent Installation
-- Installs Kiro AI agent platform (Codex or Copilot)
-- Configures the agent with the specified model
-- Verifies installation success
+- Installs a **target-specific** agent runtime (non-interactive, token-based):
+  - **Codex**: OpenAI Codex CLI (`@openai/codex`)
+  - **Gemini**: Google Gemini CLI (`@google/gemini-cli`)
+  - **Mixtral/Mistral**: Mistral API via Python SDK (`mistralai`)
+  - **Copilot**: GitHub CLI + Copilot extension (best-effort; may require interactive OAuth depending on GitHub)
+- Verifies installation success with lightweight version/help checks
 
 ### 3. Challenge File Downloads
 - Downloads challenge files from provided URLs using wget
@@ -38,9 +41,34 @@ Creates six essential configuration files on the VM:
 - Writes mcp.json configuration file to VM
 
 ### 6. Agent Startup
-- Starts the AI agent with root privileges
-- Provides access to all configuration files and challenge files
-- Runs agent in background for autonomous operation
+- Starts the selected target agent in **non-interactive one-shot mode**
+- Builds `SESSION_PROMPT.md` from `BASE_PROMPT.md` + `instructions.md`
+- Launches the run in the background and writes logs to `~/agent.log`
+
+## Credentials / Tokens
+
+Agent startup is non-interactive and expects credentials to be provided via the **control service** environment
+(e.g. Northflank secrets). `VMSetupService` writes only the required variables to:
+
+- `/home/ctfuser/.config/saki/agent.env` (chmod `600`)
+
+Required env vars by target:
+
+- **Codex**: `OPENAI_API_KEY`
+- **Gemini**: `GEMINI_API_KEY`
+- **Mixtral/Mistral**: `MISTRAL_API_KEY`
+- **Copilot**: `GH_TOKEN` or `GITHUB_TOKEN` (best-effort)
+
+The service does not log token values.
+
+### Optional Install Overrides
+
+You can override the default install commands (executed on the VM) via control-service environment variables:
+
+- `CODEX_INSTALL_COMMAND` (default: `sudo npm install -g @openai/codex`)
+- `GEMINI_INSTALL_COMMAND` (default: `sudo npm install -g @google/gemini-cli`)
+- `MISTRAL_INSTALL_COMMAND` (default: `python3 -m pip install --user --upgrade mistralai`)
+- `COPILOT_INSTALL_COMMAND` (default: install `gh` via apt + install `github/gh-copilot` extension)
 
 ## Usage
 
@@ -88,6 +116,8 @@ await setup_service.configure_mcp_servers(
 # Start agent
 await setup_service.start_agent(
     vm_ip="192.168.1.100",
+    agent_type="codex",
+    agent_model="gpt-4",
     ssh_private_key=private_key_pem
 )
 ```
@@ -166,7 +196,7 @@ This service validates the following requirements:
 - **2.6**: Agent installation with selected model
 - **2.7**: Challenge file downloads
 - **2.8-2.12**: Configuration file creation
-- **2.13**: Agent startup with root privileges
+- **2.13**: Agent startup in background (non-interactive)
 - **12.1-12.2, 12.5-12.7**: MCP server configuration
 
 ## Dependencies

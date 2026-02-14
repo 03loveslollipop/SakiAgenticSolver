@@ -228,23 +228,27 @@ class TestVMSetupService:
             assert result is True
     
     @pytest.mark.asyncio
-    async def test_start_agent_success(self, vm_setup_service, mock_ssh_client, mock_ssh_key):
+    async def test_start_agent_success(self, vm_setup_service, mock_ssh_client, mock_ssh_key, monkeypatch):
         """Test successful agent startup."""
+        monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
         with patch.object(vm_setup_service, '_create_ssh_client', return_value=mock_ssh_client):
             result = await vm_setup_service.start_agent(
                 vm_ip="192.168.1.100",
+                agent_type="codex",
+                agent_model="gpt-4",
                 ssh_private_key=mock_ssh_key
             )
             
             assert result is True
-            mock_ssh_client.open_sftp.assert_called_once()
+            assert mock_ssh_client.open_sftp.call_count >= 1
             # Verify startup script was executed
             assert mock_ssh_client.exec_command.call_count >= 2
             mock_ssh_client.close.assert_called_once()
     
     @pytest.mark.asyncio
-    async def test_start_agent_failure(self, vm_setup_service, mock_ssh_client, mock_ssh_key):
+    async def test_start_agent_failure(self, vm_setup_service, mock_ssh_client, mock_ssh_key, monkeypatch):
         """Test agent startup failure."""
+        monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
         # Mock failed execution
         mock_stdout = MagicMock()
         mock_stdout.channel.recv_exit_status.return_value = 1
@@ -257,6 +261,8 @@ class TestVMSetupService:
         with patch.object(vm_setup_service, '_create_ssh_client', return_value=mock_ssh_client):
             result = await vm_setup_service.start_agent(
                 vm_ip="192.168.1.100",
+                agent_type="codex",
+                agent_model="gpt-4",
                 ssh_private_key=mock_ssh_key
             )
             
@@ -324,6 +330,16 @@ class TestVMSetupService:
         assert "pwntools" in tools_md
         assert "MCP" in tools_md
         assert "writeup-retrieval" in tools_md
+
+    def test_redact_secrets_hides_token_values(self, vm_setup_service, monkeypatch):
+        monkeypatch.setenv("OPENAI_API_KEY", "super-secret-token")
+        monkeypatch.setenv("GEMINI_API_KEY", "another-secret")
+
+        raw = "Using OPENAI_API_KEY=super-secret-token and GEMINI_API_KEY=another-secret"
+        redacted = vm_setup_service._redact_secrets(raw)
+
+        assert "super-secret-token" not in redacted
+        assert "another-secret" not in redacted
     
     @pytest.mark.asyncio
     async def test_ssh_connection_retry(self, vm_setup_service, mock_ssh_key):

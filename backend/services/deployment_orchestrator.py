@@ -50,6 +50,8 @@ class DeploymentOrchestrator:
 
         vm_info = None
         current_stage = "queued"
+        deployment_warnings: list[str] = []
+        agent_install_succeeded = False
 
         try:
             current_stage = "preflight_check"
@@ -126,14 +128,29 @@ class DeploymentOrchestrator:
                     estimated_completion=estimated_completion,
                     message="Installing AI agent",
                 )
-                agent_install_success = await vm_setup_service.install_agent(
-                    vm_ip=vm_info.public_ip,
-                    agent_type=agent_type,
-                    agent_model=agent_model,
-                    ssh_private_key=private_key,
-                )
-                if not agent_install_success:
-                    raise RuntimeError(vm_setup_service.last_error or "Agent installation failed")
+                try:
+                    agent_install_success = await vm_setup_service.install_agent(
+                        vm_ip=vm_info.public_ip,
+                        agent_type=agent_type,
+                        agent_model=agent_model,
+                        ssh_private_key=private_key,
+                    )
+                    if not agent_install_success:
+                        raise RuntimeError(vm_setup_service.last_error or "Agent installation failed")
+                    agent_install_succeeded = True
+                except Exception as agent_install_exc:
+                    warning = (
+                        f"Agent installation failed; deployment will continue without agent startup: "
+                        f"{vm_setup_service.last_error or str(agent_install_exc)}"
+                    )
+                    deployment_warnings.append(warning)
+                    logger.warning(
+                        "Deployment task %s session %s warning at stage=%s: %s",
+                        task_id,
+                        session_id,
+                        current_stage,
+                        warning,
+                    )
 
             current_stage = "downloading_challenges"
             await self._update_progress(
@@ -172,48 +189,97 @@ class DeploymentOrchestrator:
                 raise RuntimeError("Configuration file creation failed")
 
             if deploy_agent:
-                bootstrap_success = await vm_setup_service.write_agent_bootstrap_script(
-                    vm_ip=vm_info.public_ip,
-                    agent_type=agent_type,
-                    agent_model=agent_model,
-                    ssh_private_key=private_key,
-                )
-                if not bootstrap_success:
-                    logger.warning("Agent bootstrap script generation failed for %s", session_id)
+                try:
+                    bootstrap_success = await vm_setup_service.write_agent_bootstrap_script(
+                        vm_ip=vm_info.public_ip,
+                        agent_type=agent_type,
+                        agent_model=agent_model,
+                        ssh_private_key=private_key,
+                    )
+                    if not bootstrap_success:
+                        warning = "Agent bootstrap script generation failed"
+                        deployment_warnings.append(warning)
+                        logger.warning("%s for session %s", warning, session_id)
+                except Exception as bootstrap_exc:
+                    warning = f"Agent bootstrap script generation failed: {bootstrap_exc}"
+                    deployment_warnings.append(warning)
+                    logger.warning(
+                        "Deployment task %s session %s warning: %s",
+                        task_id,
+                        session_id,
+                        warning,
+                    )
 
-                current_stage = "configuring_mcp"
-                await self._update_progress(
-                    task_id=task_id,
-                    session_id=session_id,
-                    status="creating",
-                    progress=92,
-                    current_step=current_stage,
-                    estimated_completion=estimated_completion,
-                    message="Configuring MCP services",
-                )
-                # Preserve current behavior: MCP failure is non-fatal.
-                await vm_setup_service.configure_mcp_servers(
-                    vm_ip=vm_info.public_ip,
-                    mongo_connection_string=task_data["mongo_connection_string"],
-                    ssh_private_key=private_key,
-                )
+                if agent_install_succeeded:
+                    current_stage = "configuring_mcp"
+                    await self._update_progress(
+                        task_id=task_id,
+                        session_id=session_id,
+                        status="creating",
+                        progress=92,
+                        current_step=current_stage,
+                        estimated_completion=estimated_completion,
+                        message="Configuring MCP services",
+                    )
+                    # Preserve current behavior: MCP failure is non-fatal.
+                    try:
+                        await vm_setup_service.configure_mcp_servers(
+                            vm_ip=vm_info.public_ip,
+                            mongo_connection_string=task_data["mongo_connection_string"],
+                            ssh_private_key=private_key,
+                        )
+                    except Exception as mcp_exc:
+                        warning = f"MCP server configuration failed: {mcp_exc}"
+                        deployment_warnings.append(warning)
+                        logger.warning(
+                            "Deployment task %s session %s warning at stage=%s: %s",
+                            task_id,
+                            session_id,
+                            current_stage,
+                            warning,
+                        )
 
-                current_stage = "starting_agent"
-                await self._update_progress(
-                    task_id=task_id,
-                    session_id=session_id,
-                    status="creating",
-                    progress=97,
-                    current_step=current_stage,
-                    estimated_completion=estimated_completion,
-                    message="Starting AI agent",
-                )
-                started = await vm_setup_service.start_agent(
-                    vm_ip=vm_info.public_ip,
-                    ssh_private_key=private_key,
-                )
-                if not started:
-                    raise RuntimeError("Agent start failed")
+                    current_stage = "starting_agent"
+                    await self._update_progress(
+                        task_id=task_id,
+                        session_id=session_id,
+                        status="creating",
+                        progress=97,
+                        current_step=current_stage,
+                        estimated_completion=estimated_completion,
+                        message="Starting AI agent",
+                    )
+                    try:
+                        started = await vm_setup_service.start_agent(
+                            vm_ip=vm_info.public_ip,
+                            agent_type=agent_type,
+                            agent_model=agent_model,
+                            ssh_private_key=private_key,
+                        )
+                        if not started:
+                            raise RuntimeError("Agent start failed")
+                    except Exception as agent_start_exc:
+                        warning = (
+                            f"Agent start failed; VM is still available for terminal access: "
+                            f"{vm_setup_service.last_error or str(agent_start_exc)}"
+                        )
+                        deployment_warnings.append(warning)
+                        logger.warning(
+                            "Deployment task %s session %s warning at stage=%s: %s",
+                            task_id,
+                            session_id,
+                            current_stage,
+                            warning,
+                        )
+                else:
+                    warning = "Skipping MCP configuration and agent start because agent installation did not succeed"
+                    deployment_warnings.append(warning)
+                    logger.warning(
+                        "Deployment task %s session %s warning: %s",
+                        task_id,
+                        session_id,
+                        warning,
+                    )
 
             current_stage = "running"
             await self._update_progress(
@@ -224,23 +290,30 @@ class DeploymentOrchestrator:
                 current_step=current_stage,
                 estimated_completion=None,
                 vm_ip=vm_info.public_ip,
-                message="VM deployment completed successfully",
+                message=(
+                    "VM deployment completed with warnings"
+                    if deployment_warnings
+                    else "VM deployment completed successfully"
+                ),
             )
             await self.session_manager.update_session_status(
                 session_id,
                 "running",
                 updated_by="control-worker",
             )
+            result_payload = {
+                "session_id": session_id,
+                "vm_ip": vm_info.public_ip,
+                "status": "running",
+            }
+            if deployment_warnings:
+                result_payload["warnings"] = deployment_warnings
             await self.task_queue_service.update_task(
                 task_id,
                 status="completed",
                 progress=100,
                 current_step="completed",
-                result={
-                    "session_id": session_id,
-                    "vm_ip": vm_info.public_ip,
-                    "status": "running",
-                },
+                result=result_payload,
             )
             logger.info("Deployment task %s completed for session %s", task_id, session_id)
 

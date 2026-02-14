@@ -51,7 +51,7 @@ vm_manager = AzureVMManager(
 # Create a VM
 vm_info = await vm_manager.create_vm(
     session_id="session-123",
-    vm_size="Standard_B2s",
+    vm_size="Standard_B2as_v2",
     ssh_public_key="ssh-rsa AAAAB3...",
     resource_group="ctf-rg-001"
 )
