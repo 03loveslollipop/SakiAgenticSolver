@@ -698,7 +698,7 @@ def main() -> int:
     from mistralai import Mistral
 
     client = Mistral(api_key=api_key)
-    resp = client.chat.complete(model=model, messages=[{"role": "user", "content": prompt}])
+    resp = client.chat.complete(model=model, messages=[{{"role": "user", "content": prompt}}])
 
     try:
         print(resp.choices[0].message.content)
@@ -1595,7 +1595,7 @@ def main() -> int:
     from mistralai import Mistral
 
     client = Mistral(api_key=api_key)
-    resp = client.chat.complete(model=model, messages=[{"role": "user", "content": prompt}])
+    resp = client.chat.complete(model=model, messages=[{{"role": "user", "content": prompt}}])
 
     try:
         print(resp.choices[0].message.content)

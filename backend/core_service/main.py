@@ -8,6 +8,7 @@ import logging
 from fastapi import FastAPI
 
 from core_service.routes.diagnostics import router as diagnostics_router
+from core_service.routes.terminal import router as terminal_router
 from core_service.routes.writeups import router as writeups_router
 from core_service.services.change_stream_sync import ControlPlaneChangeStreamSync
 from routes.auth import router as auth_router
@@ -65,6 +66,7 @@ app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(writeups_router)
 app.include_router(diagnostics_router)
+app.include_router(terminal_router)
 
 
 @app.get("/")
