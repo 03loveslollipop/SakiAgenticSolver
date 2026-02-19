@@ -143,12 +143,12 @@ echo "Starting CTF tools installation..."
 
 apt_update() {
   sudo -E env DEBIAN_FRONTEND="$DEBIAN_FRONTEND" NEEDRESTART_MODE="$NEEDRESTART_MODE" NEEDRESTART_SUSPEND="$NEEDRESTART_SUSPEND" APT_LISTCHANGES_FRONTEND="$APT_LISTCHANGES_FRONTEND" \
-    apt-get -o Acquire::Retries=3 -o Dpkg::Use-Pty=0 -o DPkg::Lock::Timeout=120 update
+    apt-get -o Acquire::Retries=3 -o Acquire::Progress=false -o APT::Get::Show-Progress=false -o APT::Color=0 -o Dpkg::Use-Pty=0 -o DPkg::Lock::Timeout=120 update
 }
 
 apt_install() {
   sudo -E env DEBIAN_FRONTEND="$DEBIAN_FRONTEND" NEEDRESTART_MODE="$NEEDRESTART_MODE" NEEDRESTART_SUSPEND="$NEEDRESTART_SUSPEND" APT_LISTCHANGES_FRONTEND="$APT_LISTCHANGES_FRONTEND" \
-    apt-get -y -o Dpkg::Use-Pty=0 -o DPkg::Lock::Timeout=120 -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install "$@"
+    apt-get -y -o Acquire::Progress=false -o APT::Get::Show-Progress=false -o APT::Color=0 -o Dpkg::Use-Pty=0 -o DPkg::Lock::Timeout=120 -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install "$@"
 }
 
 apt_install_optional() {
@@ -171,7 +171,14 @@ apt_update
 
 # Install z3 theorem prover
 echo "Installing z3..."
-apt_install z3
+if ! apt_install z3; then
+  echo "z3 package unavailable; trying alternative packages..."
+  if apt_install python3-z3; then
+    echo "Installed python3-z3 as fallback."
+  else
+    echo "python3-z3 unavailable; continuing with pip z3-solver fallback."
+  fi
+fi
 
 # Install cryptographic utilities
 echo "Installing cryptographic utilities..."
